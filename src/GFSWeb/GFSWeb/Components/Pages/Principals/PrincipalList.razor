@@ -1,0 +1,59 @@
+﻿@using GFSWeb.sdk.Entity
+@using GFSWeb.Application
+@using System.Collections.Frozen
+
+
+<MudDataGrid T="PrincipalIdentityRecord"
+             Items="List"
+             Dense="true"
+             Hover="true"
+             Bordered="false"
+             Elevation="0"
+             Striped=true
+             SelectedItemsChanged="@SelectedItemsChanged"
+             RowStyleFunc="GetRowStyle"
+             SortMode="SortMode.Multiple"
+             ColumnResizeMode="ResizeMode.Column"
+             MultiSelection=true
+             @ref=_grid>
+
+    <Columns>
+        <SelectColumn T="PrincipalIdentityRecord" />
+        <PropertyColumn Property="x => x.NameIdentifier" Title="Name Identifier" Sortable="true">
+            <CellTemplate>
+                <a href="@NavHelper.GetPrincipalHref(context.Item.NameIdentifier, _returnUrl)" style="color: blue;font-weight:800;text-decoration: underline">@context.Item.NameIdentifier</a>
+            </CellTemplate>
+        </PropertyColumn>
+        <PropertyColumn Property="x => x.UserName" Title="User Name" Sortable="true" />
+        <PropertyColumn Property="x => x.Email" Title="Email" Sortable="true" />
+        <PropertyColumn Property="x => x.Disabled" Title="Disabled" Sortable="true" />
+    </Columns>
+</MudDataGrid>
+
+@code {
+    [Parameter] public IReadOnlyList<PrincipalIdentityRecord> List { get; set; } = null!;
+    [Parameter] public EventCallback<HashSet<PrincipalIdentityRecord>> OnSelect { get; set; }
+
+    private MudDataGrid<PrincipalIdentityRecord> _grid = null!;
+    private HashSet<PrincipalIdentityRecord> _selectedItems = new();
+    private string _returnUrl = Uri.EscapeDataString(NavHelper.AccessManagement);
+
+    private async Task SelectedItemsChanged(HashSet<PrincipalIdentityRecord> items)
+    {
+        _selectedItems = items;
+        await OnSelect.InvokeAsync(items);
+    }
+
+    private string GetRowStyle(PrincipalIdentityRecord item, int index)
+    {
+        var result = _selectedItems.Any(x => x.NameIdentifier == item.NameIdentifier);
+        return result ? "background-color: var(--mud-palette-action-default-hover);" : string.Empty;
+    }
+
+    private static string GetPrincipalHref(string id)
+    {
+        var returnUrl = Uri.EscapeDataString(NavHelper.AccessManagement);
+        var principalId = Uri.EscapeDataString(id);
+        return $"{NavHelper.AccessManagement}/{principalId}?returnUrl={returnUrl}";
+    }
+}

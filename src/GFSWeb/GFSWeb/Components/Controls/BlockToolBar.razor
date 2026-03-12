@@ -1,0 +1,103 @@
+﻿
+
+<MudPaper Elevation="3" Outlined=true Square=false Style="margin-top:20px" Width="100%">
+    <MudToolBar Dense=true Gutters=true>
+
+        @if (Title.IsNotEmpty())
+        {
+            <MudText Typo="Typo.h6" Style="padding-left:10px">@Title</MudText>
+        }
+
+        @if (ShowTooBar)
+        {
+            <MudSpacer />
+
+                
+            @if (OnSearch.HasDelegate)
+            {
+                <MudTextField @bind-Value=@_searchString
+                              Placeholder="search"
+                              Adornment="Adornment.Start"
+                              AdornmentIcon="@Icons.Material.Filled.Search"
+                              IconSize="Size.Medium"
+                              Immediate=true
+                              Clearable=true
+                              Disabled="@DisableSearch"
+                              Style="margin-left:auto;max-width:200px;flex:0 0 auto;" />
+            }
+
+            @if (OnAdd.HasDelegate)
+            {
+                <MudButton StartIcon="@Icons.Material.Outlined.Add" Variant="Variant.Outlined" Color="Color.Info" OnClick="OnAdd" Disabled=DisableAdd Style=@_buttonStyle>Add</MudButton>
+            }
+
+            @if (OnEdit.HasDelegate)
+            {
+                <MudButton StartIcon="@Icons.Material.Outlined.Edit" Variant="Variant.Outlined" Color="Color.Info" OnClick="OnEdit" Disabled=DisableEdit Style=@_buttonStyle>Edit</MudButton>
+            }
+
+            @if (OnSave.HasDelegate)
+            {
+                <MudButton StartIcon="@Icons.Material.Outlined.Save" Variant="Variant.Outlined" Color="Color.Success" OnClick="OnSave" Disabled=DisableSave Style=@_buttonStyle>Save</MudButton>
+            }
+
+            @if (OnDelete.HasDelegate)
+            {
+                <MudButton StartIcon="@Icons.Material.Outlined.Delete" Variant="Variant.Outlined" Color="Color.Secondary" OnClick="OnDelete" Disabled=DisableDelete Style=@_buttonStyle>Delete</MudButton>
+            }
+
+            @if (OnCancel.HasDelegate)
+            {
+                <MudButton StartIcon="@Icons.Material.Outlined.Cancel" Variant="Variant.Outlined" Color="Color.Secondary" OnClick="OnCancel" Disabled=DisableCancel Style=@_buttonStyle>Cancel</MudButton>
+            }
+        }
+    </MudToolBar>
+
+    <div style="margin: 10px">
+        @ChildContent
+    </div>
+</MudPaper>
+
+@code {
+    [Parameter] public RenderFragment ChildContent { get; set; } = null!;
+    [Parameter] public EventCallback OnAdd { get; set; }
+    [Parameter] public EventCallback OnEdit { get; set; }
+    [Parameter] public EventCallback OnDelete { get; set; }
+    [Parameter] public EventCallback OnSave { get; set; }
+    [Parameter] public EventCallback OnCancel { get; set; }
+    [Parameter] public EventCallback<string?> OnSearch { get; set; }
+    [Parameter] public bool DisableEdit { get; set; }
+    [Parameter] public bool DisableAdd { get; set; }
+    [Parameter] public bool DisableDelete { get; set; }
+    [Parameter] public bool DisableSearch { get; set; }
+    [Parameter] public bool DisableSave { get; set; }
+    [Parameter] public bool DisableCancel { get; set; }
+    [Parameter] public string? Title { get; set; }
+    [Parameter] public string? Width { get; set; }
+
+    private const string _style = "margin: 0px 5px;width:24px;height:24px";
+    private const string _buttonStyle = "margin: 0px 5px;";
+
+    private bool ShowTooBar =>
+        OnAdd.HasDelegate ||
+        OnEdit.HasDelegate ||
+        OnDelete.HasDelegate ||
+        OnSearch.HasDelegate ||
+        OnSave.HasDelegate ||
+        OnCancel.HasDelegate;
+
+    private string _searchStringValue = string.Empty;
+
+    private string _searchString
+    {
+        get => _searchStringValue;
+        set
+        {
+            if (_searchStringValue != value)
+            {
+                _searchStringValue = value;
+                _ = Task.Run(async () => await OnSearch.InvokeAsync(_searchStringValue));
+            }
+        }
+    }
+}

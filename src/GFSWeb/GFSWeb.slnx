@@ -1,0 +1,12 @@
+<Solution>
+  <Project Path="GFSWeb.AppHost/GFSWeb.AppHost.csproj" />
+  <Project Path="GFSWeb.sdk/GFSWeb.sdk.csproj" Id="301c022f-37c8-4e15-a8d9-5766cd56c4dd" />
+  <Project Path="GFSWeb.ServiceDefaults/GFSWeb.ServiceDefaults.csproj" />
+  <Project Path="GFSWeb/GFSWeb.csproj" />
+  <Project Path="GFSWebDb/GFSWebDb.sqlproj" Id="90c97116-cf89-493f-8cb8-9ace5e85c5c2">
+    <Build />
+    <Deploy />
+  </Project>
+  <Project Path="Toolbox.test/Toolbox.test.csproj" Id="92b8cb58-4803-48de-9893-25b840912d57" />
+  <Project Path="Toolbox/Toolbox.csproj" />
+</Solution>

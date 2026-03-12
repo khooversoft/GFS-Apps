@@ -1,0 +1,36 @@
+﻿@inherits LayoutComponentBase
+
+@* <MudThemeProvider Theme=_theme IsDarkMode=_isDarkMode /> *@
+<MudThemeProvider Theme="GFSWeb.Application.PrimaryTheme.Theme" IsDarkMode=_isDarkMode />
+<MudPopoverProvider />
+
+<MudLayout>
+    <AppBar DrawerOpen="@_drawerOpen" DrawerToggle="DrawerToggle" OnDarkMode="OnDarkMode" IsDarkMode=_isDarkMode />
+    <MudDrawer @bind-Open="_drawerOpen"
+               Variant="DrawerVariant.Mini"
+               Breakpoint="Breakpoint.None"
+               ClipMode="DrawerClipMode.Always"
+               Width="180px">
+        <NavMenu />
+    </MudDrawer>
+    <MudMainContent Class="main-body">
+        <div class="body-wrapper">
+            @Body
+        </div>
+    </MudMainContent>
+</MudLayout>
+
+<div id="blazor-error-ui" data-nosnippet>
+    An unhandled error has occurred.
+    <a href="." class="reload">Reload</a>
+    <span class="dismiss">🗙</span>
+</div>
+
+@code {
+    bool _drawerOpen = false;
+    bool _isDarkMode = false;
+    // private MudTheme _theme = new();
+
+    private void DrawerToggle(bool state) => _drawerOpen = state;
+    private void OnDarkMode(bool isDarkMode) => _isDarkMode = isDarkMode;
+}

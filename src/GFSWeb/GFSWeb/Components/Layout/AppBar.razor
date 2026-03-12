@@ -1,0 +1,128 @@
+﻿@using Microsoft.AspNetCore.Components.Authorization;
+@using MudBlazor
+
+<MudAppBar Color="Color.Primary" Elevation="0" Fixed=true Dense=true>
+
+    <MudIconButton Icon=@_drawerIcon
+                   Color="Color.Inherit"
+                   Edge="Edge.Start"
+                   OnClick="@((e) => ToggleDrawer())" />
+
+    <MudImage Src="GFSWeb-LargeIcon.png" Width="40" Height="40" />
+
+    <MudSpacer />
+    <MudText Style="margin-left:20px" Color="Color.Dark" Typo="Typo.h5">Odyssey Group Global Financial Services</MudText>
+    <MudSpacer />
+
+    <MudHidden Breakpoint="Breakpoint.SmAndDown">
+        <AuthorizeView>
+            <Authorized>
+                <MudText Style="margin-right:10px">@_userName</MudText>
+            </Authorized>
+        </AuthorizeView>
+    </MudHidden>
+
+    <!-- Settings (gear) icon -->
+    <MudIconButton Icon="@Icons.Material.Filled.Settings" Color="Color.Inherit" aria-label="Settings" OnClick="@OpenSettings" />
+    <MudIconButton Icon="@Icons.Material.Filled.Person" Color="Color.Inherit" aria-label="Settings" OnClick="@OpenProfile" />
+    <MudIconButton Icon="@Icons.Material.Filled.Feedback" Color="Color.Inherit" aria-label="Feedback" Href="/feedback" />
+
+    <!-- Auth buttons (hidden on small/phone screens) -->
+    <MudHidden Breakpoint="Breakpoint.SmAndDown">
+        <AuthorizeView>
+            <Authorized>
+                <form method="post" action="/signout" class="d-inline">
+                    <MudButton Variant="Variant.Text"
+                               Color="Color.Inherit"
+                               ButtonType="ButtonType.Submit"
+                               StartIcon="@Icons.Material.Filled.Logout"
+                               Class="mud-nav-link px-2"
+                               Style="margin-left:19px">
+                        Log Out
+                    </MudButton>
+                </form>
+            </Authorized>
+            <NotAuthorized>
+                <MudButton Variant="Variant.Filled"
+                           Href="/signin/EntraId"
+                           Class="provider-btn"
+                           Color="Color.Secondary">
+                    <span class="provider-text">Log In</span>
+                </MudButton>
+            </NotAuthorized>
+        </AuthorizeView>
+    </MudHidden>
+</MudAppBar>
+
+<!-- Settings Drawer -->
+<MudDrawer @bind-Open="@_openSettings" Anchor="Anchor.End" Elevation="1" Variant="@DrawerVariant.Temporary" OverlayAutoClose=true>
+    <MudDrawerHeader>
+        <MudText Typo="Typo.h6">Settings</MudText>
+    </MudDrawerHeader>
+    <MudSwitch Value="IsDarkMode" ValueChanged="@((bool? nv) => OnDarkModeChanged(nv ?? false))" Label="Dark Mode" Color="Color.Secondary" />
+    <MudDivider />
+    @* <MudText Style="padding: 10px">Version @AppProgram.ServiceVersion</MudText> *@
+</MudDrawer>
+
+<!-- Profile Drawer -->
+<MudDrawer @bind-Open="@_openProfile" Anchor="Anchor.End" Elevation="1" Variant="@DrawerVariant.Temporary" OverlayAutoClose=true>
+    <div class="right-drawer-container">
+        <MudDrawerHeader>
+            <MudText Typo="Typo.h6">User</MudText>
+        </MudDrawerHeader>
+
+        <AuthorizeView>
+            <NotAuthorized>
+                <MudNavMenu>
+                    <MudText Style="margin:20px">You are logged out</MudText>
+                </MudNavMenu>
+            </NotAuthorized>
+
+            <Authorized>
+                <MudNavMenu>
+                    <MudNavLink Icon="@Icons.Material.Filled.Person" Href="/profile">Edit Profile</MudNavLink>
+
+                    <form method="post" action="/signout" class="d-inline">
+                        <MudButton Variant="Variant.Text"
+                                   Color="Color.Inherit"
+                                   ButtonType="ButtonType.Submit"
+                                   StartIcon="@Icons.Material.Filled.Logout"
+                                   Class="mud-nav-link px-2"
+                                   Style="margin-left:19px">
+                            Log Out
+                        </MudButton>
+                    </form>
+
+                </MudNavMenu>
+            </Authorized>
+        </AuthorizeView>
+    </div>
+</MudDrawer>
+
+@code {
+    [Parameter] public bool DrawerOpen { get; set; }
+    [Parameter] public EventCallback<bool> DrawerToggle { get; set; }
+    [Parameter] public EventCallback<bool> OnDarkMode { get; set; }
+    [Parameter] public bool IsDarkMode { get; set; }
+    [Inject] NavigationManager _nav { get; set; } = null!;
+    [Inject] AuthenticationAccess _authAccess { get; set; } = null!;
+
+    private bool _openSettings = false;
+    private bool _openProfile = false;
+    private string _userName = string.Empty;
+
+    private string _drawerIcon => DrawerOpen ? Icons.Material.Filled.KeyboardArrowLeft : Icons.Material.Filled.KeyboardArrowRight;
+
+    protected override async Task OnParametersSetAsync() => _userName = await _authAccess.GetUserName();
+
+    private async Task ToggleDrawer() => await DrawerToggle.InvokeAsync(!DrawerOpen);
+
+    private void OpenSettings() => _openSettings = true;
+    private void OpenProfile() => _openProfile = true;
+
+    private async Task OnDarkModeChanged(bool value)
+    {
+        IsDarkMode = value;
+        await OnDarkMode.InvokeAsync(value);
+    }
+}

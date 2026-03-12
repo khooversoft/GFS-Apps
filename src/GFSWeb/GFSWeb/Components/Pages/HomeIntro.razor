@@ -1,0 +1,31 @@
+﻿<MudText Typo="Typo.h4">Welcome to GFS Tools</MudText>
+
+<MudText Class="mt-4">
+    The following tools are avaiable...
+</MudText>
+
+<MudPaper Class="mt-4" Elevation="0" Style="max-width: 600px">
+    <MudList T="string" Dense="true">
+        <MudListItem Icon="@Icons.Material.Outlined.QueryStats" Href="/">
+            <MudText>Elim - Query SAP, apply business rules, and export data to excel.</MudText>
+        </MudListItem>
+        <MudListItem Icon="@Icons.Material.Filled.PostAdd" Href="/">
+            <MudText>Post SAP transactions with Parker</MudText>
+        </MudListItem>
+        <MudListItem Icon="@Icons.Material.Filled.QueryBuilder" Href="/">
+            <MudText>Create or Edit Elim queries.</MudText>
+        </MudListItem>
+        <MudListItem Icon="@Icons.Material.Filled.ListAlt" Href="/">
+            <MudText>View completed scheduled reports</MudText>
+        </MudListItem>
+        <MudListItem Icon="@Icons.Material.Filled.Schedule" Href="/">
+            <MudText>Create or Edit or Pause Report Schedules</MudText>
+        </MudListItem>
+        <MudListItem Icon="@Icons.Material.Filled.People" Href="@NavHelper.AccessManagement">
+            <MudText>Manage user access for roles and reports</MudText>
+        </MudListItem>
+        <MudListItem Icon="@Icons.Material.Outlined.HelpCenter" Href="/about">
+            <MudText>Online help and request for help (ServiceNow)</MudText>
+        </MudListItem>
+    </MudList>
+</MudPaper>

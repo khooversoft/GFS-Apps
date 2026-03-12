@@ -1,0 +1,128 @@
+﻿@page "/access"
+@using Toolbox.Data
+@using GFSWeb.sdk.Entity;
+
+<ReturnUrlButton ReturnUrl=@returnUrl />
+
+<BlockContainer>
+    <MudText Typo="Typo.h5" GutterBottom="true">Access Management</MudText>
+
+    <MudText Typo="Typo.body1" GutterBottom="true">
+        This page is for managing user access to GFS Tools.  User access is managed by assigning users to roles,
+        and then granting those roles access to specific tools and reports.
+    </MudText>
+
+    <div style="margin-top:10px">
+        @if (!_initialized)
+        {
+            <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+        }
+        else
+        {
+            <BlockToolBar Title="Registered Principals"
+                          OnAdd=OnAdd
+                          OnEdit=OnEdit
+                          OnDelete=OnDelete
+                          OnSearch=OnSearch
+                          DisableEdit="@_editDisabled"
+                          DisableDelete="@_deleteDisabled"
+                          DisableSearch="@_searchDisabled">
+                <PrincipalList List=GetList() OnSelect=OnRowsSelect />
+
+                <Question Show=_deleteAsk Title="Delete Principal" Descriptions=@_deleteDescriptions OnYes=OnYes OnNo=OnNo OnClose=OnClose />
+            </BlockToolBar>
+        }
+    </div>
+</BlockContainer>
+
+@code {
+    @inject NavigationManager _nav;
+    @inject PrincipalIdentityStore _store;
+    [Parameter, SupplyParameterFromQuery] public string returnUrl { get; set; } = null!;
+
+    private bool _initialized = false;
+    private IReadOnlyList<PrincipalIdentityRecord> _list = null!;
+    private bool _editDisabled = true;
+    private bool _deleteDisabled = true;
+    private bool _searchDisabled = true;
+    private string? _searchString;
+    private HashSet<PrincipalIdentityRecord> _selectedItems = new();
+    private bool _deleteAsk = false;
+    private IReadOnlyList<string> _deleteDescriptions = Array.Empty<string>();
+
+    protected override async Task OnInitializedAsync() => _initialized = true;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await GetPrincipals();
+            StateHasChanged();
+        }
+    }
+
+    public void OnNo() => _deleteAsk = false;
+
+    public void OnClose() => _deleteAsk = false;
+
+    private IReadOnlyList<PrincipalIdentityRecord> GetList() => _searchString switch
+    {
+        null => _list,
+        string v => _list
+            .Where(x => x.NameIdentifier.Like(_searchString) || x.UserName.Like(_searchString) || x.Email.Like(_searchString))
+            .ToArray(),
+    };
+
+    private async Task GetPrincipals()
+    {
+        _list = await _store.GetAll();
+        _searchDisabled = _list.Count == 0;
+    }
+
+    private void OnRowsSelect(HashSet<PrincipalIdentityRecord> items)
+    {
+        _selectedItems = items;
+
+        (_editDisabled, _deleteDisabled) = items.Count switch
+        {
+            0 => (true, true),
+            1 => (false, false),
+            _ => (true, false)
+        };
+    }
+
+    private void OnAdd() => _deleteAsk = !_deleteAsk;
+
+    private void OnEdit()
+    {
+        if (_selectedItems.Count != 1) return;
+        _nav.GotoPrincipalEditPage(_selectedItems.First().NameIdentifier, NavHelper.AccessManagement);
+    }
+
+    private void OnSearch(string? searchString)
+    {
+        searchString = searchString.ToNullIfEmpty();
+        if (_searchString == searchString) return;
+        _searchString = searchString;
+    }
+
+    private void OnDelete()
+    {
+        if (_selectedItems.Count == 0) return;
+
+        var names = _selectedItems.Select(x => x.NameIdentifier).Join(", ");
+
+        _deleteDescriptions = _selectedItems.Count switch
+        {
+            1 => ["Are you sure you want to delete principal?", $"Name Identifier: '{names}'"],
+            _ => ["Are you sure you want to delete these?", $"Name Identifiers: {names}"],
+        };
+
+        _deleteAsk = true;
+    }
+
+    private void OnYes()
+    {
+        _deleteAsk = false;
+    }
+}

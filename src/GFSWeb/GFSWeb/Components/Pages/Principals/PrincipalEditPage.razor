@@ -1,0 +1,95 @@
+﻿@page "/access/{nameIdentifier}"
+@using GFSWeb.sdk.Entity
+
+<ReturnUrlButton ReturnUrl=@returnUrl />
+
+<BlockToolBar Title="Registered Principals"
+              OnSave=OnSave
+              OnDelete=OnDelete
+              OnCancel=OnCancel
+              DisableSave="@_saveDisabled"
+              DisableDelete="@_deleteDisabled">
+</BlockToolBar>
+
+<MudPaper Elevation=1>
+    <MudStack Class="pa-4" Spacing="2">
+        <MudTextField T="string"
+                      Label="Name Identifier"
+                      Variant="Variant.Outlined"
+                      Required="true"
+                      Immediate="true"
+                      Disabled="@_nameIdentifierLocked"
+                      @bind-Value="_nameIdentifier" />
+
+        <MudTextField T="string"
+                      Label="User Name"
+                      Variant="Variant.Outlined"
+                      Required="true"
+                      Immediate="true"
+                      @bind-Value="_userName" />
+
+        <MudTextField T="string"
+                      Label="Email"
+                      Variant="Variant.Outlined"
+                      Required="true"
+                      Immediate="true"
+                      @bind-Value="_email" />
+
+        <MudSwitch T="bool"
+                   Label="Disabled"
+                   Color="Color.Primary"
+                   @bind-Value="_disabled" />
+    </MudStack>
+</MudPaper>
+
+
+@code
+{
+    @inject NavigationManager _nav;
+    @inject PrincipalIdentityStore _store;
+    [Parameter] public string nameIdentifier { get; set; } = null!;
+    [Parameter, SupplyParameterFromQuery] public string returnUrl { get; set; } = null!;
+
+    private bool _saveDisabled = true;
+    private bool _deleteDisabled = true;
+    private string _nameIdentifier = string.Empty;
+    private string _userName = string.Empty;
+    private string _email = string.Empty;
+    private bool _disabled;
+    private bool _nameIdentifierLocked;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _nameIdentifierLocked = !string.Equals(nameIdentifier, "new", StringComparison.OrdinalIgnoreCase);
+
+        if (!_nameIdentifierLocked)
+        {
+            _nameIdentifier = string.Empty;
+            _userName = string.Empty;
+            _email = string.Empty;
+            _disabled = false;
+            _deleteDisabled = true;
+            return;
+        }
+
+        var record = (await _store.GetAll()).FirstOrDefault(x => x.NameIdentifier == nameIdentifier);
+        if (record is null) return;
+
+        _nameIdentifier = record.NameIdentifier;
+        _userName = record.UserName;
+        _email = record.Email;
+        _disabled = record.Disabled;
+        _deleteDisabled = false;
+    }
+
+    private async Task OnSave()
+    {
+    }
+    private async Task OnDelete()
+    {
+    }
+
+    private async Task OnCancel()
+    {
+    }
+}

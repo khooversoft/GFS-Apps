@@ -1,0 +1,51 @@
+﻿.nav-drawer-open {
+    /*background-color: white;*/
+    color: black;
+    display: flex;
+    align-items: center;
+    min-height: 56px; /* Matches default app bar height */
+    padding: 0 8px;
+    box-sizing: border-box;
+    border-radius: 3px;
+    /*min-width: 180px;*/
+    transform: translateX(-15px); /* Move 20px to the left */
+}
+
+.nav-drawer-header {
+    /*background-color: white;*/
+    color: black;
+    display: flex;
+    align-items: center;
+    min-height: 56px; /* Matches default app bar height */
+    padding: 0 8px;
+    box-sizing: border-box;
+    border-radius: 3px;
+    min-width: 180px;
+    /*transform: translateX(-25px);*/ /* Move 20px to the left */
+}
+
+@media (max-width: 960px) {
+    .nav-drawer-header {
+        transform: translateX(-18px);
+    }
+}
+
+
+.nav-drawer-title {
+    color: inherit; /* Inherit white (or appropriate) text */
+    font-weight: 600;
+    letter-spacing: .5px;
+    margin-left: 10px;
+    line-height: 1; /* Prevent extra vertical offset */
+    white-space: nowrap;
+}
+
+.nav-logo {
+    height: 40px; /* Adjust as needed */
+    width: auto;
+    display: block;
+    object-fit: contain;
+    user-select: none;
+    -webkit-user-drag: none;
+    border-radius: 5px;
+}
