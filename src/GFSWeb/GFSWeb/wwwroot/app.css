@@ -27,6 +27,16 @@ h1:focus {
         filter: brightness(1.05);
     }
 
+.table-link {
+    color: blue;
+    font-weight: 800;
+    text-decoration: underline
+}
+
+.form-content {
+    margin-top: 10px;
+}
+
 /* Hide review text column on screens smaller than 960px */
 @media (max-width: 960px) {
     .review-text-column {

@@ -4,6 +4,10 @@
     [UserName]       NVARCHAR (100) NOT NULL,
     [Email]          NVARCHAR (50)  NOT NULL,
     [Disabled]       BIT            NOT NULL DEFAULT(0),
+    [Role]           NVARCHAR (50)  NOT NULL DEFAULT('reader') CHECK ([Role] IN ('reader', 'contributor', 'owner')),
+    [Parker]         BIT            NOT NULL DEFAULT(0),
+    [ParkerPost]     BIT            NOT NULL DEFAULT(0),
+
     CONSTRAINT [PK_PrincipalIdentity] PRIMARY KEY CLUSTERED ([PrincipalId] ASC)
 );
 GO

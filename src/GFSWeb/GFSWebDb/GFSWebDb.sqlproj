@@ -73,7 +73,7 @@
     <Build Include="AppDbo\Tables\UserToElimOpr.sql" />
     <Build Include="AppDbo\Tables\ElimOperation.sql" />
     <Build Include="AppDbo\Tables\AppRole.sql" />
-    <Build Include="App\Stored Procedures\AddOrUpdatePrincipalIdentity.sql" />
+    <Build Include="App\Stored Procedures\UpdatePrincipalIdentity.sql" />
     <Build Include="App\Views\PrincipalIdentity.sql" />
     <Build Include="App\Stored Procedures\DeletePrincipalIdentity.sql" />
     <Build Include="App\Stored Procedures\AddOrUpdateElimOpr.sql" />
@@ -81,6 +81,7 @@
     <Build Include="App\Stored Procedures\UpdateElimOprData.sql" />
     <Build Include="App\Views\AppRole.sql" />
     <Build Include="App\Views\PrincipalRole.sql" />
+    <Build Include="App\Stored Procedures\AddPrincipalIdentity.sql" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Publish\GFSWebDb.publish.xml" />

@@ -1,4 +1,4 @@
-﻿CREATE PROCEDURE [dbo].[DeleteElimOpr]
+﻿CREATE PROCEDURE [App].[DeleteElimOpr]
     @ElimCode nvarchar(50)
 AS
 BEGIN

@@ -15,7 +15,7 @@
     <div style="margin-top:10px">
         @if (!_initialized)
         {
-            <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+            <MudProgressLinear Color="Color.Primary" Indeterminate="true" Rounded="true" Size="Size.Medium" Value="100" Style="margin:20px" />
         }
         else
         {
@@ -27,10 +27,10 @@
                           DisableEdit="@_editDisabled"
                           DisableDelete="@_deleteDisabled"
                           DisableSearch="@_searchDisabled">
-                <PrincipalList List=GetList() OnSelect=OnRowsSelect />
-
-                <Question Show=_deleteAsk Title="Delete Principal" Descriptions=@_deleteDescriptions OnYes=OnYes OnNo=OnNo OnClose=OnClose />
             </BlockToolBar>
+
+            <PrincipalList List=GetList() OnSelect=OnRowsSelect />
+            <Question Show=_deleteAsk Title="Delete Principal" Descriptions=@_deleteDescriptions OnYes=DeleteOnYes OnNo=DeleteOnNo OnClose=DeleteOnClose />
         }
     </div>
 </BlockContainer>
@@ -38,6 +38,7 @@
 @code {
     @inject NavigationManager _nav;
     @inject PrincipalIdentityStore _store;
+    @inject ISnackbar _snackbar;
     [Parameter, SupplyParameterFromQuery] public string returnUrl { get; set; } = null!;
 
     private bool _initialized = false;
@@ -50,8 +51,6 @@
     private bool _deleteAsk = false;
     private IReadOnlyList<string> _deleteDescriptions = Array.Empty<string>();
 
-    protected override async Task OnInitializedAsync() => _initialized = true;
-
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
@@ -61,22 +60,17 @@
         }
     }
 
-    public void OnNo() => _deleteAsk = false;
-
-    public void OnClose() => _deleteAsk = false;
-
     private IReadOnlyList<PrincipalIdentityRecord> GetList() => _searchString switch
     {
         null => _list,
-        string v => _list
-            .Where(x => x.NameIdentifier.Like(_searchString) || x.UserName.Like(_searchString) || x.Email.Like(_searchString))
-            .ToArray(),
+        string v => _list.Where(x => x.Like(_searchString)).ToArray(),
     };
 
     private async Task GetPrincipals()
     {
         _list = await _store.GetAll();
         _searchDisabled = _list.Count == 0;
+        _initialized = true;
     }
 
     private void OnRowsSelect(HashSet<PrincipalIdentityRecord> items)
@@ -91,7 +85,7 @@
         };
     }
 
-    private void OnAdd() => _deleteAsk = !_deleteAsk;
+    private void OnAdd() => _nav.GotoPrincipalEditPage("new-record", NavHelper.AccessManagement);
 
     private void OnEdit()
     {
@@ -103,7 +97,9 @@
     {
         searchString = searchString.ToNullIfEmpty();
         if (_searchString == searchString) return;
+
         _searchString = searchString;
+        _ = InvokeAsync(StateHasChanged);
     }
 
     private void OnDelete()
@@ -121,8 +117,31 @@
         _deleteAsk = true;
     }
 
-    private void OnYes()
+    private async Task DeleteOnYes()
     {
         _deleteAsk = false;
+        if (_selectedItems.Count == 0) return;
+
+        foreach(var item in _selectedItems)
+        {
+            var deleteOption = await _store.Delete(item.NameIdentifier);
+            if( deleteOption.IsError())
+            {
+                _snackbar.Add($"Failed to delete principal '{item.NameIdentifier}', statusCode={deleteOption.StatusCode}, error={deleteOption.Error}", Severity.Error, config =>
+                {
+                    config.RequireInteraction = true;
+                });
+
+                return;
+            }
+
+            _snackbar.Add($"Principal '{item.NameIdentifier}' deleted", Severity.Success);
+        }
+
+        await GetPrincipals();
     }
+
+    public void DeleteOnNo() => _deleteAsk = false;
+
+    public void DeleteOnClose() => _deleteAsk = false;
 }

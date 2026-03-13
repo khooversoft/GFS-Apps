@@ -10,13 +10,13 @@ public static class NavHelper
     public static string AccessManagement => "/access";
     public static string UnderConstructionPath => "/underConstruction";
 
-    //public static void Goto
+    public static void GotoAcessManagement(this NavigationManager nav) => nav.NotNull().NavigateTo(AccessManagement);
+
     //public static void GotoCalendar(this NavigationManager nav) => nav.NotNull().NavigateTo(MarathonCalendarPath);
 
     public static string GetPrincipalHref(string id, string? returnUrl = null)
     {
         id = Uri.EscapeDataString(id);
-        returnUrl = returnUrl?.Func(x => Uri.EscapeDataString(x));
 
         var url = Build([AccessManagement, id], BuildReturnUrl(returnUrl));
         return $"{NavHelper.AccessManagement}/{id}?returnUrl={returnUrl}";

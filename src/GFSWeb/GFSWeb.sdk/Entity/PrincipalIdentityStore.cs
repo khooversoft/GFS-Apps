@@ -20,13 +20,31 @@ public class PrincipalIdentityStore
         _logger = logger.NotNull();
     }
 
+    public async Task<Option<PrincipalIdentityRecord>> Get(string nameIdentifier)
+    {
+        var cmd = """
+            SELECT  x.*
+            FROM    [App].[PrincipalIdentity] x
+            WHERE   x.[NameIdentifier] = @NameIdentifier
+            """;
+
+        var result = await _client.Query()
+            .SetCommand(cmd, CommandType.Text)
+            .AddParameter("NameIdentifier", nameIdentifier)
+            .Execute<PrincipalIdentityRecord>();
+
+        return result.Count switch
+        {
+            0 => StatusCode.NotFound,
+            1 => result[0],
+            _ => throw new InvalidOperationException($"Multiple records found for NameIdentifier: {nameIdentifier}")
+        };
+    }
+
     public async Task<IReadOnlyList<PrincipalIdentityRecord>> GetAll()
     {
         var cmd = """
-            SELECT  x.[NameIdentifier]
-                    ,x.[UserName]
-                    ,x.[Email]
-                    ,x.[Disabled]
+            SELECT  x.*
             FROM    [App].[PrincipalIdentity] x
             ORDER BY x.[NameIdentifier]
             """;
@@ -54,16 +72,36 @@ public class PrincipalIdentityStore
         return result;
     }
 
-    public async Task<Option<int>> AddOrUpdate(PrincipalIdentityRecord record)
+    public async Task<Option<int>> Add(PrincipalIdentityRecord record)
     {
         record.NotNull().Validate().ThrowOnError();
 
         var result = await _client.Query()
-            .SetCommand("EXEC [App].[AddOrUpdatePrincipalIdentity] @NameIdentifier, @UserName, @Email, @Disabled", CommandType.StoredProcedure)
+            .SetCommand("[App].[AddPrincipalIdentity]", CommandType.StoredProcedure)
             .AddParameter("@NameIdentifier", record.NameIdentifier)
             .AddParameter("@UserName", record.UserName)
             .AddParameter("@Email", record.Email)
             .AddParameter("@Disabled", record.Disabled)
+            .AddParameter("@Role", record.Role)
+            .AddParameter("@Parker", record.Parker)
+            .AddParameter("@ParkerPost", record.ParkerPost)
+            .ExecuteNonQuery();
+
+        return result;
+    }
+    public async Task<Option<int>> Update(PrincipalIdentityRecord record)
+    {
+        record.NotNull().Validate().ThrowOnError();
+
+        var result = await _client.Query()
+            .SetCommand("[App].[UpdatePrincipalIdentity]", CommandType.StoredProcedure)
+            .AddParameter("@NameIdentifier", record.NameIdentifier)
+            .AddParameter("@UserName", record.UserName)
+            .AddParameter("@Email", record.Email)
+            .AddParameter("@Disabled", record.Disabled)
+            .AddParameter("@Role", record.Role)
+            .AddParameter("@Parker", record.Parker)
+            .AddParameter("@ParkerPost", record.ParkerPost)
             .ExecuteNonQuery();
 
         return result;
@@ -74,7 +112,7 @@ public class PrincipalIdentityStore
         nameIdentifier.NotEmpty();
 
         var result = await _client.Query()
-            .SetCommand("EXEC [App].[DeletePrincipalIdentity] @NameIdentifier", CommandType.StoredProcedure)
+            .SetCommand("[App].[DeletePrincipalIdentity]", CommandType.StoredProcedure)
             .AddParameter("@NameIdentifier", nameIdentifier)
             .ExecuteNonQuery();
 

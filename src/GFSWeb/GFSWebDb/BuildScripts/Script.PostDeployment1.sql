@@ -39,13 +39,13 @@ WHEN NOT MATCHED BY TARGET THEN
 -- Ensure required application roles exist
 MERGE [AppDbo].[PrincipalIdentity] AS target
 USING (VALUES
-    ('user1-entra', 'User1', 'User1@odysseygroup.com', 0),
-    ('user2-entra', 'User2', 'User2@odysseygroup.com', 0),
-    ('user3-entra', 'User3', 'User3@odysseygroup.com', 0)
-) AS src ([NameIdentifier], [UserName], [Email], [Disabled])
+    ('user1-entra', 'User1', 'User1@odysseygroup.com'),
+    ('user2-entra', 'User2', 'User2@odysseygroup.com'),
+    ('user3-entra', 'User3', 'User3@odysseygroup.com')
+) AS src ([NameIdentifier], [UserName], [Email])
     ON target.[NameIdentifier] = src.[NameIdentifier]
 WHEN NOT MATCHED BY TARGET THEN
-    INSERT ([NameIdentifier], [UserName], [Email], [Disabled])
-    VALUES (src.[NameIdentifier], src.[UserName], src.[Email], src.[Disabled]);
+    INSERT ([NameIdentifier], [UserName], [Email])
+    VALUES (src.[NameIdentifier], src.[UserName], src.[Email]);
 
 

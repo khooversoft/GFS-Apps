@@ -13,6 +13,7 @@ public class SqlQuery
     private readonly ILogger _logger;
     private const int _retryCount = 5;
     private const int _deadLockNumber = 1205;
+    private const int _errorNumber = 50000;
     private const string _deadLockMessage = "Deadlock retry failed";
 
     public SqlQuery(string connectionString, ILogger logger)
@@ -36,7 +37,7 @@ public class SqlQuery
     {
         name.NotEmpty();
 
-        if (!addValueIfNull && value.Equals(default(T)))
+        if (!addValueIfNull && default(T) is null && value is null)
         {
             return this;
         }
@@ -83,6 +84,7 @@ public class SqlQuery
         return result switch
         {
             int v => v,
+            StoredProcedureError err => (StatusCode.BadRequest, err.Error),
             _ => throw new InvalidOperationException("Failed to return value"),
         };
     }
@@ -126,11 +128,17 @@ public class SqlQuery
             }
             catch (SqlException sqlEx)
             {
-                if (sqlEx.Number == _deadLockNumber)
+                switch (sqlEx.Number)
                 {
-                    saveEx = sqlEx;
-                    Thread.Sleep(TimeSpan.FromMilliseconds(_random.Next(10, 1000)));
-                    continue;
+                    case _deadLockNumber:
+                        saveEx = sqlEx;
+                        _logger.LogError(sqlEx, "SQL error - Victim of Deadlock: {Command}, Parameters: {Parameters}", Command, Parameters);
+                        Thread.Sleep(TimeSpan.FromMilliseconds(_random.Next(10, 1000)));
+                        continue;
+
+                    case _errorNumber:
+                        _logger.LogError(sqlEx, "SQL error - Command: {Command}, Parameters: {Parameters}", Command, Parameters);
+                        return new StoredProcedureError(Command, sqlEx.Message);
                 }
 
                 _logger.LogError(sqlEx, "SQL execution error - Command: {Command}, Parameters: {Parameters}", Command, Parameters);
@@ -145,4 +153,6 @@ public class SqlQuery
 
         throw new InvalidOperationException(_deadLockMessage, saveEx);
     }
+
+    private record StoredProcedureError(string? Command, string Error);
 }

@@ -1,5 +1,6 @@
 ﻿@page "/access/{nameIdentifier}"
 @using GFSWeb.sdk.Entity
+@using MudBlazor.Charts
 
 <ReturnUrlButton ReturnUrl=@returnUrl />
 
@@ -11,85 +12,181 @@
               DisableDelete="@_deleteDisabled">
 </BlockToolBar>
 
-<MudPaper Elevation=1>
-    <MudStack Class="pa-4" Spacing="2">
-        <MudTextField T="string"
-                      Label="Name Identifier"
-                      Variant="Variant.Outlined"
-                      Required="true"
-                      Immediate="true"
-                      Disabled="@_nameIdentifierLocked"
-                      @bind-Value="_nameIdentifier" />
+<div class="form-content">
+    <MudStack Row=true>
+        <MudPaper Elevation=1 Style="flex: 0 0 65%;">
+            <MudStack Class="pa-4" Spacing="2">
+                <MudTextField T="string"
+                              Label="Name Identifier"
+                              Variant="Variant.Outlined"
+                              Required="true"
+                              Immediate="true"
+                              Disabled="@(!_newRecord)"
+                              @bind-Value="_record.NameIdentifier"
+                              @bind-Value:after="OnEditorChanged" />
 
-        <MudTextField T="string"
-                      Label="User Name"
-                      Variant="Variant.Outlined"
-                      Required="true"
-                      Immediate="true"
-                      @bind-Value="_userName" />
+                <MudTextField T="string"
+                              Label="User Name"
+                              Variant="Variant.Outlined"
+                              Required="true"
+                              Immediate="true"
+                              @bind-Value="_record.UserName"
+                              @bind-Value:after="OnEditorChanged" />
 
-        <MudTextField T="string"
-                      Label="Email"
-                      Variant="Variant.Outlined"
-                      Required="true"
-                      Immediate="true"
-                      @bind-Value="_email" />
+                <MudTextField T="string"
+                              Label="Email"
+                              Variant="Variant.Outlined"
+                              Required="true"
+                              Immediate="true"
+                              @bind-Value="_record.Email"
+                              @bind-Value:after="OnEditorChanged" />
 
-        <MudSwitch T="bool"
-                   Label="Disabled"
-                   Color="Color.Primary"
-                   @bind-Value="_disabled" />
+                <MudSwitch T="bool"
+                           Label="Disabled"
+                           Color="Color.Primary"
+                           @bind-Value="_record.Disabled"
+                           @bind-Value:after="OnEditorChanged" />
+            </MudStack>
+        </MudPaper>
+        <MudPaper Style="flex: 1 1 0;">
+            <div style="margin:20px">
+                <MudText>Roles</MudText>
+
+                <MudRadioGroup T="string" @bind-Value="_record.Role" @bind-Value:after="OnEditorChanged">
+                    <MudRadio Value=IdentityRole.ReaderRole Color="@GetColor(() => _record.IsReader)" Size="Size.Medium">Reader</MudRadio>
+                    <MudRadio Value=IdentityRole.ContributorRole Color="@GetColor(() => _record.IsContributor)" Size="Size.Medium">Contributor</MudRadio>
+                    <MudRadio Value=IdentityRole.OwnerRole Color="@GetColor(() => _record.IsOwner)" Size="Size.Medium">Owner</MudRadio>
+                </MudRadioGroup>
+
+                <MudCheckBox @bind-Value=_record.Parker @bind-Value:after="OnEditorChanged" Color="@GetColor(() => _record.Parker)">Parker</MudCheckBox>
+                <MudCheckBox @bind-Value=_record.ParkerPost @bind-Value:after="OnEditorChanged" Color="@GetColor(() => _record.ParkerPost)">Parker-Host</MudCheckBox>
+            </div>
+        </MudPaper>
     </MudStack>
-</MudPaper>
+</div>
 
+<Question Show=_showDeleteAsk Title="Delete Principal" Descriptions=@_deleteDescriptions OnYes=OnAskDeleteYes OnNo=OnAskDeleteNo />
 
 @code
 {
     @inject NavigationManager _nav;
     @inject PrincipalIdentityStore _store;
-    [Parameter] public string nameIdentifier { get; set; } = null!;
+    @inject ISnackbar _snackbar;
+    [Parameter] public string? nameIdentifier { get; set; }
     [Parameter, SupplyParameterFromQuery] public string returnUrl { get; set; } = null!;
 
     private bool _saveDisabled = true;
     private bool _deleteDisabled = true;
-    private string _nameIdentifier = string.Empty;
-    private string _userName = string.Empty;
-    private string _email = string.Empty;
-    private bool _disabled;
-    private bool _nameIdentifierLocked;
+    private bool _showDeleteAsk = false;
+    private bool _newRecord;
+    private IReadOnlyList<string> _deleteDescriptions = Array.Empty<string>();
+
+    private PrincipalIdentityRecord _record = new();
+    private PrincipalIdentityRecord _originalRecord = new();
+
+    private Color GetColor(Func<bool> test) => test() switch
+    {
+        true => Color.Success,
+        false => Color.Info,
+    };
 
     protected override async Task OnParametersSetAsync()
     {
-        _nameIdentifierLocked = !string.Equals(nameIdentifier, "new", StringComparison.OrdinalIgnoreCase);
-
-        if (!_nameIdentifierLocked)
+        if (nameIdentifier.IsEmpty() || nameIdentifier == "new-record")
         {
-            _nameIdentifier = string.Empty;
-            _userName = string.Empty;
-            _email = string.Empty;
-            _disabled = false;
+            _record = new();
+            _originalRecord = _record with { };
+            _saveDisabled = true;
             _deleteDisabled = true;
+            _newRecord = true;
             return;
         }
 
-        var record = (await _store.GetAll()).FirstOrDefault(x => x.NameIdentifier == nameIdentifier);
-        if (record is null) return;
+        _record = (await _store.Get(nameIdentifier)).ThrowOnError().Return();
+        _record.Validate().ThrowOnError();
 
-        _nameIdentifier = record.NameIdentifier;
-        _userName = record.UserName;
-        _email = record.Email;
-        _disabled = record.Disabled;
+        _originalRecord = _record with { };
+
+        _saveDisabled = true;
         _deleteDisabled = false;
+        _newRecord = false;
     }
 
     private async Task OnSave()
     {
-    }
-    private async Task OnDelete()
-    {
+        _record.NotNull();
+
+        if (_record.Validate().IsError())
+        {
+            _snackbar.Add("Please fill in all required fields", Severity.Error);
+            return;
+        }
+
+        Option<int> saveOption = _newRecord switch
+        {
+            true => await _store.Add(_record),
+            false => await _store.Update(_record)
+        };
+
+        if (saveOption.IsError())
+        {
+            _snackbar.Add($"Failed to save principal '{_record.NameIdentifier}', statusCode={saveOption.StatusCode}, error={saveOption.Error}", Severity.Error, config =>
+            {
+                config.RequireInteraction = true;
+            });
+            return;
+        }
+
+        _snackbar.Add($"Principal '{_record.NameIdentifier}' saved", Severity.Success);
+        _nav.GotoAcessManagement();
     }
 
-    private async Task OnCancel()
+    private void OnDelete()
     {
+        _deleteDescriptions = ["Are you sure you want to delete principal?", $"Name Identifier: '{_record.NameIdentifier}'"];
+        _showDeleteAsk = true;
+    }
+
+    private async Task OnAskDeleteYes()
+    {
+        _showDeleteAsk = false;
+        var deleteOption = await _store.Delete(_record.NameIdentifier);
+        if (deleteOption.IsError())
+        {
+            _snackbar.Add($"Failed to delete principal '{_record.NameIdentifier}', statusCode={deleteOption.StatusCode}, error={deleteOption.Error}", Severity.Error, config =>
+            {
+                config.RequireInteraction = true;
+            });
+            _nav.GotoAcessManagement();
+            return;
+        }
+
+        _snackbar.Add($"Principal '{_record.NameIdentifier}' deleted", Severity.Success);
+        _nav.GotoAcessManagement();
+    }
+
+    private void OnAskDeleteNo() => _showDeleteAsk = false;
+
+    private void OnCancel() => _nav.GotoAcessManagement();
+
+    private void OnEditorChanged() => EvaluateSaveState();
+
+    private void EvaluateSaveState()
+    {
+        _saveDisabled = _newRecord switch
+        {
+            true => _record.NameIdentifier.EqualsIgnoreCase(_originalRecord.NameIdentifier) &&
+                _record.UserName.EqualsIgnoreCase(_originalRecord.UserName) &&
+                _record.Email.EqualsIgnoreCase(_originalRecord.Email) &&
+                _record.Disabled == _originalRecord.Disabled &&
+                _record.Role == _originalRecord.Role &&
+                _record.Parker == _originalRecord.Parker &&
+                _record.ParkerPost == _originalRecord.ParkerPost,
+
+            false => _record.NameIdentifier.IsEmpty() ||
+                _record.UserName.IsEmpty() ||
+                _record.Email.IsEmpty() ||
+                _record.Role.IsEmpty(),
+        };
     }
 }

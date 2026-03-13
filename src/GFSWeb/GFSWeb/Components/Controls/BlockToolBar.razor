@@ -23,7 +23,7 @@
                               Immediate=true
                               Clearable=true
                               Disabled="@DisableSearch"
-                              Style="margin-left:auto;max-width:200px;flex:0 0 auto;" />
+                              Style="margin-right: 20px;margin-left:auto;max-width:200px;flex:0 0 auto;" />
             }
 
             @if (OnAdd.HasDelegate)
@@ -48,12 +48,12 @@
 
             @if (OnCancel.HasDelegate)
             {
-                <MudButton StartIcon="@Icons.Material.Outlined.Cancel" Variant="Variant.Outlined" Color="Color.Secondary" OnClick="OnCancel" Disabled=DisableCancel Style=@_buttonStyle>Cancel</MudButton>
+                <MudButton StartIcon="@Icons.Material.Outlined.Cancel" Variant="Variant.Outlined" Color="Color.Surface" OnClick="OnCancel" Disabled=DisableCancel Style=@_buttonStyle>Cancel</MudButton>
             }
         }
     </MudToolBar>
 
-    <div style="margin: 10px">
+    <div style="margin-bottom: 20px">
         @ChildContent
     </div>
 </MudPaper>
@@ -96,7 +96,7 @@
             if (_searchStringValue != value)
             {
                 _searchStringValue = value;
-                _ = Task.Run(async () => await OnSearch.InvokeAsync(_searchStringValue));
+                _ = OnSearch.InvokeAsync(_searchStringValue);
             }
         }
     }

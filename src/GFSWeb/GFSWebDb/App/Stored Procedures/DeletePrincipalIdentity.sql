@@ -1,7 +1,7 @@
-﻿CREATE PROCEDURE [dbo].[DeletePrincipalIdentity]
-    @PrincipalId nvarchar(50)
+﻿CREATE PROCEDURE [App].[DeletePrincipalIdentity]
+    @NameIdentifier nvarchar(50)
 AS
 BEGIN
     DELETE FROM [AppDbo].[PrincipalIdentity]
-    WHERE [PrincipalId] = @PrincipalId
+    WHERE [NameIdentifier] = @NameIdentifier
 END

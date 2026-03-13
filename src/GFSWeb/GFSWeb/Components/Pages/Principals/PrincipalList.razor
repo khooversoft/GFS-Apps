@@ -21,7 +21,7 @@
         <SelectColumn T="PrincipalIdentityRecord" />
         <PropertyColumn Property="x => x.NameIdentifier" Title="Name Identifier" Sortable="true">
             <CellTemplate>
-                <a href="@NavHelper.GetPrincipalHref(context.Item.NameIdentifier, _returnUrl)" style="color: blue;font-weight:800;text-decoration: underline">@context.Item.NameIdentifier</a>
+                <a href="@NavHelper.GetPrincipalHref(context.Item.NameIdentifier, _returnUrl)" class="table-link">@context.Item.NameIdentifier</a>
             </CellTemplate>
         </PropertyColumn>
         <PropertyColumn Property="x => x.UserName" Title="User Name" Sortable="true" />
@@ -48,12 +48,5 @@
     {
         var result = _selectedItems.Any(x => x.NameIdentifier == item.NameIdentifier);
         return result ? "background-color: var(--mud-palette-action-default-hover);" : string.Empty;
-    }
-
-    private static string GetPrincipalHref(string id)
-    {
-        var returnUrl = Uri.EscapeDataString(NavHelper.AccessManagement);
-        var principalId = Uri.EscapeDataString(id);
-        return $"{NavHelper.AccessManagement}/{principalId}?returnUrl={returnUrl}";
     }
 }
