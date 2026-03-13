@@ -27,6 +27,16 @@
         <PropertyColumn Property="x => x.UserName" Title="User Name" Sortable="true" />
         <PropertyColumn Property="x => x.Email" Title="Email" Sortable="true" />
         <PropertyColumn Property="x => x.Disabled" Title="Disabled" Sortable="true" />
+        <TemplateColumn Title="Roles">
+            <CellTemplate>
+                <MudStack Row>
+                    @foreach (var role in GetRoleLabels(context.Item))
+                    {
+                        <MudChip T="string" Variant="Variant.Outlined" Color=@role.color Size="Size.Small" Style="margin: 0px;font-size: 11px">@role.role</MudChip>
+                    }
+                </MudStack>
+            </CellTemplate>
+        </TemplateColumn>
     </Columns>
 </MudDataGrid>
 
@@ -48,5 +58,14 @@
     {
         var result = _selectedItems.Any(x => x.NameIdentifier == item.NameIdentifier);
         return result ? "background-color: var(--mud-palette-action-default-hover);" : string.Empty;
+    }
+
+    private static IEnumerable<(string role, Color color)> GetRoleLabels(PrincipalIdentityRecord item)
+    {
+        if (item.IsReader) yield return ("Reader", Color.Info);
+        if (item.IsContributor) yield return ("Contributor", Color.Warning);
+        if (item.IsOwner) yield return ("Owner", Color.Error);
+        if (item.Parker) yield return ("Parker", Color.Info);
+        if (item.ParkerPost) yield return ("Parker Post", Color.Warning);
     }
 }
