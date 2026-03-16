@@ -1,6 +1,6 @@
 ﻿CREATE PROCEDURE [App].[UpdateElimOperationData]
-    @ElimCode nvarchar(50) NOT NULL,
-    @Data nvarchar(max) NULL = NULL
+    @ElimCode nvarchar(50),
+    @Data nvarchar(max)
 AS
 BEGIN
     SET NOCOUNT ON;

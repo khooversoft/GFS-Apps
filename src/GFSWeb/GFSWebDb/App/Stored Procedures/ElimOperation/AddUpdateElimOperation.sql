@@ -1,7 +1,7 @@
 ﻿CREATE PROCEDURE [App].[AddUpdateElimOperation]
-    @ElimCode nvarchar(50) NOT NULL,
-    @Description nvarchar(100) NOT NULL,
-    @Data nvarchar(max) NULL = NULL,
+    @ElimCode nvarchar(50),
+    @Description nvarchar(100),
+    @Data nvarchar(max),
     @Disabled BIT = 0
 AS
 BEGIN
