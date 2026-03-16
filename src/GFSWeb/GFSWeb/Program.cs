@@ -129,7 +129,8 @@ builder.Services.AddAuthentication(options =>
 });
 
 var gfsWebOption = builder.Configuration.GetSection("AdminDatabase").Get<GfsWebOption>().NotNull("AdminDatabase not in appsettings.json");
-builder.Services.AddGFSWeb(gfsWebOption);
+var gfsSapOption = builder.Configuration.GetSection("AdminDatabase").Get<GfsSapOption>().NotNull("AdminDatabase not in appsettings.json");
+builder.Services.AddGFSWeb(gfsWebOption, gfsSapOption);
 
 var app = builder.Build();
 

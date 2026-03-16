@@ -17,8 +17,7 @@ public static class SqlDataReaderMapper
 
         // Build a map from column name -> ordinal
         var ordinals = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
-        for (int i = 0; i < reader.FieldCount; i++)
-            ordinals[reader.GetName(i)] = i;
+        for (int i = 0; i < reader.FieldCount; i++) ordinals[reader.GetName(i)] = i;
 
         // Pre-compute property setters aligned to column ordinals (when present)
         var propertyBindings = props
@@ -35,24 +34,37 @@ public static class SqlDataReaderMapper
             var item = new T();
             foreach (var pb in propertyBindings)
             {
-                var ordinal = pb.Ordinal!.Value;
-                object? value = reader.IsDBNull(ordinal) ? null : reader.GetValue(ordinal);
-                if (value == null)
+                try
                 {
-                    pb.Property.SetValue(item, null);
-                    continue;
+                    var ordinal = pb.Ordinal!.Value;
+                    object? value = reader.IsDBNull(ordinal) ? null : reader.GetValue(ordinal);
+                    if (value == null)
+                    {
+                        pb.Property.SetValue(item, null);
+                        continue;
+                    }
+
+                    var targetType = Nullable.GetUnderlyingType(pb.Property.PropertyType) ?? pb.Property.PropertyType;
+
+                    // Handle Enums and safe conversion
+                    if (targetType.IsEnum)
+                    {
+                        value = Enum.ToObject(targetType, value);
+                    }
+                    else
+                    {
+                        if (value.GetType() != targetType) value = Convert.ChangeType(value, targetType);
+                    }
+
+                    pb.Property.SetValue(item, value);
                 }
-
-                var targetType = Nullable.GetUnderlyingType(pb.Property.PropertyType) ?? pb.Property.PropertyType;
-
-                // Handle Enums and safe conversion
-                if (targetType.IsEnum)
-                    value = Enum.ToObject(targetType, value);
-                else if (value.GetType() != targetType)
-                    value = Convert.ChangeType(value, targetType);
-
-                pb.Property.SetValue(item, value);
+                catch(Exception ex)
+                {
+                    string msg = $"Error mapping column '{reader.GetName(pb.Ordinal!.Value)}' to property '{pb.Property.Name}' of type '{pb.Property.PropertyType.FullName}'";
+                    throw new InvalidOperationException(msg, ex);
+                }
             }
+
             result.Add(item);
         }
         return result;

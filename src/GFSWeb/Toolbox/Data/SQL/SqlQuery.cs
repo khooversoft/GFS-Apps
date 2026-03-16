@@ -33,7 +33,7 @@ public class SqlQuery
         return this;
     }
 
-    public SqlQuery AddParameter<T>(string name, T value, bool addValueIfNull = false) where T : notnull
+    public SqlQuery AddParameter<T>(string name, T? value, bool addValueIfNull = false) where T : notnull
     {
         name.NotEmpty();
 

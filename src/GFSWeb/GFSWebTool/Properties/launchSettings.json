@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "GFSWebTool": {
+      "commandName": "Project",
+      "commandLineArgs": "import --config appsettings.json --source E:\\Sources\\GFS-Apps\\Data\\Export"
+    }
+  }
+}

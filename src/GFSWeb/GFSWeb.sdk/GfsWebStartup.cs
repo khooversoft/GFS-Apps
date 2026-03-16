@@ -10,25 +10,27 @@ namespace GFSWeb.sdk;
 
 public static class GfsWebStartup
 {
-    public static IServiceCollection AddGFSWeb(this IServiceCollection services, Action<GfsWebOption> config)
-    {
-        config.NotNull();
-        var option = new GfsWebOption();
-        config(option);
+    //public static IServiceCollection AddGFSWeb(this IServiceCollection services, Action<GfsWebOption> config)
+    //{
+    //    config.NotNull();
+    //    var option = new GfsWebOption();
+    //    config(option);
 
-        return services.AddGFSWeb(option);
-    }
+    //    return services.AddGFSWeb(option);
+    //}
 
-    public static IServiceCollection AddGFSWeb(this IServiceCollection services, GfsWebOption option)
+    public static IServiceCollection AddGFSWeb(this IServiceCollection services, GfsWebOption webOption, GfsSapOption sapOption)
     {
-        option.NotNull();
+        webOption.NotNull();
+        sapOption.NotNull();
 
         services.AddSqlClient<PrincipalIdentityStore>(c =>
         {
-            c.ConnectionString = option.ConnectionString;
+            c.ConnectionString = webOption.ConnectionString;
         });
 
-        services.AddSingleton<GfsWebOption>(option);
+        services.AddSingleton<GfsWebOption>(webOption);
+        services.AddSingleton<GfsSapOption>(sapOption);
         services.AddSingleton<PrincipalIdentityStore>();
 
         return services;

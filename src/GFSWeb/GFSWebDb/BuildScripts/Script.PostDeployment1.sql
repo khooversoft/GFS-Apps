@@ -12,20 +12,6 @@ Post-Deployment Script Template
 
 
 -- Ensure required application roles exist
-MERGE [AppDbo].[AppRole] AS target
-USING (VALUES
-    ('reader', 'Gives user read access to management'),
-    ('contributor', 'Gives user contributor access to management'),
-    ('owner', 'User has all rights & can change security'),
-    ('paker', 'Gives user access to parker transactions'),
-    ('parker-post', 'Gives user access to post a parker transaction')
-) AS src ([RoleCode], [Description])
-    ON target.[RoleCode] = src.[RoleCode]
-WHEN NOT MATCHED BY TARGET THEN
-    INSERT ([RoleCode], [Description])
-    VALUES (src.[RoleCode], src.[Description]);
-
--- Ensure required application roles exist
 MERGE [AppDbo].[ElimOperation] AS target
 USING (VALUES
     ('R1-100', 'Elimination for Canada R1'),

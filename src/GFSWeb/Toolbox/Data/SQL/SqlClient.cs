@@ -1,16 +1,32 @@
 ﻿using System.Data;
 using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Toolbox.Tools;
 
 namespace Toolbox.Data;
 
-public interface ISqlClient<T>
+public interface ISqlClient
 {
     string ConnectionString { get; }
     SqlQuery Query();
     bool TestConnection();
 }
+
+public static class SqlClientTool
+{
+    public static T CreateSqlStore<T>(string connectionString, IServiceProvider serviceProvider)
+    {
+        var sqlOption = new SqlOption { ConnectionString = connectionString.NotEmpty() };
+        ISqlClient<T> sqlClient = ActivatorUtilities.CreateInstance<SqlClient<T>>(serviceProvider, sqlOption);
+        sqlClient.TestConnection().BeTrue($"Failed to connect to SQL database connectionString={connectionString}");
+
+        var store = ActivatorUtilities.CreateInstance<T>(serviceProvider, sqlClient);
+        return store;
+    }
+}
+
+public interface ISqlClient<T> : ISqlClient { }
 
 public class SqlClient<T> : SqlClient, ISqlClient<T>
 {

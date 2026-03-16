@@ -7,6 +7,7 @@
     <Build />
     <Deploy />
   </Project>
+  <Project Path="GFSWebTool/GFSWebTool.csproj" Id="251e87c5-8693-40ac-b7f1-a536e192f2c1" />
   <Project Path="Toolbox.test/Toolbox.test.csproj" Id="92b8cb58-4803-48de-9893-25b840912d57" />
   <Project Path="Toolbox/Toolbox.csproj" />
 </Solution>

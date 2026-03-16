@@ -56,22 +56,6 @@ public class PrincipalIdentityStore
         return result;
     }
 
-    public async Task<IReadOnlyList<PrincipalRole>> GetRoles(string nameIdentifier)
-    {
-        var cmd = """
-            SELECT  x.[RoleCode]
-            FROM    [App].[PrincipalRole] x
-            WHERE   x.[NameIdentifier] = @NameIdentifier
-            """;
-
-        var result = await _client.Query()
-            .SetCommand(cmd, CommandType.Text)
-            .AddParameter("@NameIdentifier", nameIdentifier)
-            .Execute<PrincipalRole>();
-
-        return result;
-    }
-
     public async Task<Option<int>> Add(PrincipalIdentityRecord record)
     {
         record.NotNull().Validate().ThrowOnError();
