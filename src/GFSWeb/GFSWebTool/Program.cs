@@ -1,10 +1,10 @@
-﻿using System.Reflection;
-using Microsoft.Extensions.Hosting;
-using Toolbox.Tools;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.DependencyInjection;
+﻿using System.CommandLine;
+using System.Reflection;
 using GFSWebTool.Commands;
-using System.CommandLine;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using Toolbox.Tools;
 
 Console.WriteLine($"GFSWebTool CLI - Version {Assembly.GetExecutingAssembly().GetName().Version}");
 Console.WriteLine();

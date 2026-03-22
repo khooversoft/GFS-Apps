@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace GFSWebTool.Model;
+﻿namespace GFSWebTool.Model;
 
 internal class GfsWebToolOption
 {

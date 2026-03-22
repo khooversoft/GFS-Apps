@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Toolbox.Data;
+﻿namespace Toolbox.Data;
 
 public record SqlOption
 {

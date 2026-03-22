@@ -1,9 +1,8 @@
 ﻿using System.CommandLine;
 using GFSWeb.sdk.Models;
 using GFSWebTool.Model;
-using GFSWebTool.Stores;
+using GFSWeb.sdk.Store;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Toolbox.Data;
 using Toolbox.Extensions;
@@ -24,17 +23,11 @@ internal class ExportElimConfigCommand : ICommand
 
     public Command GetCommand()
     {
-        Option<FileInfo> configOption = new("--config")
-        {
-            Description = "Read connector configuration",
-        };
-
-        Option<DirectoryInfo> outputFolderOption = new("--output")
-        {
-            Description = "Folder to write Elim report package to",
-        };
+        Option<FileInfo> configOption = new("--config") { Description = "Read connector configuration" };
+        Option<DirectoryInfo> outputFolderOption = new("--output") { Description = "Folder to write Elim report package to" };
 
         var command = new Command("export", "Export data from SQL database for Elim, ElimSelect, and SQL Commands");
+
         command.Options.Add(configOption);
         command.Options.Add(outputFolderOption);
 
@@ -43,6 +36,7 @@ internal class ExportElimConfigCommand : ICommand
             FileInfo config = parseResult.GetValue(configOption).NotNull();
             DirectoryInfo outputFolder = parseResult.GetValue(outputFolderOption).NotNull();
             _logger.LogInformation("ConnectorFile={connectorFile}, outputFolder={outputFolder}", config.FullName, outputFolder.FullName);
+
             await Export(config, outputFolder);
         });
 
@@ -51,66 +45,83 @@ internal class ExportElimConfigCommand : ICommand
 
     private async Task Export(FileInfo config, DirectoryInfo outputFolder)
     {
-        var reportRecords = await ReadAndConstructReport(config, outputFolder);
+        ClearPackages(outputFolder);
+        var context = await ReadAllData(config);
+        context = await BuildReportPackages(context);
 
-        foreach (var reportRecord in reportRecords)
+        var dirJson = new ReportDirectoryModel { Items = context.ElimTreeRecords }.ToJson();
+
+        string dirFullFileName = Path.Combine(outputFolder.FullName, "ReportDirectory.json");
+        File.WriteAllText(dirFullFileName, dirJson);
+        _logger.LogInformation("Writing elim report directory to fleName={fileName}", dirFullFileName);
+
+        foreach (var reportRecord in context.ReportPackages)
         {
-            var conform = reportRecord.ShortName.NotEmpty().Select(x => char.IsLetterOrDigit(x) ? x : '_').ToArray();
+            var conform = reportRecord.PackageId.Select(x => char.IsLetterOrDigit(x) ? x : '_').ToArray();
             string fileName = new string(conform);
-            var exportFileName = $"{fileName}.epack.json";
+            var exportFileName = $"{fileName}.reportPackage.json";
 
             var json = reportRecord.ToJson();
             string fullFileName = Path.Combine(outputFolder.FullName, exportFileName);
 
-            _logger.LogInformation("Writing elim report package for ElimId={elimId}, shortName={shortName} to fleName={fileName}",
-                reportRecord.Elimination.ID, reportRecord.ShortName, fullFileName);
-
+            _logger.LogInformation("Writing elim report package for PackageId={PackageId} to fleName={fileName}", reportRecord.PackageId, fullFileName);
             File.WriteAllText(fullFileName, json);
         }
     }
 
-    private async Task<IReadOnlyList<ElimReportRecord>> ReadAndConstructReport(FileInfo config, DirectoryInfo outputFolder)
+    private void ClearPackages(DirectoryInfo outputFolder)
     {
-        var store = CreateSqlStore(config);
+        var files = Directory.GetFiles(outputFolder.FullName, "*.reportPackage.json");
+        _logger.LogInformation("Clear folder={folder} of report packages", outputFolder.FullName);
+        foreach (var file in files)
+        {
+            File.Delete(file);
+        }
+    }
 
-        IReadOnlyList<EliminationRecord> eliminationList = (await store.GetEliminationRecords()).Select(x => x.ConvertTo()).ToArray();
-        eliminationList.Count.Assert(x => x > 0, "No elimination records found in database");
+    private async Task<Context> BuildReportPackages(Context context)
+    {
+        _logger.LogInformation("Building report packages from elim tree records");
 
-        IReadOnlyList<ElimSelectRecord> elimSelectList = (await store.GetElimSelectRecords()).Select(x => x.ConvertTo()).ToArray();
-        elimSelectList.Count.Assert(x => x > 0, "No selectList records found in database");
-
-        IReadOnlyList<ElimSqlCommand> sqlCommandList = (await store.GetMiscTablesRecords()).Select(x => x.ConvertTo()).ToArray();
-        sqlCommandList.Count.Assert(x => x > 0, "No miscTablesList records found in database");
-
-        IReadOnlyList<ElimReportRecord> elimReportRecords = eliminationList
-            .Select(elimination => new
+        var list = context.ElimTreeRecords
+            .Where(x => x.Parent != "top")
+            .Select(x => new ReportPackageModel
             {
-                ElimId = elimination.ID.NotNull(),
-                Elimination = elimination,
-            })
-            .GroupJoin(
-                elimSelectList,
-                elimination => elimination.ElimId.ToString(),
-                elimSelect => elimSelect.ElimID,
-                (elimination, elimSelects) => new ElimReportRecord
-                {
-                    ShortName = elimination.Elimination.ShortName ?? string.Empty,
-                    Description = elimination.Elimination.Def ?? string.Empty,
-                    Elimination = elimination.Elimination,
-                    ElimSelects = elimSelects.OrderBy(x => x.Pass).ThenBy(x => x.SubSeq).ToArray(),
-                    SqlCommands = sqlCommandList.Where(x => x.CommandType?.Id == elimination.ElimId).ToArray(),
-                }
-            )
+                PackageId = x.Id.NotEmpty(),
+                SortKey = x.SortKey.NotEmpty(),
+                Description = x.Descr.NotEmpty(),
+                ParentPackageId = x.Parent.NotEmpty(),
+                PackageType = ReportPackageModelTool.GetPackageType(x.PackageType),
+                Elimination = lookupElimination(x.ShortName, x.Def),
+                ElimSelects = lookupElimSelect(x.ElimId),
+                SqlCommand = lookupSqlCommand(x.Id),
+                SqlSelect = lookupSqlSelect(x.Id),
+            }).ToArray();
+
+        context = context with { ReportPackages = list };
+        return context;
+
+        EliminationRecord? lookupElimination(string? shortName, string? def) => (shortName, def) switch
+        {
+            (string s, string d) => context.EliminationList.FirstOrDefault(x => x.ShortName == s && x.Def == d),
+            _ => null,
+        };
+
+        IReadOnlyList<ElimSelectRecord> lookupElimSelect(int? elimId) => elimId switch
+        {
+            int id => id.ToString().Func(x => context.ElimSelectList.Where(y => y.ElimID == x).ToArray()),
+            _ => Array.Empty<ElimSelectRecord>(),
+        };
+
+        IReadOnlyList<MiscTablesRecord> lookupSqlCommand(string id) => context.MiscTableList
+            .Where(x => x.Table_ID == "SQL-" + id)
+            .OrderBy(x => x.ID)
             .ToArray();
 
-        var moreEliminations = eliminationList.Select(x => x.ID.ToString()).Except(elimSelectList.Select(x => x.ElimID)).Join(',');
-        _logger.LogInformation("Elimination records with have no matching ElimSelect records: {moreEliminations}", moreEliminations);
-
-        var moreSelects = elimSelectList.Select(x => x.ElimID).Except(eliminationList.Select(x => x.ID.ToString())).Join(',');
-        _logger.LogInformation("ElimSelect records with have no matching Elimination records: {moreSelects}", moreSelects);
-
-        _logger.LogInformation("Built {count} elim report records", elimReportRecords.Count);
-        return elimReportRecords;
+        IReadOnlyList<MiscTablesRecord> lookupSqlSelect(string id) => context.MiscTableList
+            .Where(x => x.Table_ID.EqualsIgnoreCase("SQLselect") && x.ID.Like(id + "*"))
+            .OrderBy(x => x.ID)
+            .ToArray();
     }
 
     private EliminationImportStore CreateSqlStore(FileInfo connector)
@@ -120,12 +131,46 @@ internal class ExportElimConfigCommand : ICommand
             .Build();
 
         var sqlWebToolOption = config.Get<GfsWebToolOption>().NotNull();
+        _logger.LogInformation("Creating SQL store with connectionString={connectionString}", sqlWebToolOption.OriginalConnectionString);
         var store = SqlClientTool.CreateSqlStore<EliminationImportStore>(sqlWebToolOption.OriginalConnectionString, _serviceProvider);
-        //var sqlOption = new SqlOption { ConnectionString = sqlWebToolOption.OriginalConnectionString.NotEmpty() };
-        //ISqlClient<EliminationImportStore> sqlClient = ActivatorUtilities.CreateInstance<SqlClient<EliminationImportStore>>(_serviceProvider, sqlOption);
-        //sqlClient.TestConnection().BeTrue("Failed to connect to SQL database with provided configuration");
-
-        //var store = ActivatorUtilities.CreateInstance<EliminationImportStore>(_serviceProvider, sqlClient);
         return store;
+    }
+
+    private async Task<Context> ReadAllData(FileInfo config)
+    {
+        var store = CreateSqlStore(config);
+
+        _logger.LogInformation("Reading elimination records from database");
+        IReadOnlyList<EliminationRecord> eliminationList = await store.GetEliminationRecords();
+        eliminationList.Count.Assert(x => x > 0, "No elimination records found in database");
+
+        _logger.LogInformation("Reading elim select records from database");
+        IReadOnlyList<ElimSelectRecord> elimSelectList = await store.GetElimSelectRecords();
+        elimSelectList.Count.Assert(x => x > 0, "No selectList records found in database");
+
+        _logger.LogInformation("Reading misc table records from database");
+        IReadOnlyList<MiscTablesRecord> miscTableList = await store.GetMiscTablesRecords();
+        miscTableList.Count.Assert(x => x > 0, "No miscTableList records found in database");
+
+        _logger.LogInformation("Reading elim tree records from database");
+        IReadOnlyList<ElimTreeRecord> elimTreeRecords = await store.GetMenuTree();
+        elimTreeRecords.Count.Assert(x => x > 0, "No menu tree records found in database");
+
+        return new Context
+        {
+            EliminationList = eliminationList,
+            ElimSelectList = elimSelectList,
+            MiscTableList = miscTableList,
+            ElimTreeRecords = elimTreeRecords,
+        };
+    }
+
+    private record Context
+    {
+        public IReadOnlyList<EliminationRecord> EliminationList { get; init; } = null!;
+        public IReadOnlyList<ElimSelectRecord> ElimSelectList { get; init; } = null!;
+        public IReadOnlyList<MiscTablesRecord> MiscTableList { get; init; } = null!;
+        public IReadOnlyList<ElimTreeRecord> ElimTreeRecords { get; init; } = null!;
+        public IReadOnlyList<ReportPackageModel> ReportPackages { get; init; } = null!;
     }
 }

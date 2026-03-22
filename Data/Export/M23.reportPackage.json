@@ -1,0 +1,1 @@
+{"packageId":"M23","sortKey":"H","description":"M23 - PwC BSEG","parentPackageId":"6","packageType":"moreReports","elimination":null,"elimSelects":[],"sqlCommand":[{"table_ID":"SQL-M23","id":"101","descr":"select top 1 * from BSEG"}],"sqlSelect":[]}

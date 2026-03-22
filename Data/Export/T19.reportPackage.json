@@ -1,0 +1,1 @@
+{"packageId":"T19","sortKey":"J","description":"T19 - Ledger Groups","parentPackageId":"8","packageType":"userManuals","elimination":null,"elimSelects":[],"sqlCommand":[{"table_ID":"SQL-T19","id":"101","descr":"insert into TransX (KeyID,Flex1,Flex2,Flex3) (Select '[batchID]',LedgerGroup,Descr,Ledger from LedgerGroups where Lead = 'y')"}],"sqlSelect":[]}

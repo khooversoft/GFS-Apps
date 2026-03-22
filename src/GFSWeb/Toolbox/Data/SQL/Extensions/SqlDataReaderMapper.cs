@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Reflection;
-using System.Text;
+﻿using System.Reflection;
 using Microsoft.Data.SqlClient;
 
 namespace Toolbox.Data;
@@ -58,7 +55,7 @@ public static class SqlDataReaderMapper
 
                     pb.Property.SetValue(item, value);
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
                     string msg = $"Error mapping column '{reader.GetName(pb.Ordinal!.Value)}' to property '{pb.Property.Name}' of type '{pb.Property.PropertyType.FullName}'";
                     throw new InvalidOperationException(msg, ex);

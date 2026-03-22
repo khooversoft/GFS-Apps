@@ -65,25 +65,26 @@
     <Folder Include="App\Stored Procedures\" />
     <Folder Include="App\Views\" />
     <Folder Include="App\Stored Procedures\PrincipalIdentity" />
-    <Folder Include="App\Stored Procedures\ElimOperation" />
+    <Folder Include="App\Stored Procedures\ReportPackage" />
+    <Folder Include="App\Stored Procedures\ReportAccess" />
   </ItemGroup>
   <ItemGroup>
     <Build Include="AppDbo\Tables\PrincipalIdentity.sql" />
     <Build Include="Security\AppDbo.sql" />
     <Build Include="Security\App.sql" />
-    <Build Include="AppDbo\Tables\UserToElimOpr.sql" />
-    <Build Include="AppDbo\Tables\ElimOperation.sql" />
+    <Build Include="AppDbo\Tables\ReportAccess.sql" />
+    <Build Include="AppDbo\Tables\ReportPackage.sql" />
     <Build Include="App\Views\PrincipalIdentity.sql" />
     <Build Include="App\Stored Procedures\PrincipalIdentity\AddPrincipalIdentity.sql" />
     <Build Include="App\Stored Procedures\PrincipalIdentity\DeletePrincipalIdentity.sql" />
     <Build Include="App\Stored Procedures\PrincipalIdentity\UpdatePrincipalIdentity.sql" />
-    <Build Include="AppDbo\Tables\Elimination.sql" />
-    <Build Include="AppDbo\Tables\ElimSelect.sql" />
-    <Build Include="App\Views\ElimOperation.sql" />
-    <Build Include="App\Stored Procedures\ElimOperation\AddUpdateElimOperation.sql" />
-    <Build Include="App\Stored Procedures\ElimOperation\DeleteElimOpr.sql" />
-    <Build Include="App\Stored Procedures\ElimOperation\AddElimOperation.sql" />
-    <Build Include="App\Stored Procedures\ElimOperation\UpdateElimOperationData.sql" />
+    <Build Include="App\Views\ReportPackage.sql" />
+    <Build Include="App\Stored Procedures\ReportPackage\DeleteReportPackage.sql" />
+    <Build Include="App\Stored Procedures\ReportPackage\AddReportPackage.sql" />
+    <Build Include="App\Stored Procedures\ReportPackage\UpdateReportPackageData.sql" />
+    <Build Include="App\Stored Procedures\ReportPackage\UpdateReportPackage.sql" />
+    <Build Include="App\Stored Procedures\ReportAccess\AddReportAccess.sql" />
+    <Build Include="App\Stored Procedures\ReportAccess\DeleteReportAccess.sql" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Publish\GFSWebDb.publish.xml" />

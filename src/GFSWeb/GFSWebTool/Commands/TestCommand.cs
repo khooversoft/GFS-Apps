@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.CommandLine;
-using System.Text;
+﻿using System.CommandLine;
 using Microsoft.Extensions.Logging;
 using Toolbox.Tools;
 

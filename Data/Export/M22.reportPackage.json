@@ -1,0 +1,1 @@
+{"packageId":"M22","sortKey":"H","description":"M22 - PwC FAGLFLEXA","parentPackageId":"6","packageType":"moreReports","elimination":null,"elimSelects":[],"sqlCommand":[{"table_ID":"SQL-M22","id":"101","descr":"select top 1 * from FAGLFLEXA"}],"sqlSelect":[]}

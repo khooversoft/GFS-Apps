@@ -44,11 +44,11 @@ public class SqlQuery
 
         if (typeof(T).IsEnum)
         {
-            Parameters.Add(new SqlSimpleParameter(name, value.ToString().NotEmpty()));
+            Parameters.Add(new SqlSimpleParameter(name, value.NotNull().ToString().NotEmpty()));
             return this;
         }
 
-        Parameters.Add(new SqlSimpleParameter(name, value));
+        Parameters.Add(new SqlSimpleParameter(name, value!));
         return this;
     }
 

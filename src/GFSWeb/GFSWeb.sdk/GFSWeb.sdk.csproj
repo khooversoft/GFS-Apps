@@ -7,6 +7,14 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Scripts\MenuTreeSelect.sql" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Scripts\MenuTreeSelect.sql" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Toolbox\Toolbox.csproj" />
   </ItemGroup>
 

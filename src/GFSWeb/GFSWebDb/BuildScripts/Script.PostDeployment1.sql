@@ -12,17 +12,6 @@ Post-Deployment Script Template
 
 
 -- Ensure required application roles exist
-MERGE [AppDbo].[ElimOperation] AS target
-USING (VALUES
-    ('R1-100', 'Elimination for Canada R1'),
-    ('G1-110', 'Elimination for George R2')
-) AS src ([ElimCode], [Description])
-    ON target.[ElimCode] = src.[ElimCode]
-WHEN NOT MATCHED BY TARGET THEN
-    INSERT ([ElimCode], [Description])
-    VALUES (src.[ElimCode], src.[Description]);
-
--- Ensure required application roles exist
 MERGE [AppDbo].[PrincipalIdentity] AS target
 USING (VALUES
     ('user1-entra', 'User1', 'User1@odysseygroup.com'),

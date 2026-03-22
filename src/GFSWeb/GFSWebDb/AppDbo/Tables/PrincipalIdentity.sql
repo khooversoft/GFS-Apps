@@ -6,7 +6,7 @@
     [Role]           NVARCHAR (50)  NOT NULL DEFAULT('reader') CHECK ([Role] IN ('reader', 'contributor', 'owner')),
     [Parker]         BIT            NOT NULL DEFAULT(0),
     [ParkerPost]     BIT            NOT NULL DEFAULT(0),
-	[DateTimeStamp]  [datetime2](7)  NOT NULL DEFAULT (SYSUTCDATETIME()),
+	[DateTimeStamp]  [datetime2](7) NOT NULL DEFAULT (SYSUTCDATETIME()),
     [UserStamp]      NVARCHAR(50) NOT NULL DEFAULT (SUSER_SNAME())
 );
 GO
