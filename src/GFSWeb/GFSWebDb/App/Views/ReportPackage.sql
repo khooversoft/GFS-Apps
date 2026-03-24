@@ -2,6 +2,7 @@
 AS
     SELECT  x.[PackageId]
             ,x.[Description]
+            ,x.[MenuId]
             ,x.[Data]
             ,x.[Disabled]
             ,x.[DateTimeStamp]

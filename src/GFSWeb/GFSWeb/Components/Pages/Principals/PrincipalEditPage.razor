@@ -15,43 +15,46 @@
 
 <div class="form-content">
     <MudStack Row=true>
-        <MudPaper Elevation=1 Style="flex: 0 0 65%;">
-            <MudStack Class="pa-4" Spacing="2">
-                <MudTextField T="string"
-                              Label="Name Identifier"
-                              Variant="Variant.Outlined"
-                              Required="true"
-                              Immediate="true"
-                              Disabled="@(!_newRecord)"
-                              @bind-Value="_record.NameIdentifier"
-                              @bind-Value:after="OnEditorChanged" />
+        <MudPaper Elevation=1 Style="flex: 0 0 65%; overflow-x: hidden;">
+            <MudGrid Spacing="2" Style="margin:0; width:100%; box-sizing:border-box; padding:0px 12px 8px 8px;">
+                @foreach (var control in _requiredControls)
+                {
+                    <MudItem xs="12" Class="pr-2">
+                        <MudTextField T="string"
+                                      Label="@control.Label"
+                                      Variant="Variant.Outlined"
+                                      Required="@control.Required"
+                                      Immediate="true"
+                                      Disabled="@control.Disabled"
+                                      @bind-Value="control.Value"
+                                      @bind-Value:after="OnEditorChanged" />
+                    </MudItem>
+                }
+            </MudGrid>
 
-                <MudTextField T="string"
-                              Label="User Name"
-                              Variant="Variant.Outlined"
-                              Required="true"
-                              Immediate="true"
-                              @bind-Value="_record.UserName"
-                              @bind-Value:after="OnEditorChanged" />
+            <MudDivider Style="border-top-width: 3px; border-top-color: rgba(0, 0, 0, 0.55);" DividerType="DividerType.Middle" />
 
-                <MudTextField T="string"
-                              Label="Email"
-                              Variant="Variant.Outlined"
-                              Required="true"
-                              Immediate="true"
-                              @bind-Value="_record.Email"
-                              @bind-Value:after="OnEditorChanged" />
-
-                <MudSwitch T="bool"
-                           Label="Disabled"
-                           Color="Color.Primary"
-                           @bind-Value="_record.Disabled"
-                           @bind-Value:after="OnEditorChanged" />
-            </MudStack>
+            <MudGrid Spacing="2" Style="margin:0; width:100%; box-sizing:border-box; padding:0px 12px 8px 8px;">
+                @foreach (var control in _editControls)
+                {
+                    <MudItem xs="6" Class="pr-2">
+                        <MudTextField T="string"
+                                      Label="@control.Label"
+                                      Variant="Variant.Outlined"
+                                      Required="@control.Required"
+                                      Immediate="true"
+                                      Disabled="@control.Disabled"
+                                      @bind-Value="control.Value"
+                                      @bind-Value:after="OnEditorChanged" />
+                    </MudItem>
+                }
+            </MudGrid>
         </MudPaper>
         <MudPaper Style="flex: 1 1 0;">
             <div style="margin:20px">
                 <MudText>Roles</MudText>
+                
+                <MudSwitch T="bool" Label="Disabled" Color="Color.Primary" @bind-Value="_record.Disabled" @bind-Value:after="OnEditorChanged" />
 
                 <MudRadioGroup T="string" @bind-Value="_record.Role" @bind-Value:after="OnEditorChanged">
                     <MudRadio Value=IdentityRole.ReaderRole Color="@GetColor(() => _record.IsReader)" Size="Size.Medium">Reader</MudRadio>
@@ -60,7 +63,7 @@
                 </MudRadioGroup>
 
                 <MudCheckBox @bind-Value=_record.Parker @bind-Value:after="OnEditorChanged" Color="@GetColor(() => _record.Parker)">Parker</MudCheckBox>
-                <MudCheckBox @bind-Value=_record.ParkerPost @bind-Value:after="OnEditorChanged" Color="@GetColor(() => _record.ParkerPost)">Parker-Host</MudCheckBox>
+                <MudCheckBox @bind-Value=_record.ParkerPost @bind-Value:after="OnEditorChanged" Color="@GetColor(() => _record.ParkerPost)">Parker Post</MudCheckBox>
             </div>
         </MudPaper>
     </MudStack>
@@ -176,18 +179,56 @@
     {
         _saveDisabled = _newRecord switch
         {
-            true => _record.NameIdentifier.EqualsIgnoreCase(_originalRecord.NameIdentifier) &&
-                _record.UserName.EqualsIgnoreCase(_originalRecord.UserName) &&
-                _record.Email.EqualsIgnoreCase(_originalRecord.Email) &&
-                _record.Disabled == _originalRecord.Disabled &&
-                _record.Role == _originalRecord.Role &&
-                _record.Parker == _originalRecord.Parker &&
-                _record.ParkerPost == _originalRecord.ParkerPost,
+            false => _record == _originalRecord,
 
-            false => _record.NameIdentifier.IsEmpty() ||
+            true => _record.NameIdentifier.IsEmpty() ||
                 _record.UserName.IsEmpty() ||
                 _record.Email.IsEmpty() ||
-                _record.Role.IsEmpty(),
+                _record.Role.IsEmpty() ||
+                _record.UserID_SAP.IsEmpty(),
         };
+    }
+
+    private IReadOnlyList<EditControl> _requiredControls =>
+    [
+        new() { Label = "Name Identifier", Required = true, Disabled = !_newRecord, Getter = () => _record.NameIdentifier, Setter = value => _record.NameIdentifier = value ?? String.Empty},
+        new() { Label = "User Name", Required = true, Getter = () => _record.UserName, Setter = value => _record.UserName = value ?? String.Empty},
+        new() { Label = "User ID SAP", Required = true, Getter = () => _record.UserID_SAP, Setter = value => _record.UserID_SAP = value },
+        new() { Label = "Email", Required = true, Getter = () => _record.Email, Setter = value => _record.Email = value ?? String.Empty },
+    ];
+
+    private IReadOnlyList<EditControl> _editControls =>
+    [
+        new() { Label = "First Name", Getter = () => _record.FirstName, Setter = value => _record.FirstName = value },
+        new() { Label = "Nick Name", Getter = () => _record.NickName, Setter = value => _record.NickName = value },
+        new() { Label = "Middle Name", Getter = () => _record.MiddleName, Setter = value => _record.MiddleName = value },
+        new() { Label = "Last Name", Getter = () => _record.LastName, Setter = value => _record.LastName = value },
+        new() { Label = "Location", Getter = () => _record.Location, Setter = value => _record.Location = value },
+        new() { Label = "Park Post", Getter = () => _record.ParkPost, Setter = value => _record.ParkPost = value },
+        new() { Label = "Post Email", Getter = () => _record.PostEmail, Setter = value => _record.PostEmail = value },
+        new() { Label = "CC Email 1", Getter = () => _record.CCEmail1, Setter = value => _record.CCEmail1 = value },
+        new() { Label = "CC Email 2", Getter = () => _record.CCEmail2, Setter = value => _record.CCEmail2 = value },
+        new() { Label = "Elim", Getter = () => _record.Elim, Setter = value => _record.Elim = value },
+        new() { Label = "Co Update", Getter = () => _record.Co_Update, Setter = value => _record.Co_Update = value },
+        new() { Label = "Co View", Getter = () => _record.Co_View, Setter = value => _record.Co_View = value },
+        new() { Label = "CC Node ID", Getter = () => _record.CC_NodeID, Setter = value => _record.CC_NodeID = value },
+        new() { Label = "Flex 1", Getter = () => _record.Flex1, Setter = value => _record.Flex1 = value },
+        new() { Label = "Flex 2", Getter = () => _record.Flex2, Setter = value => _record.Flex2 = value },
+        new() { Label = "Flex 3", Getter = () => _record.Flex3, Setter = value => _record.Flex3 = value },
+        new() { Label = "Post Email 2", Getter = () => _record.PostEmail2, Setter = value => _record.PostEmail2 = value },
+    ];
+
+    private record EditControl
+    {
+        public string Label { get; init; } = null!;
+        public bool Required { get; init; }
+        public bool Disabled { get; init; }
+        public Func<string?> Getter { get; init; } = null!;
+        public Action<string?> Setter { get; init; } = null!;
+        public string? Value
+        {
+            get => Getter();
+            set => Setter(value);
+        }
     }
 }

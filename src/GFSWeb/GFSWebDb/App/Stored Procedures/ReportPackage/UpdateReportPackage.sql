@@ -1,8 +1,7 @@
 ﻿CREATE PROCEDURE [App].[UpdateReportPackage]
     @PackageId nvarchar(50),
-    @SortKey nvarchar(50),
     @Description nvarchar(100),
-    @ParentPackageId nvarchar(50),
+    @MenuId nvarchar(50),
     @Data nvarchar(max),
     @Disabled BIT = 0
 AS
@@ -20,9 +19,8 @@ BEGIN
     END
 
     UPDATE [AppDbo].[ReportPackage]
-        SET [SortKey] = @SortKey
-            ,[Description] = @Description
-            ,[ParentPackageId] = @ParentPackageId
+        SET [Description] = @Description
+            ,[MenuId] = @MenuId
             ,[Data] = @Data
             ,[Disabled] = @Disabled
     WHERE [PackageId] = @PackageId;

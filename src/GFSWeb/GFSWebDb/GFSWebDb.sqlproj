@@ -67,6 +67,7 @@
     <Folder Include="App\Stored Procedures\PrincipalIdentity" />
     <Folder Include="App\Stored Procedures\ReportPackage" />
     <Folder Include="App\Stored Procedures\ReportAccess" />
+    <Folder Include="App\Stored Procedures\Menu" />
   </ItemGroup>
   <ItemGroup>
     <Build Include="AppDbo\Tables\PrincipalIdentity.sql" />
@@ -80,11 +81,17 @@
     <Build Include="App\Stored Procedures\PrincipalIdentity\UpdatePrincipalIdentity.sql" />
     <Build Include="App\Views\ReportPackage.sql" />
     <Build Include="App\Stored Procedures\ReportPackage\DeleteReportPackage.sql" />
-    <Build Include="App\Stored Procedures\ReportPackage\AddReportPackage.sql" />
+    <Build Include="App\Stored Procedures\ReportPackage\AddOrUpdateReportPackage.sql" />
     <Build Include="App\Stored Procedures\ReportPackage\UpdateReportPackageData.sql" />
     <Build Include="App\Stored Procedures\ReportPackage\UpdateReportPackage.sql" />
     <Build Include="App\Stored Procedures\ReportAccess\AddReportAccess.sql" />
     <Build Include="App\Stored Procedures\ReportAccess\DeleteReportAccess.sql" />
+    <Build Include="AppDbo\Tables\Menu.sql" />
+    <Build Include="App\Views\Menu.sql" />
+    <Build Include="App\Stored Procedures\Menu\AddOrUpdateMenu.sql" />
+    <Build Include="App\Stored Procedures\Menu\UpdateMenu.sql" />
+    <Build Include="App\Stored Procedures\Menu\DeleteMenu.sql" />
+    <Build Include="App\Views\ReportAccess.sql" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Publish\GFSWebDb.publish.xml" />
@@ -92,5 +99,8 @@
   </ItemGroup>
   <ItemGroup>
     <PostDeploy Include="BuildScripts\Script.PostDeployment1.sql" />
+  </ItemGroup>
+  <ItemGroup>
+    <RefactorLog Include="GFSWebDb.refactorlog" />
   </ItemGroup>
 </Project>

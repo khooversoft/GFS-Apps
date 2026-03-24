@@ -49,12 +49,25 @@ internal class ExportElimConfigCommand : ICommand
         var context = await ReadAllData(config);
         context = await BuildReportPackages(context);
 
-        var dirJson = new ReportDirectoryModel { Items = context.ElimTreeRecords }.ToJson();
+        WriteDirectory(outputFolder, context.ElimTreeList);
+        WriteReportPackages(outputFolder, context);
+    }
+
+    private void WriteDirectory(DirectoryInfo outputFolder, IReadOnlyList<ElimTreeRecord> menuRecords)
+    {
+        var dirJson = new ReportDirectoryModel
+        {
+            Items = menuRecords.Where(x => x.Parent == "top").Select(x => x.ConvertTo()).ToArray(),
+        }.ToJson();
 
         string dirFullFileName = Path.Combine(outputFolder.FullName, "ReportDirectory.json");
         File.WriteAllText(dirFullFileName, dirJson);
-        _logger.LogInformation("Writing elim report directory to fleName={fileName}", dirFullFileName);
 
+        _logger.LogInformation("Writing elim report directory to fleName={fileName}", dirFullFileName);
+    }
+
+    private void WriteReportPackages(DirectoryInfo outputFolder, Context context)
+    {
         foreach (var reportRecord in context.ReportPackages)
         {
             var conform = reportRecord.PackageId.Select(x => char.IsLetterOrDigit(x) ? x : '_').ToArray();
@@ -78,19 +91,17 @@ internal class ExportElimConfigCommand : ICommand
             File.Delete(file);
         }
     }
-
     private async Task<Context> BuildReportPackages(Context context)
     {
         _logger.LogInformation("Building report packages from elim tree records");
 
-        var list = context.ElimTreeRecords
+        var list = context.ElimTreeList
             .Where(x => x.Parent != "top")
             .Select(x => new ReportPackageModel
             {
                 PackageId = x.Id.NotEmpty(),
-                SortKey = x.SortKey.NotEmpty(),
                 Description = x.Descr.NotEmpty(),
-                ParentPackageId = x.Parent.NotEmpty(),
+                MenuId = (int.Parse(x.Parent) + 1).ToString(),
                 PackageType = ReportPackageModelTool.GetPackageType(x.PackageType),
                 Elimination = lookupElimination(x.ShortName, x.Def),
                 ElimSelects = lookupElimSelect(x.ElimId),
@@ -161,7 +172,7 @@ internal class ExportElimConfigCommand : ICommand
             EliminationList = eliminationList,
             ElimSelectList = elimSelectList,
             MiscTableList = miscTableList,
-            ElimTreeRecords = elimTreeRecords,
+            ElimTreeList = elimTreeRecords,
         };
     }
 
@@ -170,7 +181,7 @@ internal class ExportElimConfigCommand : ICommand
         public IReadOnlyList<EliminationRecord> EliminationList { get; init; } = null!;
         public IReadOnlyList<ElimSelectRecord> ElimSelectList { get; init; } = null!;
         public IReadOnlyList<MiscTablesRecord> MiscTableList { get; init; } = null!;
-        public IReadOnlyList<ElimTreeRecord> ElimTreeRecords { get; init; } = null!;
+        public IReadOnlyList<ElimTreeRecord> ElimTreeList { get; init; } = null!;
         public IReadOnlyList<ReportPackageModel> ReportPackages { get; init; } = null!;
     }
 }

@@ -10,42 +10,42 @@ SELECT * FROM (
     -- Elimination processes
     SELECT 'B' AS SortKey, 'E' + RIGHT('00' + CAST(ID AS VARCHAR), 2) AS ID,
            'E' + RIGHT('00' + CAST(ID AS VARCHAR), 2) + ' - ' + ShortName + ' (' + Def + ')' AS Descr,
-           '0' AS Parent
+           '1' AS Parent
     FROM Eliminations
 
     UNION ALL
 
     -- Special "Run all Elims" node
-    SELECT 'B' AS SortKey, 'E99' AS ID, 'E99 - Run all Elims' AS Descr, '0' AS Parent
+    SELECT 'B' AS SortKey, 'E99' AS ID, 'E99 - Run all Elims' AS Descr, '2' AS Parent
 
     UNION ALL
 
     -- Recon processes
     SELECT 'C' AS SortKey, 'F' + RIGHT('00' + CAST(ID AS VARCHAR), 2) AS ID,
            'F' + RIGHT('00' + CAST(ID AS VARCHAR), 2) + ' - ' + ShortName + ' (' + Def + ')' AS Descr,
-           '1' AS Parent
+           '3' AS Parent
     FROM Eliminations
 
     UNION ALL
 
     -- Special recon nodes
-    SELECT 'C' AS SortKey, 'F98' AS ID, 'F98 - Run all Doc Crcy Recons' AS Descr, '1' AS Parent
+    SELECT 'C' AS SortKey, 'F98' AS ID, 'F98 - Run all Doc Crcy Recons' AS Descr, '3' AS Parent
     UNION ALL
-    SELECT 'C' AS SortKey, 'F99' AS ID, 'F99 - Run all Recons - LC2 (USD) Crcy' AS Descr, '1' AS Parent
+    SELECT 'C' AS SortKey, 'F99' AS ID, 'F99 - Run all Recons - LC2 (USD) Crcy' AS Descr, '3' AS Parent
 
     UNION ALL
 
     -- True-up contracts
     SELECT 'D' AS SortKey, 'P' + RIGHT('00' + CAST(ID AS VARCHAR), 2) AS ID,
            'P' + RIGHT('00' + CAST(ID AS VARCHAR), 2) + ' - ' + ShortName + ' (' + Def + ')' AS Descr,
-           '2' AS Parent
+           '4' AS Parent
     FROM Eliminations
     WHERE TrueUpContract <> 'NONE'
 
     UNION ALL
 
     -- Special functions
-    SELECT 'E' AS SortKey, 'S' + ID AS ID, 'S' + ID + ' - ' + Descr AS Descr, '3' AS Parent
+    SELECT 'E' AS SortKey, 'S' + ID AS ID, 'S' + ID + ' - ' + Descr AS Descr, '5' AS Parent
     FROM Misc_Tables
     WHERE Table_ID = 'SpecialFunctions'
 

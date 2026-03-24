@@ -16,7 +16,13 @@ public class ReportPackageStore
     {
         _client = client.NotNull();
         _logger = logger.NotNull();
+
+        Access = new(_client, logger);
+        Menu = new(_client, logger);
     }
+
+    public ReportAccessStore Access { get; }
+    public ReportMenuStore Menu { get; }
 
     public async Task<Option<ReportPackageRecord>> Get(string packageId)
     {
@@ -53,16 +59,15 @@ public class ReportPackageStore
         return result;
     }
 
-    public async Task<Option<int>> Add(ReportPackageRecord record)
+    public async Task<Option<int>> AddOrUpdate(ReportPackageRecord record)
     {
         record.NotNull().Validate().ThrowOnError();
 
         var result = await _client.Query()
-            .SetCommand("[App].[AddReportPackage]", CommandType.StoredProcedure)
+            .SetCommand("[App].[AddOrUpdateReportPackage]", CommandType.StoredProcedure)
             .AddParameter("@PackageId", record.PackageId)
-            .AddParameter("@SortKey", record.SortKey)
             .AddParameter("@Description", record.Description)
-            .AddParameter("@ParentPackageId", record.ParentPackageId)
+            .AddParameter("@MenuId", record.MenuId)
             .AddParameter("@Data", record.Data)
             .AddParameter("@Disabled", record.Disabled)
             .ExecuteNonQuery();
@@ -89,9 +94,8 @@ public class ReportPackageStore
         var result = await _client.Query()
             .SetCommand("[App].[UpdateReportPackage]", CommandType.StoredProcedure)
             .AddParameter("@PackageId", record.PackageId)
-            .AddParameter("@SortKey", record.SortKey)
             .AddParameter("@Description", record.Description)
-            .AddParameter("@ParentPackageId", record.ParentPackageId)
+            .AddParameter("@ParentPackageId", record.MenuId)
             .AddParameter("@Data", record.Data)
             .AddParameter("@Disabled", record.Disabled)
             .ExecuteNonQuery();
@@ -108,34 +112,6 @@ public class ReportPackageStore
             .SetCommand("[App].[UpdateReportPackageData]", CommandType.StoredProcedure)
             .AddParameter("@PackageId", packageId)
             .AddParameter("@Data", data)
-            .ExecuteNonQuery();
-
-        return result;
-    }
-
-    public async Task<Option<int>> AddAccess(ReportAccessRecord subject)
-    {
-        subject.NotNull().Validate().ThrowOnError();
-
-        var result = await _client.Query()
-            .SetCommand("[App].[AddReportAccess]", CommandType.StoredProcedure)
-            .AddParameter("@PackageId", subject.PackageId)
-            .AddParameter("@NameIdentifier", subject.NameIdentifier)
-            .AddParameter("@Access", subject.Access)
-            .ExecuteNonQuery();
-
-        return result;
-    }
-
-    public async Task<Option<int>> DeleteAccess(string reportId, string nameIdentifier)
-    {
-        reportId.NotEmpty();
-        nameIdentifier.NotEmpty();
-
-        var result = await _client.Query()
-            .SetCommand("[App].[DeleteReportAccess]", CommandType.StoredProcedure)
-            .AddParameter("@PackageId", reportId)
-            .AddParameter("@NameIdentifier", nameIdentifier)
             .ExecuteNonQuery();
 
         return result;

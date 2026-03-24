@@ -50,32 +50,40 @@ internal class ImportElimConfigCommand : ICommand
 
         ReportPackageStore store = CreateSqlStore(config);
 
+        await WriteMenu(store, reportDirectory);
+        await WriteReportPackages(store, reportPackages, reportDirectory);
+    }
+
+    private async Task WriteMenu(ReportPackageStore store, ReportDirectoryModel reportDirectory)
+    {
+        foreach (var item in reportDirectory.Items)
+        {
+            (await store.Menu.Add(item)).BeOk();
+            _logger.LogInformation("Import menu menuId={menuId}", item.MenuId);
+        }
+    }
+
+    private async Task WriteReportPackages(ReportPackageStore store, IReadOnlyList<ReportPackageModel> reportPackages, ReportDirectoryModel reportDirectory)
+    {
         foreach (ReportPackageModel reportPackage in reportPackages)
         {
+            if (!reportDirectory.Items.Any(x => x.MenuId == reportPackage.MenuId))
+            {
+                _logger.LogInformation("Skipping packageId={packageId}, menuId={menuId} not found in ReportDirectory", reportPackage.PackageId, reportPackage.MenuId);
+                continue;
+            }
+
             var reportPackageRecord = new ReportPackageRecord
             {
                 PackageId = reportPackage.PackageId,
-                SortKey = reportPackage.SortKey,
                 Description = reportPackage.Description,
-                ParentPackageId = reportPackage.ParentPackageId,
+                MenuId = reportPackage.MenuId,
                 Data = reportPackage.ToJson(),
             };
 
-            (await store.Add(reportPackageRecord)).BeOk();
+            (await store.AddOrUpdate(reportPackageRecord)).BeOk();
             _logger.LogInformation("Imported Report package packageId={packageId}", reportPackage.PackageId);
         }
-
-        var dirPackageRecord = new ReportPackageRecord
-        {
-            PackageId = "dir",
-            SortKey = "z",
-            Description = "directory",
-            ParentPackageId = "na",
-            Data = reportDirectory.ToJson(),
-        };
-
-        (await store.Add(dirPackageRecord)).BeOk();
-        _logger.LogInformation("Import directory package packageId={packageId}", dirPackageRecord.PackageId);
     }
 
     private async Task<IReadOnlyList<ReportPackageModel>> ReadReportPackages(DirectoryInfo inputFolder)

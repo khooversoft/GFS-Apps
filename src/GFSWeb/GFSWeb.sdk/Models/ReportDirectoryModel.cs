@@ -6,5 +6,5 @@ namespace GFSWeb.sdk.Models;
 
 public class ReportDirectoryModel
 {
-    public IReadOnlyList<ElimTreeRecord> Items { get; init; } = Array.Empty<ElimTreeRecord>();
+    public IReadOnlyList<MenuRecord> Items { get; init; } = Array.Empty<MenuRecord>();
 }
