@@ -101,7 +101,7 @@ internal class ExportElimConfigCommand : ICommand
             {
                 PackageId = x.Id.NotEmpty(),
                 Description = x.Descr.NotEmpty(),
-                MenuId = (int.Parse(x.Parent) + 1).ToString(),
+                MenuId = x.Parent,
                 PackageType = ReportPackageModelTool.GetPackageType(x.PackageType),
                 Elimination = lookupElimination(x.ShortName, x.Def),
                 ElimSelects = lookupElimSelect(x.ElimId),

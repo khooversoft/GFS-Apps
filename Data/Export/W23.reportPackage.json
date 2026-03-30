@@ -1,1 +1,1 @@
-{"packageId":"W23","sortKey":null,"description":"W23 - IFRS-17 Multi-file Run","menuId":"8","packageType":"tables","elimination":null,"elimSelects":[],"sqlCommand":[],"sqlSelect":[{"table_ID":"SQLselect","id":"W23","descr":"(none)"}]}
+{"packageId":"W23","sortKey":null,"description":"W23 - IFRS-17 Multi-file Run","menuId":"7","packageType":"writes","elimination":null,"elimSelects":[],"sqlCommand":[],"sqlSelect":[]}

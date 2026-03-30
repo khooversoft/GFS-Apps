@@ -1,0 +1,30 @@
+﻿@using GFSWeb.sdk.Models
+@using GFSWeb.sdk.Store
+@using GFSWeb.Application
+@using System.Collections.Frozen
+
+<MudDataGrid T="MenuItem"
+             Items="@List"
+             Dense="true"
+             Hover="true"
+             Elevation="0"
+             Striped=true
+             MultiSelection=false
+             SelectedItemChanged="@SelectedItemChanged">
+
+    <Columns>
+        <PropertyColumn Property="x => x.Value" Title="Report" Sortable="true" />
+    </Columns>
+</MudDataGrid>
+
+
+@code {
+    [Parameter] public IReadOnlyList<MenuItem> List { get; set; } = null!;
+    [Parameter] public EventCallback<MenuItem> OnSelect { get; set; }
+
+    private async Task SelectedItemChanged(MenuItem? item)
+    {
+        if (item is null) return;
+        await OnSelect.InvokeAsync(item);
+    }
+}

@@ -92,6 +92,7 @@
     <Build Include="App\Stored Procedures\Menu\UpdateMenu.sql" />
     <Build Include="App\Stored Procedures\Menu\DeleteMenu.sql" />
     <Build Include="App\Views\ReportAccess.sql" />
+    <Build Include="App\Stored Procedures\ReportPackage\ListReportPackagesByNamePrincipal.sql" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Publish\GFSWebDb.publish.xml" />

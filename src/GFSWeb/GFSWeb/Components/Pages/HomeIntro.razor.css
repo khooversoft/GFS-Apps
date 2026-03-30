@@ -1,0 +1,7 @@
+﻿.intro-bg {
+    height: 100vh;
+    background-image: linear-gradient(rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0.4)), url('gfsintro2.png');
+    background-size: contain;
+    background-position: left top;
+    background-repeat: no-repeat;
+}

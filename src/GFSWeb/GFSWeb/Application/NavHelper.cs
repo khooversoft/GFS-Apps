@@ -9,6 +9,7 @@ public static class NavHelper
 {
     public static string AccessManagement => "/access";
     public static string UnderConstructionPath => "/underConstruction";
+    public static string ElimMenuPath => "/elimMenu";
 
     public static void GotoAcessManagement(this NavigationManager nav) => nav.NotNull().NavigateTo(AccessManagement);
 
@@ -33,6 +34,19 @@ public static class NavHelper
     //    var url = Build([MarathonReviewPath, id], BuildReturnUrl(returnUrl));
     //    nav.NotNull().NavigateTo(url);
     //}
+
+    public static string GetElimReportHref(string packageId, string? returnUrl = null)
+    {
+        packageId = Uri.EscapeDataString(packageId);
+        var url = Build(["/elimReport", packageId], BuildReturnUrl(returnUrl));
+        return url;
+    }
+
+    public static void GotoElimReportHref(this NavigationManager nav, string packageId, string? returnUrl = null)
+    {
+        var url = GetElimReportHref(packageId, returnUrl);
+        nav.NotNull().NavigateTo(url);
+    }
 
     private static string? BuildReturnUrl(string? url) => url.IsEmpty() ? null : $"returnUrl={url}";
 

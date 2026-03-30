@@ -26,9 +26,15 @@ public static class GfsWebStartup
             c.ConnectionString = webOption.ConnectionString;
         });
 
+        services.AddSqlClient<ReportPackageStore>(c =>
+        {
+            c.ConnectionString = webOption.ConnectionString;
+        });
+
         services.AddSingleton<GfsWebOption>(webOption);
         services.AddSingleton<GfsSapOption>(sapOption);
         services.AddSingleton<PrincipalIdentityStore>();
+        services.AddSingleton<ReportPackageStore>();
 
         return services;
     }

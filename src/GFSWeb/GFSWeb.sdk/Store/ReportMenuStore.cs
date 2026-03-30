@@ -5,6 +5,7 @@ using System.Text;
 using GFSWeb.sdk.Models;
 using Microsoft.Extensions.Logging;
 using Toolbox.Data;
+using Toolbox.Extensions;
 using Toolbox.Tools;
 using Toolbox.Types;
 
@@ -72,4 +73,17 @@ public class ReportMenuStore
 
         return result;
     }
+
+    public async Task<IReadOnlyList<PrincipalMenuRecord>> GetMenuForPrincipalIdentity(string? nameIdentifier)
+    {
+        if (nameIdentifier.IsEmpty()) return Array.Empty<PrincipalMenuRecord>();
+
+        var result = await _client.Query()
+            .SetCommand("[App].[ListReportPackagesByNamePrincipal]", CommandType.StoredProcedure)
+            .AddParameter("@NameIdentifier", nameIdentifier)
+            .Execute<PrincipalMenuRecord>();
+
+        return result;
+    }
 }
+

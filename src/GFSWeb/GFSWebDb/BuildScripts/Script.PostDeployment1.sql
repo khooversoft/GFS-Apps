@@ -14,13 +14,13 @@ Post-Deployment Script Template
 -- Ensure required application roles exist
 MERGE [AppDbo].[PrincipalIdentity] AS target
 USING (VALUES
-    ('user1-entra', 'User1', 'User1@odysseygroup.com'),
-    ('user2-entra', 'User2', 'User2@odysseygroup.com'),
-    ('user3-entra', 'User3', 'User3@odysseygroup.com')
-) AS src ([NameIdentifier], [UserName], [Email])
+    ('khoover@biz-bricks.com', 'Kelvin Hoover', 'khoover@biz-bricks.com', 'owner'),
+    ('user2-entra', 'User2', 'User2@odysseygroup.com', 'reader'),
+    ('user3-entra', 'User3', 'User3@odysseygroup.com', 'reader')
+) AS src ([NameIdentifier], [UserName], [Email], [Role])
     ON target.[NameIdentifier] = src.[NameIdentifier]
 WHEN NOT MATCHED BY TARGET THEN
-    INSERT ([NameIdentifier], [UserName], [Email])
-    VALUES (src.[NameIdentifier], src.[UserName], src.[Email]);
+    INSERT ([NameIdentifier], [UserName], [Email], [Role])
+    VALUES (src.[NameIdentifier], src.[UserName], src.[Email], [Role]);
 
 

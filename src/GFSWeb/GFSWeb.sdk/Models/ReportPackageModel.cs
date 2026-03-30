@@ -12,6 +12,7 @@ public enum PackageType
     GLSUs,
     Reports,
     MoreReports,
+    Writes,
     Tables,
     UserManuals
 }
@@ -52,8 +53,9 @@ public static class ReportPackageModelTool
         "G" => PackageType.GLSUs,               // 4
         "R" => PackageType.Reports,             // 5
         "M" => PackageType.MoreReports,         // 6
-        "W" => PackageType.Tables,              // 8
-        "T" => PackageType.UserManuals,         // 9
+        "W" => PackageType.Writes,              // 7
+        "T" => PackageType.Tables,              // 8
+        "K" => PackageType.UserManuals,         // 9
         _ => PackageType.None
     };
 }

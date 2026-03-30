@@ -1,0 +1,85 @@
+﻿@page "/elimMenu/{menuId?}"
+@using GFSWeb.sdk.Models
+@using GFSWeb.sdk.Store
+@using Toolbox.Data
+
+<ReturnUrlButton ReturnUrl=@returnUrl />
+
+@if (!_initialized)
+{
+    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Rounded="true" Size="Size.Medium" Value="100" Style="margin:20px" />
+}
+else
+{
+    <MudText Typo="Typo.h5" GutterBottom="true">@GetTitle()</MudText>
+
+    @if (_selectedMenu != null)
+    {
+        <BlockToolBar OnBack="@OnBack" />
+    }
+
+    <ElimMenuList List=GetList() OnSelect="OnRowSelected" />
+}
+
+@code {
+    @inject NavigationManager _nav;
+    @inject ReportPackageStore _store;
+    @inject ISnackbar _snackbar;
+    [Parameter] public string? MenuId { get; set; }
+    [Parameter, SupplyParameterFromQuery] public string returnUrl { get; set; } = null!;
+
+    private bool _initialized = false;
+    private IReadOnlyList<PrincipalMenuRecord> _list = Array.Empty<PrincipalMenuRecord>();
+    private MenuItem? _selectedMenu;
+    private string GetTitle() => _selectedMenu == null ? "Select Elim report" : $"Run {_selectedMenu.Value} Report";
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await GetPrincipals();
+            if( _selectedMenu == null && MenuId != null)
+            {
+                var menu = _list.FirstOrDefault(x => x.MenuId == MenuId);
+                if (menu != null)
+                {
+                    _selectedMenu = new MenuItem(menu.MenuId, menu.MenuDescription);
+                }
+            }
+
+            StateHasChanged();
+        }
+    }
+
+    private IReadOnlyList<MenuItem> GetList() => _selectedMenu switch
+    {
+        null => _list
+            .GroupBy(x => x.MenuId)
+            .Select(x => new MenuItem(x.Key, x.First().MenuDescription))
+            .ToArray(),
+
+        MenuItem v => _list
+            .Where(x => v.Key == x.MenuId)
+            .Select(x => new MenuItem(x.PackageId, x.Description))
+            .ToArray(),
+    };
+
+    private async Task GetPrincipals()
+    {
+        _list = await _store.Menu.GetMenuForPrincipalIdentity("khoover@biz-bricks.com");
+        _initialized = true;
+    }
+
+    private void OnRowSelected(MenuItem item)
+    {
+        if (_selectedMenu == null)
+        {
+            _selectedMenu = item;
+            return;
+        }
+
+        _nav.GotoElimReportHref(item.Key, $"{NavHelper.ElimMenuPath}/{_selectedMenu.Key}");
+    }
+
+    private void OnBack() => _selectedMenu = null;
+}
