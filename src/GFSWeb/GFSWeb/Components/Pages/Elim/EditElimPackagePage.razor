@@ -1,0 +1,55 @@
+﻿@page "/editElimPackages/{packageId}"
+@using GFSWeb.sdk.Models
+@using GFSWeb.sdk.Store
+@using Toolbox.Data
+
+<ReturnUrlButton ReturnUrl=@returnUrl />
+
+@if (!_initialized)
+{
+    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Rounded="true" Size="Size.Medium" Value="100" Style="margin:20px" />
+}
+else
+{
+    <BlockContainer>
+        <MudText Typo="Typo.h5" style="margin-top:20px" GutterBottom="true">Edit Elim Package</MudText>
+
+        <MudText Typo="Typo.body1" GutterBottom="true">
+            Elim Package contains all the details on how to query and construct report from SAP.
+        </MudText>
+
+        <BlockToolBar OnSave="@OnSave" OnCancel="@OnCancel" />
+
+
+    </BlockContainer>
+}
+
+@code {
+    @inject NavigationManager _nav;
+    @inject ReportPackageStore _store;
+    @inject ISnackbar _snackbar;
+    [Parameter] public string PackageId { get; set; } = null!;
+    [Parameter, SupplyParameterFromQuery] public string returnUrl { get; set; } = null!;
+
+    private record MenuTree(string MenuDescription, IReadOnlyList<MenuItem> Items);
+    private bool _initialized = false;
+    private ReportPackageRecord? _currentRecord;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await LoadPackage();
+            StateHasChanged();
+        }
+    }
+
+    private async Task LoadPackage()
+    {
+        _currentRecord = (await _store.Get(PackageId)).BeOk().Return();
+        _initialized = true;
+    }
+
+    private void OnSave() => _nav.GotoElimPackages();
+    private void OnCancel() => _nav.GotoElimPackages();
+}

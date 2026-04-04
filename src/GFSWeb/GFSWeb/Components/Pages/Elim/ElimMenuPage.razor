@@ -5,7 +5,9 @@
 
 <ReturnUrlButton ReturnUrl=@returnUrl />
 
-@if (!_initialized)
+<SelectElimPackage Title="@GetTitle()" OnSelect="OnRowSelected" />
+
+@* @if (!_initialized)
 {
     <MudProgressLinear Color="Color.Primary" Indeterminate="true" Rounded="true" Size="Size.Medium" Value="100" Style="margin:20px" />
 }
@@ -19,7 +21,7 @@ else
     }
 
     <ElimMenuList List=GetList() OnSelect="OnRowSelected" />
-}
+} *@
 
 @code {
     @inject NavigationManager _nav;
@@ -66,7 +68,7 @@ else
 
     private async Task GetPrincipals()
     {
-        _list = await _store.Menu.GetMenuForPrincipalIdentity("khoover@biz-bricks.com");
+        _list = await _store.Menu.GetMenuForPrincipalIdentity();
         _initialized = true;
     }
 
@@ -78,7 +80,7 @@ else
             return;
         }
 
-        _nav.GotoElimReportHref(item.Key, $"{NavHelper.ElimMenuPath}/{_selectedMenu.Key}");
+        _nav.GotoRunElimReportHref(item.Key, $"{NavHelper.ElimReportsPath}/{_selectedMenu.Key}");
     }
 
     private void OnBack() => _selectedMenu = null;

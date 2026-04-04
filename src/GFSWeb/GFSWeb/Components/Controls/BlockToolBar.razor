@@ -1,4 +1,4 @@
-﻿<div style="margin-top:20px;border-bottom-width:1px">
+﻿<div style="margin-top:20px;border-bottom-width:1px;border-bottom-color: lightgray">
     <MudToolBar Dense=true Gutters=false>
         @foreach (var action in Actions.Where(a => a.Show))
         {
@@ -17,7 +17,8 @@
         @if (OnSearch.HasDelegate)
         {
             <div class="toolbar-search-container">
-                <MudTextField @bind-Value=@_searchString
+                <MudTextField @bind-Value="@_searchString"
+                              @bind-Value:after="@OnSearchTextChanged"
                               Placeholder="search"
                               Adornment="Adornment.Start"
                               AdornmentIcon="@Icons.Material.Filled.Search"
@@ -66,20 +67,9 @@
         OnSave.HasDelegate ||
         OnCancel.HasDelegate;
 
-    private string _searchStringValue = string.Empty;
+    private string _searchString = string.Empty;
 
-    private string _searchString
-    {
-        get => _searchStringValue;
-        set
-        {
-            if (_searchStringValue != value)
-            {
-                _searchStringValue = value;
-                _ = OnSearch.InvokeAsync(_searchStringValue);
-            }
-        }
-    }
+    private async Task OnSearchTextChanged() => await OnSearch.InvokeAsync(_searchString);
 
     private sealed record ToolbarAction
     {

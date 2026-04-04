@@ -14,10 +14,12 @@ public class ReportAccessStore
 {
     private readonly ISqlClient _client;
     private readonly ILogger _logger;
+    private readonly IAuthAccess _authAccess;
 
-    public ReportAccessStore(ISqlClient client, ILogger<ReportPackageStore> logger)
+    public ReportAccessStore(ISqlClient client, IAuthAccess authAccess, ILogger<ReportPackageStore> logger)
     {
         _client = client.NotNull();
+        _authAccess = authAccess.NotNull();
         _logger = logger.NotNull();
     }
 

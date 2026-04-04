@@ -33,8 +33,8 @@ public static class GfsWebStartup
 
         services.AddSingleton<GfsWebOption>(webOption);
         services.AddSingleton<GfsSapOption>(sapOption);
-        services.AddSingleton<PrincipalIdentityStore>();
-        services.AddSingleton<ReportPackageStore>();
+        services.AddScoped<PrincipalIdentityStore>();
+        services.AddScoped<ReportPackageStore>();
 
         return services;
     }

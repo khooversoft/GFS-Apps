@@ -1,4 +1,5 @@
-﻿using Toolbox.Tools;
+﻿using Toolbox.Extensions;
+using Toolbox.Tools;
 using Toolbox.Types;
 
 namespace GFSWeb.sdk.Models;
@@ -24,4 +25,10 @@ public record ReportPackageRecord
 public static class ElimOperationRecordExtensions
 {
     public static Option Validate(this ReportPackageRecord record) => ReportPackageRecord.Validator.Validate(record).ToOptionStatus();
+
+    public static ReportPackageModel Unpack(this ReportPackageRecord record)
+    {
+        record.Validate().ThrowOnError();
+        return record.Data.ToObject<ReportPackageModel>();
+    }
 }

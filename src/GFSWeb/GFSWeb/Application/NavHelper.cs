@@ -9,9 +9,12 @@ public static class NavHelper
 {
     public static string AccessManagement => "/access";
     public static string UnderConstructionPath => "/underConstruction";
-    public static string ElimMenuPath => "/elimMenu";
+    public static string ElimReportsPath => "/elimReports";
+    public static string ElimPackagePath => "/elimPackages";
+    public static string EditElimPackagePath => "/editElimPackages";
 
     public static void GotoAcessManagement(this NavigationManager nav) => nav.NotNull().NavigateTo(AccessManagement);
+    public static void GotoElimPackages(this NavigationManager nav) => nav.NotNull().NavigateTo(ElimPackagePath);
 
     //public static void GotoCalendar(this NavigationManager nav) => nav.NotNull().NavigateTo(MarathonCalendarPath);
 
@@ -29,22 +32,29 @@ public static class NavHelper
         nav.NotNull().NavigateTo(url);
     }
 
-    //public static void GotoMarathonReview(this NavigationManager nav, string id, string? returnUrl = null)
-    //{
-    //    var url = Build([MarathonReviewPath, id], BuildReturnUrl(returnUrl));
-    //    nav.NotNull().NavigateTo(url);
-    //}
-
-    public static string GetElimReportHref(string packageId, string? returnUrl = null)
+    public static string GetRunElimReportHref(string packageId, string? returnUrl = null)
     {
         packageId = Uri.EscapeDataString(packageId);
-        var url = Build(["/elimReport", packageId], BuildReturnUrl(returnUrl));
+        var url = Build(["/runElimReport", packageId], BuildReturnUrl(returnUrl));
         return url;
     }
 
-    public static void GotoElimReportHref(this NavigationManager nav, string packageId, string? returnUrl = null)
+    public static void GotoRunElimReportHref(this NavigationManager nav, string packageId, string? returnUrl = null)
     {
-        var url = GetElimReportHref(packageId, returnUrl);
+        var url = GetRunElimReportHref(packageId, returnUrl);
+        nav.NotNull().NavigateTo(url);
+    }
+
+    public static string GetEditElimReportHref(string packageId, string? returnUrl = null)
+    {
+        packageId = Uri.EscapeDataString(packageId);
+        var url = Build([EditElimPackagePath, packageId], BuildReturnUrl(returnUrl));
+        return url;
+    }
+
+    public static void GotoEditElimReportHref(this NavigationManager nav, string packageId, string? returnUrl = null)
+    {
+        var url = GetEditElimReportHref(packageId, returnUrl);
         nav.NotNull().NavigateTo(url);
     }
 

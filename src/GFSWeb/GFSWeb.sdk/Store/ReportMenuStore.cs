@@ -15,10 +15,12 @@ public class ReportMenuStore
 {
     private readonly ISqlClient _client;
     private readonly ILogger _logger;
+    private readonly IAuthAccess _authAccess;
 
-    public ReportMenuStore(ISqlClient client, ILogger<ReportPackageStore> logger)
+    public ReportMenuStore(ISqlClient client, IAuthAccess authAccess, ILogger<ReportPackageStore> logger)
     {
         _client = client.NotNull();
+        _authAccess = authAccess.NotNull();
         _logger = logger.NotNull();
     }
 
@@ -74,9 +76,10 @@ public class ReportMenuStore
         return result;
     }
 
-    public async Task<IReadOnlyList<PrincipalMenuRecord>> GetMenuForPrincipalIdentity(string? nameIdentifier)
+    public async Task<IReadOnlyList<PrincipalMenuRecord>> GetMenuForPrincipalIdentity()
     {
-        if (nameIdentifier.IsEmpty()) return Array.Empty<PrincipalMenuRecord>();
+        var nameIdentifier = await _authAccess.GetEmail();
+        if (nameIdentifier.IsEmpty()) return [];
 
         var result = await _client.Query()
             .SetCommand("[App].[ListReportPackagesByNamePrincipal]", CommandType.StoredProcedure)

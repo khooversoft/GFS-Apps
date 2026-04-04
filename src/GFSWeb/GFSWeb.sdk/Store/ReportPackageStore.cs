@@ -2,6 +2,7 @@
 using GFSWeb.sdk.Models;
 using Microsoft.Extensions.Logging;
 using Toolbox.Data;
+using Toolbox.Extensions;
 using Toolbox.Tools;
 using Toolbox.Types;
 
@@ -11,14 +12,16 @@ public class ReportPackageStore
 {
     private readonly ISqlClient<ReportPackageStore> _client;
     private readonly ILogger<ReportPackageStore> _logger;
+    private readonly IAuthAccess _authAccess;
 
-    public ReportPackageStore(ISqlClient<ReportPackageStore> client, ILogger<ReportPackageStore> logger)
+    public ReportPackageStore(ISqlClient<ReportPackageStore> client, IAuthAccess authAccess, ILogger<ReportPackageStore> logger)
     {
         _client = client.NotNull();
+        _authAccess = authAccess.NotNull();
         _logger = logger.NotNull();
 
-        Access = new(_client, logger);
-        Menu = new(_client, logger);
+        Access = new(_client, _authAccess, logger);
+        Menu = new(_client, _authAccess, logger);
     }
 
     public ReportAccessStore Access { get; }
@@ -26,22 +29,20 @@ public class ReportPackageStore
 
     public async Task<Option<ReportPackageRecord>> Get(string packageId)
     {
-        var cmd = """
-            SELECT  x.*
-            FROM    [App].[ReportPackage] x
-            WHERE   x.[[PackageId]] = @PackageId
-            """;
+        var nameIdentifier = await _authAccess.GetEmail();
+        if (nameIdentifier.IsEmpty()) return StatusCode.Unauthorized;
 
         var result = await _client.Query()
-            .SetCommand(cmd, CommandType.Text)
+            .SetCommand("[App].[GetReportPackage]", CommandType.StoredProcedure)
             .AddParameter("@PackageId", packageId)
+            .AddParameter("@NameIdentifier", nameIdentifier)
             .Execute<ReportPackageRecord>();
 
         return result.Count switch
         {
             0 => StatusCode.NotFound,
             1 => result[0],
-            _ => throw new InvalidOperationException($"Multiple records found for NameIdentifier: {packageId}")
+            _ => throw new InvalidOperationException($"Multiple records returned")
         };
     }
 

@@ -1,0 +1,83 @@
+﻿@page "/elimPackages"
+@using GFSWeb.sdk.Models
+@using GFSWeb.sdk.Store
+@using Toolbox.Data
+
+<ReturnUrlButton ReturnUrl=@returnUrl />
+
+@if (!_initialized)
+{
+    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Rounded="true" Size="Size.Medium" Value="100" Style="margin:20px" />
+}
+else
+{
+    <BlockContainer>
+        <MudText Typo="Typo.h5" GutterBottom="true">Elim Package</MudText>
+
+        <MudText Typo="Typo.body1" GutterBottom="true">
+            Create or Edit Elim Package (Report Definitions).
+        </MudText>
+
+        <BlockToolBar OnSearch="@OnSearch" />
+
+        <MudTreeView T="string" Hover="true" SelectedValueChanged="@OnItemSelected">
+            @foreach (var group in GetList())
+            {
+                <MudTreeViewItem T="string" Text="@group.MenuDescription" Value="@("top")" Expanded="@autoExpand">
+                    @foreach (var item in group.Items)
+                    {
+                        <MudTreeViewItem T="string" Text="@item.Value" Value="@item.Key" />
+                    }
+                </MudTreeViewItem>
+            }
+        </MudTreeView>
+    </BlockContainer>
+}
+
+@code {
+    @inject NavigationManager _nav;
+    @inject ReportPackageStore _store;
+    @inject ISnackbar _snackbar;
+    [Parameter] public string? MenuId { get; set; }
+    [Parameter, SupplyParameterFromQuery] public string returnUrl { get; set; } = null!;
+
+    private record MenuTree(string MenuDescription, IReadOnlyList<MenuItem> Items);
+    private bool _initialized = false;
+    private IReadOnlyList<PrincipalMenuRecord> _list = Array.Empty<PrincipalMenuRecord>();
+    private string? _searchString;
+    private bool autoExpand => _searchString.IsEmpty() ? false : true;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await GetPrincipals();
+            StateHasChanged();
+        }
+    }
+
+    private IReadOnlyList<MenuTree> GetList() => _list
+        .GroupBy(x => x.MenuId)
+        .Select(x => new MenuTree(
+            x.First().MenuDescription,
+            x.Where(x => x.LikeDescription(_searchString)).Select(y => new MenuItem(y.PackageId, y.Description)).ToArray())
+        )
+        .ToArray();
+
+    private async Task GetPrincipals()
+    {
+        _list = await _store.Menu.GetMenuForPrincipalIdentity();
+        _initialized = true;
+    }
+
+    private void OnSearch(string? searchString)
+    {
+        _searchString = searchString;
+    }
+
+    private void OnItemSelected(string? item)
+    {
+        if (item is null || item == "top") return;
+        _nav.GotoEditElimReportHref(item, NavHelper.ElimPackagePath);
+    }
+}

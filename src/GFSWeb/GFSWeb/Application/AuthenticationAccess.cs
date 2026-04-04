@@ -1,10 +1,11 @@
-﻿using Microsoft.AspNetCore.Components.Authorization;
+﻿using GFSWeb.sdk;
+using Microsoft.AspNetCore.Components.Authorization;
 
 using Toolbox.Tools;
 
 namespace GFSWeb.Application;
 
-public class AuthenticationAccess
+public class AuthenticationAccess : IAuthAccess
 {
     private readonly AuthenticationStateProvider _authProvider;
 

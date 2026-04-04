@@ -13,15 +13,15 @@
             The following tools are avaiable...
         </MudText>
 
-        <MudPaper Class="mt-4" Elevation="0" Style="max-width: 600px">
+        <MudPaper Class="m-4" Elevation="0" Style="max-width: 600px">
             <MudList T="string" Dense="true">
-                <MudListItem Icon="@Icons.Material.Outlined.QueryStats" Href="/elimMenu">
+                <MudListItem Icon="@Icons.Material.Outlined.QueryStats" Href="@NavHelper.ElimReportsPath">
                     <MudText>Elim - Query SAP, apply business rules, and export data to excel.</MudText>
                 </MudListItem>
                 <MudListItem Icon="@Icons.Material.Filled.PostAdd" Href="/">
                     <MudText>Post SAP transactions with Parker</MudText>
                 </MudListItem>
-                <MudListItem Icon="@Icons.Material.Filled.QueryBuilder" Href="/">
+                <MudListItem Icon="@Icons.Material.Filled.Build" Href="@NavHelper.ElimPackagePath">
                     <MudText>Create or Edit Elim queries.</MudText>
                 </MudListItem>
                 <MudListItem Icon="@Icons.Material.Filled.ListAlt" Href="/">

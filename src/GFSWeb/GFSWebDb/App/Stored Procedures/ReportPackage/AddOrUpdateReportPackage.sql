@@ -9,8 +9,6 @@ BEGIN
     SET NOCOUNT ON;
     SET XACT_ABORT ON;
 
-    BEGIN TRAN;
-
     MERGE [AppDbo].[ReportPackage] AS target
     USING (SELECT
                 @PackageId AS [PackageId],
@@ -28,6 +26,4 @@ BEGIN
     WHEN NOT MATCHED THEN
         INSERT ([PackageId], [Description], [MenuId], [Data], [Disabled])
         VALUES (source.[PackageId], source.[Description], source.[MenuId], source.[Data], source.[Disabled]);
-
-    COMMIT TRAN;
 END

@@ -1,3 +1,5 @@
+create view MenuTreeView
+AS
 -- Build the TreeView data for trvList in Elim (Elim/Elim-W access)
 SELECT * FROM (
     -- Top-level menu
@@ -91,4 +93,3 @@ SELECT * FROM (
     FROM Misc_Tables
     WHERE Table_ID = 'UserManuals'
 ) a
-ORDER BY SortKey, ID;

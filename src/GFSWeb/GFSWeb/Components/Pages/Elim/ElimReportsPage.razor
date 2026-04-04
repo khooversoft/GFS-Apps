@@ -1,0 +1,27 @@
+﻿@page "/elimReports"
+@using GFSWeb.sdk.Models
+@using GFSWeb.sdk.Store
+@using Toolbox.Data
+
+<ReturnUrlButton ReturnUrl=@returnUrl />
+
+<MudText Typo="Typo.h5" Style="margin-top:10px" GutterBottom="true">Run Elim Report</MudText>
+
+<MudText Typo="Typo.body1">
+    Select the report to run.
+</MudText>
+
+<SelectElimPackage OnSelect="OnRowSelected" />
+
+
+@code {
+    @inject NavigationManager _nav;
+    [Parameter, SupplyParameterFromQuery] public string returnUrl { get; set; } = null!;
+
+    private bool _initialized = false;
+
+    private void OnRowSelected(MenuItem item)
+    {
+        _nav.GotoRunElimReportHref(item.Key, NavHelper.ElimReportsPath);
+    }
+}
