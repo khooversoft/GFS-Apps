@@ -11,29 +11,49 @@
 }
 else
 {
-    <BlockContainer>
-        <MudText Typo="Typo.h5" style="margin-top:20px" GutterBottom="true">Edit Elim Package</MudText>
+    <MudText Typo="Typo.h5" style="margin-top:20px" GutterBottom="true">@_currentRecord.NotNull().Description</MudText>
 
-        <MudText Typo="Typo.body1" GutterBottom="true">
-            Elim Package contains all the details on how to query and construct report from SAP.
-        </MudText>
+    <MudText Typo="Typo.body1" GutterBottom="true">
+        Elim Package contains all the details on how to query and construct report.
+    </MudText>
 
-        <BlockToolBar OnSave="@OnSave" OnCancel="@OnCancel" />
+    <BlockToolBar OnSave="@OnSave" OnCancel="@OnCancel" />
 
-
-    </BlockContainer>
+    <CascadingValue Value="_editContext">
+        <WhereEdit OnUpdate="@OnUpdate" />
+    </CascadingValue>
 }
 
 @code {
     @inject NavigationManager _nav;
     @inject ReportPackageStore _store;
-    @inject ISnackbar _snackbar;
     [Parameter] public string PackageId { get; set; } = null!;
     [Parameter, SupplyParameterFromQuery] public string returnUrl { get; set; } = null!;
 
-    private record MenuTree(string MenuDescription, IReadOnlyList<MenuItem> Items);
+    private WhereEditContext _editContext = null!;
     private bool _initialized = false;
     private ReportPackageRecord? _currentRecord;
+
+    private List<WhereClause> _whereClauses = [
+        new WhereClause { FieldName = "first", Operator = Operator.Equal, Value = "value1" },
+        new WhereClause { FieldName = "second", Operator = Operator.NotEqual, Value = "value2" },
+        new WhereClause { FieldName = "third", Operator = Operator.ComparePattern, Value = "value3" },
+        new WhereClause { FieldName = "four", Operator = Operator.Between, Value = "value4-1", Value2 = "value4-2" },
+        new WhereClause { FieldName = "five", Operator = Operator.Equal, Value = "value4" }
+    ];
+    private List<string> _fieldNames = ["first", "second", "third", "four", "five"];
+
+    protected override void OnInitialized()
+    {
+        _editContext = new WhereEditContext
+        {
+            FieldNames = _fieldNames,
+            WhereItems = _whereClauses,
+            ReadWhereItems = _whereClauses.Select(x => x with { }).ToList(),
+        };
+
+        base.OnInitialized();
+    }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -52,4 +72,9 @@ else
 
     private void OnSave() => _nav.GotoElimPackages();
     private void OnCancel() => _nav.GotoElimPackages();
+
+    public async Task OnUpdate()
+    {
+        await Task.CompletedTask;
+    }
 }

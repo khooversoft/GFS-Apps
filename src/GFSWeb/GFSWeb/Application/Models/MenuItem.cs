@@ -1,7 +1,8 @@
-﻿using Toolbox.Extensions;
+﻿using GFSWeb.Application.Models;
+using Toolbox.Extensions;
 using Toolbox.Tools;
 
-namespace GFSWeb.Application;
+namespace GFSWeb.Application.Models;
 
 public record MenuItem
 {
@@ -10,11 +11,11 @@ public record MenuItem
     public MenuItem(string key, string value)
     {
         Key = key.NotEmpty();
-        Value = value.NotEmpty();
+        Description = value.NotEmpty();
     }
 
     public string Key { get; init; } = null!;
-    public string Value { get; init; } = null!;
+    public string Description { get; init; } = null!;
 }
 
 public static class MenuItemExtensions
@@ -27,7 +28,7 @@ public static class MenuItemExtensions
         var realSearch = search switch
         {
             var s when s.IndexOf('*') < 0 || s.IndexOf('%') < 0 => subject.Key.Contains(search, StringComparison.OrdinalIgnoreCase),
-            _ => subject.Value.Like(search)
+            _ => subject.Description.Like(search)
         };
 
         return realSearch;

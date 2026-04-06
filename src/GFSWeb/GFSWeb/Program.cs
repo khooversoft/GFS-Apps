@@ -73,6 +73,7 @@ builder.Services.AddMudServices(config =>
 
 builder.Services.AddAuthorization();
 builder.Services.AddCascadingAuthenticationState();
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddTransient<AuthenticationAccess>();
 
 builder.Services.AddAuthentication(options =>
@@ -187,6 +188,27 @@ app.MapPost("/signout", async (HttpContext ctx) =>
 })
 .AllowAnonymous()
 .DisableAntiforgery();
+
+app.MapGet("/preferences/dark-mode", (bool value, string? returnUrl, HttpContext ctx) =>
+{
+    var cookieOptions = new CookieOptions
+    {
+        HttpOnly = true,
+        Secure = true,
+        SameSite = SameSiteMode.Lax,
+        Expires = DateTimeOffset.UtcNow.AddYears(1),
+        IsEssential = true,
+    };
+
+    ctx.Response.Cookies.Append("darkMode", value.ToString().ToLowerInvariant(), cookieOptions);
+
+    var safeReturnUrl = string.IsNullOrWhiteSpace(returnUrl) || !Uri.IsWellFormedUriString(returnUrl, UriKind.Relative)
+        ? "/"
+        : returnUrl;
+
+    return Results.LocalRedirect(safeReturnUrl);
+})
+.AllowAnonymous();
 
 // Blazor root
 app.MapRazorComponents<App>()

@@ -1,4 +1,4 @@
-﻿@using GFSWeb.sdk.Models
+﻿@* @using GFSWeb.sdk.Models
 @using GFSWeb.sdk.Store
 @using GFSWeb.Application
 @using System.Collections.Frozen
@@ -13,7 +13,7 @@
              SelectedItemChanged="@SelectedItemChanged">
 
     <Columns>
-        <PropertyColumn Property="x => x.Value" Title="Report" Sortable="true" />
+        <PropertyColumn Property="x => x.Description" Title="Report" Sortable="true" />
     </Columns>
 </MudDataGrid>
 
@@ -28,3 +28,4 @@
         await OnSelect.InvokeAsync(item);
     }
 }
+ *@

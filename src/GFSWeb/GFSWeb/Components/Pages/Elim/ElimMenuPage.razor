@@ -33,7 +33,7 @@ else
     private bool _initialized = false;
     private IReadOnlyList<PrincipalMenuRecord> _list = Array.Empty<PrincipalMenuRecord>();
     private MenuItem? _selectedMenu;
-    private string GetTitle() => _selectedMenu == null ? "Select Elim report" : $"Run {_selectedMenu.Value} Report";
+    private string GetTitle() => _selectedMenu == null ? "Select Elim report" : $"Run {_selectedMenu.Description} Report";
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {

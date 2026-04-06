@@ -1,0 +1,124 @@
+﻿<MudDataGrid T="WhereClause"
+             Items="@_whereItems"
+             ReadOnly="false"
+             Dense="true"
+             EditMode="@DataGridEditMode.Cell"
+             EditTrigger="@DataGridEditTrigger.OnRowClick"
+             StartedEditingItem="@StartedEditingItem"
+             CanceledEditingItem="@CanceledEditingItem"
+             CommittedItemChanges="@CommittedItemChanges"
+             Bordered="true">
+    <Columns>
+        <TemplateColumn CellStyle="width: 1%; white-space: nowrap;" HeaderStyle="width: 1%; white-space: nowrap;">
+            <EditTemplate>
+                <MudStack Row Spacing="0">
+                    <MudIconButton Color="Color.Success" Size="@Size.Small" Icon="@Icons.Material.Outlined.Add" OnClick="@(() => AddNewItem(context.Item))" />
+                    <MudIconButton Color="Color.Error" Size="@Size.Small" Icon="@Icons.Material.Outlined.Delete" OnClick="@(() => DeleteItem(context.Item))" />
+                </MudStack>
+            </EditTemplate>
+        </TemplateColumn>
+        <PropertyColumn Property="x => x.AndOr"
+                        Title="And/Or"
+                        CellStyle="width: 1%; white-space: nowrap;"
+                        HeaderStyle="width: 1%; white-space: nowrap;">
+            <EditTemplate>
+                <MudSelect T="AndOr" @bind-Value="context.Item.AndOr" @bind-Value:after="OnWhereItemsChanged" Required RequiredError="Select operator" Margin="@Margin.Dense" Dense="true">
+                    @foreach (var op in Enum.GetValues<AndOr>())
+                    {
+                        <MudSelectItem Value="@op">@op</MudSelectItem>
+                    }
+                </MudSelect>
+            </EditTemplate>
+        </PropertyColumn>
+        <PropertyColumn Property="x => x.FieldName" Title="Field Name">
+            <EditTemplate>
+                <MudSelect T="string" @bind-Value="context.Item.FieldName" Required RequiredError="Select field" Margin="@Margin.Dense">
+                    @foreach (var field in EditContext.FieldNames)
+                    {
+                        <MudSelectItem Value="@field">@field</MudSelectItem>
+                    }
+                </MudSelect>
+            </EditTemplate>
+        </PropertyColumn>
+        <PropertyColumn Property="x => x.Operator"
+                        Title="Operator"
+                        CellStyle="width: 1%; white-space: nowrap;"
+                        HeaderStyle="width: 1%; white-space: nowrap;">
+            <EditTemplate>
+                <MudSelect T="Operator" @bind-Value="context.Item.Operator" @bind-Value:after="OnWhereItemsChanged" Required RequiredError="Select operator" Margin="@Margin.Dense" Dense="true">
+                    @foreach (var op in Enum.GetValues<Operator>())
+                    {
+                        <MudSelectItem Value="@op">@op.ToSymbol()</MudSelectItem>
+                    }
+                </MudSelect>
+            </EditTemplate>
+        </PropertyColumn>
+        <PropertyColumn Property="x => x.Value" Title="Value / From" />
+        <PropertyColumn Property="x => x.Value2" Title="Thru Value">
+            <EditTemplate>
+                <MudTextField @bind-Value="context.Item.Value2" Disabled="@(!context.Item.IsValue2Required())" Margin="@Margin.Dense" />
+            </EditTemplate>
+        </PropertyColumn>
+    </Columns>
+</MudDataGrid>
+
+
+@code {
+    [CascadingParameter] public WhereEditContext EditContext { get; set; } = null!;
+    [Parameter] public EventCallback OnUpdate { get; set; }
+
+    private List<WhereClause> _whereItems = null!;
+
+    protected override void OnParametersSet()
+    {
+        _whereItems = EditContext.WhereItems;
+        base.OnParametersSet();
+    }
+
+    private void StartedEditingItem(WhereClause item)
+    {
+    }
+
+    private void CanceledEditingItem(WhereClause item)
+    {
+    }
+
+    private async Task<DataGridEditFormAction> CommittedItemChanges(WhereClause item)
+    {
+        await OnUpdate.InvokeAsync();
+        return DataGridEditFormAction.Close;
+    }
+
+    private async Task OnWhereItemsChanged()
+    {
+        await OnUpdate.InvokeAsync();
+    }
+
+    private void AddNewItem(WhereClause item)
+    {
+        var newItem = item with { };
+
+        for (int i = 0; i < EditContext.WhereItems.Count - 1; i++)
+        {
+            if (item.Id == EditContext.WhereItems[i].Id)
+            {
+                EditContext.WhereItems.Insert(i + 1, newItem);
+                return;
+            }
+        }
+
+        EditContext.WhereItems.Add(newItem);
+    }
+
+    private void DeleteItem(WhereClause item)
+    {
+        for (int i = 0; i < EditContext.WhereItems.Count; i++)
+        {
+            if (item.Id == EditContext.WhereItems[i].Id)
+            {
+                EditContext.WhereItems.RemoveAt(i);
+                return;
+            }
+        }
+    }
+}

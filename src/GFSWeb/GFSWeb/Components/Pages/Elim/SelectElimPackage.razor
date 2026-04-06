@@ -1,7 +1,4 @@
-﻿@using GFSWeb.sdk.Models
-@using GFSWeb.sdk.Store
-
-@if (!_initialized)
+﻿@if (!_initialized)
 {
     <MudProgressLinear Color="Color.Primary" Indeterminate="true" Rounded="true" Size="Size.Medium" Value="100" Style="margin:20px" />
 }
@@ -12,12 +9,12 @@ else
     </div>
 
     <MudNavMenu>
-        @foreach(var menu in _menuList)
+        @foreach (var menu in _menuList)
         {
             <MudNavGroup Title="@menu.MenuDescription" Expanded="@_searchString.IsNotEmpty()">
-                @foreach(var item in menu.Items)
+                @foreach (var item in menu.Items)
                 {
-                    <MudNavLink OnClick="@(() => SelectedItemChanged(item))">@item.Key</MudNavLink>
+                    <MudNavLink OnClick="@(() => SelectedItemChanged(item))">@item.Description</MudNavLink>
                 }
             </MudNavGroup>
         }
@@ -27,22 +24,6 @@ else
             <MudNavLink Href="/security">Security</MudNavLink>
         </MudNavGroup>
     </MudNavMenu>
-
-@*     <MudDataGrid T="MenuGroup" Items="@_menuList" Dense="true" Hover="true" Elevation="0" @ref=_dataGrid>
-        <Columns>
-            <HierarchyColumn EnableHeaderToggle=true InitiallyExpandedFunc="@(_ => _searchString.IsNotEmpty())" />
-            <PropertyColumn Property="x => x.MenuDescription" Title="Report Type" Sortable="true" />
-        </Columns>
-        <ChildRowContent>
-            <div style="margin-top:10px">
-                <MudDataGrid T="MenuItem" Items="@context.Item.Items" Elevation="3" SelectedItemChanged="@SelectedItemChanged">
-                    <Columns>
-                        <PropertyColumn Property="x => x.Key" Title="@(context.Item.MenuDescription + " Report")" Sortable="true" />
-                    </Columns>
-                </MudDataGrid>
-            </div>
-        </ChildRowContent>
-    </MudDataGrid> *@
 }
 
 
@@ -52,7 +33,6 @@ else
     private bool _initialized = false;
     private IReadOnlyList<PrincipalMenuRecord> _list = Array.Empty<PrincipalMenuRecord>();
     private string? _searchString;
-    // private MudDataGrid<MenuGroup> _dataGrid = null!;
     private IReadOnlyList<MenuGroup> _menuList = null!;
 
     private record MenuGroup(string MenuDescription, IReadOnlyList<MenuItem> Items);
@@ -72,7 +52,7 @@ else
             .GroupBy(x => x.MenuId)
             .Select(x => new MenuGroup(
                 x.First().MenuDescription,
-                x.Where(x => x.Like(_searchString)).Select(y => new MenuItem(y.Description, y.PackageId)).ToArray()
+                x.Where(x => x.Like(_searchString)).Select(y => new MenuItem(y.PackageId, y.Description)).ToArray()
             ))
             .Where(x => x.Items.Any())
             .ToArray();
@@ -97,12 +77,5 @@ else
         _searchString = searchString;
         LoadList();
         StateHasChanged();
-
-        // if (searchString.IsEmpty())
-        // {
-        //     await _dataGrid.CollapseAllHierarchy();
-        // }
-
-        // await _dataGrid.ExpandAllHierarchy();
     }
 }

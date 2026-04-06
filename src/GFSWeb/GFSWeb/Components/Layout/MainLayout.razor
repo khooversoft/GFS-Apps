@@ -1,4 +1,6 @@
 ﻿@inherits LayoutComponentBase
+@inject NavigationManager Navigation
+@inject IHttpContextAccessor HttpContextAccessor
 
 @* <MudThemeProvider Theme=_theme IsDarkMode=_isDarkMode /> *@
 <MudThemeProvider Theme="GFSWeb.Application.PrimaryTheme.Theme" IsDarkMode=_isDarkMode />
@@ -28,10 +30,31 @@
 </div>
 
 @code {
+    private const string DarkModeCookieName = "darkMode";
+
     bool _drawerOpen = false;
     bool _isDarkMode = false;
     // private MudTheme _theme = new();
 
+    protected override void OnInitialized()
+    {
+        if (HttpContextAccessor.HttpContext?.Request.Cookies.TryGetValue(DarkModeCookieName, out var darkModeValue) == true &&
+            bool.TryParse(darkModeValue, out var isDarkMode))
+        {
+            _isDarkMode = isDarkMode;
+        }
+    }
+
     private void DrawerToggle(bool state) => _drawerOpen = state;
-    private void OnDarkMode(bool isDarkMode) => _isDarkMode = isDarkMode;
+
+    private void OnDarkMode(bool isDarkMode)
+    {
+        _isDarkMode = isDarkMode;
+
+        var relativePath = Navigation.ToBaseRelativePath(Navigation.Uri);
+        var returnUrl = relativePath.IsEmpty() ? "/" : $"/{relativePath}";
+        var setDarkModeUrl = $"/preferences/dark-mode?value={isDarkMode.ToString().ToLowerInvariant()}&returnUrl={Uri.EscapeDataString(returnUrl)}";
+
+        Navigation.NavigateTo(setDarkModeUrl, forceLoad: true);
+    }
 }
