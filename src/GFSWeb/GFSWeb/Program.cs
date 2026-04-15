@@ -15,7 +15,7 @@ using Toolbox.Extensions;
 using Toolbox.Tools;
 using Toolbox.Types;
 
-Console.WriteLine($"Starting {AppProgram.ServiceName} ver {AppProgram.ServiceVersion} ...");
+Console.WriteLine($"Starting {AppConstants.ServiceName} ver {AppConstants.ServiceVersion} ...");
 
 var builder = WebApplication.CreateBuilder(args);
 builder.AddServiceDefaults();
@@ -23,7 +23,7 @@ builder.AddServiceDefaults();
 // OpenTelemetry + Azure Monitor (App Insights)
 builder.Services.AddOpenTelemetry()
     .ConfigureResource(r => r
-        .AddService(serviceName: AppProgram.ServiceName, serviceVersion: AppProgram.ServiceVersion)
+        .AddService(serviceName: AppConstants.ServiceName, serviceVersion: AppConstants.ServiceVersion)
         .AddAttributes(new[]
         {
             new KeyValuePair<string, object>("deployment.environment", builder.Environment.EnvironmentName),

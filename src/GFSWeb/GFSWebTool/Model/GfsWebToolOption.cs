@@ -2,7 +2,8 @@
 
 internal class GfsWebToolOption
 {
-    public string OriginalConnectionString { get; init; } = null!;
-    public string ManagementConnectionString { get; init; } = null!;
+    public string CorpAccountConnection { get; init; } = null!;
+    public string FxReconConnection { get; init; } = null!;
+    public string GfsWebConnection { get; init; } = null!;
 
 }

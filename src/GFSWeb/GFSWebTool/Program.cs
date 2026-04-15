@@ -1,5 +1,6 @@
 ﻿using System.CommandLine;
 using System.Reflection;
+using GFSWeb.sdk;
 using GFSWebTool.Commands;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -19,6 +20,7 @@ IHost host = Host.CreateDefaultBuilder(args)
     {
         services.AddSingleton<ICommand, ExportElimConfigCommand>();
         services.AddSingleton<ICommand, ImportElimConfigCommand>();
+        services.AddSingleton<IAuthAccess, FakeAuthAccess>();
     })
     .Build();
 

@@ -128,8 +128,8 @@
 
         Option<int> saveOption = _newRecord switch
         {
-            true => await _store.Add(_record),
-            false => await _store.Update(_record)
+            true => await _store.AddOrUpdate(_record),
+            false => await _store.AddOrUpdate(_record)
         };
 
         if (saveOption.IsError())

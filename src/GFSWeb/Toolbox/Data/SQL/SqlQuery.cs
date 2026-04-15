@@ -33,14 +33,9 @@ public class SqlQuery
         return this;
     }
 
-    public SqlQuery AddParameter<T>(string name, T? value, bool addValueIfNull = false)
+    public SqlQuery AddParameter<T>(string name, T? value)
     {
         name.NotEmpty();
-
-        if (!addValueIfNull && default(T) is null && value is null)
-        {
-            return this;
-        }
 
         if (typeof(T).IsEnum)
         {
@@ -137,7 +132,7 @@ public class SqlQuery
                         continue;
 
                     case _errorNumber:
-                        _logger.LogError(sqlEx, "SQL error - Command: {Command}, Parameters: {Parameters}", Command, Parameters);
+                        _logger.LogWarning(sqlEx, "SQL error - Command: {Command}, Parameters: {Parameters}", Command, Parameters);
                         return new StoredProcedureError(Command, sqlEx.Message);
                 }
 

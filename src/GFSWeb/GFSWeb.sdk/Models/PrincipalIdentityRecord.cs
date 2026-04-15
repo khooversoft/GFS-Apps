@@ -1,18 +1,8 @@
-﻿using System.Collections.Frozen;
-using Toolbox.Extensions;
+﻿using Toolbox.Extensions;
 using Toolbox.Tools;
 using Toolbox.Types;
 
 namespace GFSWeb.sdk.Models;
-
-public static class IdentityRole
-{
-    public const string ReaderRole = "reader";
-    public const string ContributorRole = "contributor";
-    public const string OwnerRole = "owner";
-
-    public static FrozenSet<string> ValidRoles { get; } = new string[] { IdentityRole.ReaderRole, IdentityRole.ContributorRole, IdentityRole.OwnerRole }.ToFrozenSet();
-}
 
 public record PrincipalIdentityRecord
 {
@@ -128,4 +118,33 @@ public record PrincipalIdentityRecord
 public static class PrincipalIdentityRecordExtensions
 {
     public static Option<IValidatorResult> Validate(this PrincipalIdentityRecord record) => PrincipalIdentityRecord.Validator.Validate(record);
+
+    public static PrincipalIdentityRecord ConvertTo(this UserRecord record) => new PrincipalIdentityRecord
+    {
+        NameIdentifier = record.Email.NotEmpty(),
+        UserName = record.UserID_Network,
+        Email = record.Email,
+        Disabled = false,
+        Role = IdentityRole.ReaderRole,
+        Parker = false,
+        ParkerPost = false,
+        UserID_SAP = record.UserID_SAP,
+        FirstName = record.FirstName,
+        NickName = record.NickName,
+        MiddleName = record.MiddleName,
+        LastName = record.LastName,
+        Location = record.Location,
+        ParkPost = record.ParkPost,
+        PostEmail = record.PostEmail,
+        CCEmail1 = record.CCEmail1,
+        CCEmail2 = record.CCEmail2,
+        Elim = record.Elim,
+        Co_Update = record.Co_Update,
+        Co_View = record.Co_View,
+        CC_NodeID = record.CC_NodeID,
+        Flex1 = record.Flex1,
+        Flex2 = record.Flex2,
+        Flex3 = record.Flex3,
+        PostEmail2 = record.PostEmail2
+    };
 }

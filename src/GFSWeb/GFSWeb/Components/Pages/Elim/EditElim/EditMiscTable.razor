@@ -1,0 +1,12 @@
+﻿<MudStack Row="true" Spacing="2">
+    <MudText>@MiscTable.Table_ID</MudText>
+    <MudTextField Label="Description" Variant="Variant.Outlined" @bind-Value=MiscTable.Descr />
+    <MudTextField Label="Field1" Variant="Variant.Outlined" @bind-Value=MiscTable.Field1 />
+    <MudTextField Label="Field2" Variant="Variant.Outlined" @bind-Value=MiscTable.Field2 />
+    <MudTextField Label="Field3" Variant="Variant.Outlined" @bind-Value=MiscTable.Field3 />
+    <MudTextField Label="Field4" Variant="Variant.Outlined" @bind-Value=MiscTable.Field4 />
+</MudStack>
+
+@code {
+    [Parameter] public MiscTablesRecord MiscTable { get; set; } = null!;
+}

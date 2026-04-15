@@ -1,5 +1,6 @@
 <Solution>
   <Project Path="GFSWeb.AppHost/GFSWeb.AppHost.csproj" />
+  <Project Path="GFSWeb.sdk.test/GFSWeb.sdk.test.csproj" Id="0709e00e-e15c-413f-b362-4f9420c898bf" />
   <Project Path="GFSWeb.sdk/GFSWeb.sdk.csproj" Id="301c022f-37c8-4e15-a8d9-5766cd56c4dd" />
   <Project Path="GFSWeb.ServiceDefaults/GFSWeb.ServiceDefaults.csproj" />
   <Project Path="GFSWeb/GFSWeb.csproj" />

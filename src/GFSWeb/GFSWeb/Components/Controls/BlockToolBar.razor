@@ -1,5 +1,11 @@
-﻿<div style="margin-top:20px;border-bottom-width:1px;border-bottom-color: lightgray">
+﻿<MudPaper Elevation="1">
     <MudToolBar Dense=true Gutters=false>
+        @if (Title is not null)
+        {
+            <MudText Typo="Typo.h6" Style="margin-left:10px">@Title</MudText>
+            <MudSpacer />
+        }
+
         @foreach (var action in Actions.Where(a => a.Show))
         {
             <MudButton StartIcon="@action.Icon"
@@ -12,8 +18,11 @@
             </MudButton>
         }
 
-        <MudSpacer />
-                            
+        @if (Title is null)
+        {
+            <MudSpacer />
+        }
+
         @if (OnSearch.HasDelegate)
         {
             <div class="toolbar-search-container">
@@ -35,7 +44,7 @@
     <div style="margin-bottom: 5px">
         @ChildContent
     </div>
-</div>
+</MudPaper>
 
 @code {
     [Parameter] public RenderFragment ChildContent { get; set; } = null!;
@@ -58,6 +67,7 @@
     [Parameter] public string? Width { get; set; }
 
     private const string _buttonStyle = "margin: 0px 5px;";
+    private const string _panelStyle = "margin-top:20px;border-bottom-width:1px;border-bottom-color: lightgray";
 
     private bool ShowTooBar =>
         OnAdd.HasDelegate ||

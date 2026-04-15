@@ -1,0 +1,29 @@
+﻿@if (_context is not null)
+{
+    <WhereEdit EditContext="@_context" OnUpdate="@OnUpdate" />
+}
+
+@code {
+    [CascadingParameter] public EditPackageContext EditContext { get; set; } = null!;
+    [Parameter] public EventCallback OnUpdate { get; set; }
+
+    private WhereEditContext _context = null!;
+
+    protected override void OnParametersSet()
+    {
+        var list = EditContext.ElimSelects.Values.Select(x => new WhereClause
+        {
+            FieldName = x.FieldName,
+            Operator = OperatorTool.ToOperator(x.Oper, x.IncExcl),
+            Value = x.FromVal,
+            Value2 = x.ThruVal,
+        }).ToList();
+
+        _context = new WhereEditContext
+        {
+            FieldNames = ElimSelectRecordTool.FieldNames,
+            WhereItems = list,
+            ReadWhereItems = list.Select(x => x with { }).ToList(),
+        };
+    }
+}

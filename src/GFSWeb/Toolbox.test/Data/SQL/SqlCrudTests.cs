@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Toolbox.Data;
+using Toolbox.Extensions;
 using Toolbox.Tools;
 
 namespace Toolbox.Test.Data.SQL;
@@ -13,11 +14,13 @@ public class SqlCrudTests
     private ITestOutputHelper _outputHelper;
     private const string _connectionString = "Data Source=localhost;Initial Catalog=GFSWeb;Integrated Security=True;TrustServerCertificate=False;Encrypt=False";
 
-    public record AppRole()
+    public record TestPrincipal()
     {
-        public int RoleId { get; init; }
-        public string RoleCode { get; init; } = null!;
-        public string Description { get; init; } = null!;
+        public string NameIdentifier { get; init; } = null!;
+        public string UserName { get; init; } = null!;
+        public string Email { get; init; } = null!;
+
+        public bool IsValid() => NameIdentifier.IsNotEmpty() && UserName.IsNotEmpty() && Email.IsNotEmpty();
     }
 
 
@@ -32,7 +35,7 @@ public class SqlCrudTests
             {
                 services.AddLogging(c => c.AddLambda(_outputHelper.WriteLine).AddDebug().AddFilter(_ => true));
 
-                services.AddSqlClient<AppRole>(config => config.ConnectionString = _connectionString);
+                services.AddSqlClient<TestPrincipal>(config => config.ConnectionString = _connectionString);
             })
             .Build();
 
@@ -45,7 +48,7 @@ public class SqlCrudTests
         using var host = await BuildService();
         var logger = host.Services.GetRequiredService<ILogger<SqlCrudTests>>();
 
-        var sqlClient = host.Services.GetRequiredService<ISqlClient<AppRole>>();
+        var sqlClient = host.Services.GetRequiredService<ISqlClient<TestPrincipal>>();
         sqlClient.TestConnection().BeTrue();
     }
 
@@ -55,18 +58,18 @@ public class SqlCrudTests
         using var host = await BuildService();
         var logger = host.Services.GetRequiredService<ILogger<SqlCrudTests>>();
 
-        var sqlClient = host.Services.GetRequiredService<ISqlClient<AppRole>>();
+        var sqlClient = host.Services.GetRequiredService<ISqlClient<TestPrincipal>>();
+
+        string cmd = """
+            select top(2) * from app.PrincipalIdentity 
+            """;
 
         var result = await sqlClient.Query()
-            .SetCommand("select * from appdbo.approle", CommandType.Text)
-            .Execute<AppRole>();
+            .SetCommand(cmd, CommandType.Text)
+            .Execute<TestPrincipal>();
 
-        result.Count.Be(5);
-        string[] expectedRoleCodes = ["reader", "contributor", "owner", "parker", "parker-post"];
-
-        var o1 = expectedRoleCodes.OrderBy(x => x).ToArray();
-        var r1 = result.Select(x => x.RoleCode).OrderBy(x => x).ToArray();
-        r1.SequenceEqual(o1).BeTrue();
+        result.Count.Be(2);
+        result.ForEach(x => x.IsValid().BeTrue());
 
         logger.LogInformation("Connected successfully");
     }

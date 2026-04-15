@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using Toolbox.Data;
 using Toolbox.Extensions;
 using Toolbox.Tools;
+using System.Collections.Frozen;
 
 namespace GFSWebTool.Commands;
 
@@ -14,6 +15,7 @@ internal class ExportElimConfigCommand : ICommand
 {
     private readonly IServiceProvider _serviceProvider;
     private readonly ILogger<ExportElimConfigCommand> _logger;
+    private static readonly FrozenSet<string> _requiredTableIds = new[] { "UserList", "UserCoAccess", "UserAccess", "UserRoles" }.ToFrozenSet(StringComparer.OrdinalIgnoreCase);
 
     public ExportElimConfigCommand(IServiceProvider serviceProvider, ILogger<ExportElimConfigCommand> logger)
     {
@@ -47,18 +49,28 @@ internal class ExportElimConfigCommand : ICommand
     {
         ClearPackages(outputFolder);
         var context = await ReadAllData(config);
+        context = await ReadFxReconData(config, context);
         context = await BuildReportPackages(context);
 
-        WriteDirectory(outputFolder, context.ElimTreeList);
+        WriteDirectory(outputFolder, context);
         WriteReportPackages(outputFolder, context);
     }
 
-    private void WriteDirectory(DirectoryInfo outputFolder, IReadOnlyList<ElimTreeRecord> menuRecords)
+    private void WriteDirectory(DirectoryInfo outputFolder, Context context)
     {
-        var dirJson = new ReportDirectoryModel
+        var data = new ReportDirectoryModel
         {
-            Items = menuRecords.Where(x => x.Parent == "top").Select(x => x.ConvertTo()).ToArray(),
-        }.ToJson();
+            Items = context.ElimTreeList.Where(x => x.Parent == "top").Select(x => x.ConvertTo()).ToArray(),
+            Users = context.UserList.Select(x => x.ConvertTo()).ToArray(),
+
+            UserAccess = context.MiscTableList
+                .Where(x => _requiredTableIds.Contains(x.Table_ID))
+                .Select(x => x.ConvertTo())
+                .ToArray(),
+
+        };
+
+        var dirJson = data.ToJson();
 
         string dirFullFileName = Path.Combine(outputFolder.FullName, "ReportDirectory.json");
         File.WriteAllText(dirFullFileName, dirJson);
@@ -105,8 +117,7 @@ internal class ExportElimConfigCommand : ICommand
                 PackageType = ReportPackageModelTool.GetPackageType(x.PackageType),
                 Elimination = lookupElimination(x.ShortName, x.Def),
                 ElimSelects = lookupElimSelect(x.ElimId),
-                SqlCommand = lookupSqlCommand(x.Id),
-                SqlSelect = lookupSqlSelect(x.Id),
+                MiscTables = getRequiredTables(x.Id),
             }).ToArray();
 
         context = context with { ReportPackages = list };
@@ -124,32 +135,40 @@ internal class ExportElimConfigCommand : ICommand
             _ => Array.Empty<ElimSelectRecord>(),
         };
 
-        IReadOnlyList<MiscTablesRecord> lookupSqlCommand(string id) => context.MiscTableList
-            .Where(x => x.Table_ID == "SQL-" + id)
-            .OrderBy(x => x.ID)
-            .ToArray();
-
-        IReadOnlyList<MiscTablesRecord> lookupSqlSelect(string id) => context.MiscTableList
-            .Where(x => x.Table_ID.EqualsIgnoreCase("SQLselect") && x.ID.Like(id + "*"))
-            .OrderBy(x => x.ID)
+        IReadOnlyList<MiscTablesRecord> getRequiredTables(string id) => context.MiscTableList
+            .Where(x => TableIdMap.IsRequiredTableId(id, x))
+            .OrderBy(x => x.Table_ID)
+            .ThenBy(x => x.ID)
             .ToArray();
     }
 
-    private EliminationImportStore CreateSqlStore(FileInfo connector)
+    private CorpAccountStore CreateCorpAccountStore(FileInfo connector)
     {
         var config = new ConfigurationBuilder()
             .AddJsonFile(connector.FullName)
             .Build();
 
         var sqlWebToolOption = config.Get<GfsWebToolOption>().NotNull();
-        _logger.LogInformation("Creating SQL store with connectionString={connectionString}", sqlWebToolOption.OriginalConnectionString);
-        var store = SqlClientTool.CreateSqlStore<EliminationImportStore>(sqlWebToolOption.OriginalConnectionString, _serviceProvider);
+        _logger.LogInformation("Creating SQL store with connectionString={connectionString}", sqlWebToolOption.CorpAccountConnection);
+        var store = SqlClientTool.CreateSqlStore<CorpAccountStore>(sqlWebToolOption.CorpAccountConnection, _serviceProvider);
+        return store;
+    }
+
+    private CorpAccountStore CreateFxReconStore(FileInfo connector)
+    {
+        var config = new ConfigurationBuilder()
+            .AddJsonFile(connector.FullName)
+            .Build();
+
+        var sqlWebToolOption = config.Get<GfsWebToolOption>().NotNull();
+        _logger.LogInformation("Creating SQL store with connectionString={connectionString}", sqlWebToolOption.FxReconConnection);
+        var store = SqlClientTool.CreateSqlStore<CorpAccountStore>(sqlWebToolOption.FxReconConnection, _serviceProvider);
         return store;
     }
 
     private async Task<Context> ReadAllData(FileInfo config)
     {
-        var store = CreateSqlStore(config);
+        var store = CreateCorpAccountStore(config);
 
         _logger.LogInformation("Reading elimination records from database");
         IReadOnlyList<EliminationRecord> eliminationList = await store.GetEliminationRecords();
@@ -167,13 +186,40 @@ internal class ExportElimConfigCommand : ICommand
         IReadOnlyList<ElimTreeRecord> elimTreeRecords = await store.GetMenuTree();
         elimTreeRecords.Count.Assert(x => x > 0, "No menu tree records found in database");
 
+        IReadOnlyList<UserRecord> userRecords = await store.GetUserRecords();
+        userRecords.Where(x => x.Email.IsEmpty()).ForEach(x => _logger.LogError("Skipping user record with empty email UserID={UserID}", x.UserID_Network));
+        userRecords.Count.Assert(x => x > 0, "No user records found in database");
+        userRecords = userRecords.Where(x => x.Email.IsNotEmpty()).ToArray();
+
         return new Context
         {
             EliminationList = eliminationList,
             ElimSelectList = elimSelectList,
             MiscTableList = miscTableList,
             ElimTreeList = elimTreeRecords,
+            UserList = userRecords,
         };
+    }
+
+    private async Task<Context> ReadFxReconData(FileInfo config, Context context)
+    {
+        var store = CreateFxReconStore(config);
+
+        _logger.LogInformation("Reading Misc_Tables for user access from FxRecon database");
+        IReadOnlyList<MiscTablesRecord> miscTableList = await store.GetMiscTablesRecords();
+        miscTableList.Count.Assert(x => x > 0, "No miscTableList records found in database");
+
+        var addMiscTables = miscTableList.Where(x => _requiredTableIds.Contains(x.Table_ID)).ToArray();
+
+        context = context with
+        {
+            MiscTableList = context.MiscTableList
+                .Where(x => !_requiredTableIds.Contains(x.Table_ID))
+                .Concat(addMiscTables)
+                .ToArray(),
+        };
+
+        return context;
     }
 
     private record Context
@@ -182,6 +228,7 @@ internal class ExportElimConfigCommand : ICommand
         public IReadOnlyList<ElimSelectRecord> ElimSelectList { get; init; } = null!;
         public IReadOnlyList<MiscTablesRecord> MiscTableList { get; init; } = null!;
         public IReadOnlyList<ElimTreeRecord> ElimTreeList { get; init; } = null!;
+        public IReadOnlyList<UserRecord> UserList { get; init; } = null!;
         public IReadOnlyList<ReportPackageModel> ReportPackages { get; init; } = null!;
     }
 }

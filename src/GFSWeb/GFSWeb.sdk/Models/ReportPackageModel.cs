@@ -17,7 +17,7 @@ public enum PackageType
     UserManuals
 }
 
-public class ReportPackageModel
+public record ReportPackageModel
 {
     public string PackageId { get; set; } = null!;
     public string SortKey { get; set; } = null!;
@@ -27,8 +27,7 @@ public class ReportPackageModel
 
     public EliminationRecord? Elimination { get; init; }
     public IReadOnlyList<ElimSelectRecord> ElimSelects { get; init; } = Array.Empty<ElimSelectRecord>();
-    public IReadOnlyList<MiscTablesRecord> SqlCommand { get; init; } = Array.Empty<MiscTablesRecord>();
-    public IReadOnlyList<MiscTablesRecord> SqlSelect { get; init; } = Array.Empty<MiscTablesRecord>();
+    public IReadOnlyList<MiscTablesRecord> MiscTables { get; init; } = Array.Empty<MiscTablesRecord>();
 
     public static IValidator<ReportPackageModel> Validator { get; } = new Validator<ReportPackageModel>()
         .RuleFor(x => x.PackageId).NotEmpty()
@@ -37,8 +36,6 @@ public class ReportPackageModel
         .RuleFor(x => x.MenuId).NotEmpty()
         .RuleFor(x => x.PackageType).ValidEnum()
         .RuleFor(x => x.ElimSelects).NotNull()
-        .RuleFor(x => x.SqlCommand).NotNull()
-        .RuleFor(x => x.SqlSelect).NotNull()
         .Build();
 }
 

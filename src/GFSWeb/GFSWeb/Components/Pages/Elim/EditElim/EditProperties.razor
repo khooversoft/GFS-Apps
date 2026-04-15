@@ -1,0 +1,64 @@
+﻿<div style="margin-top:10px">
+    <BlockToolBar Title="@Title" OnAdd="OnAdd" />
+
+    <MudDataGrid T="MiscTablesRecord"
+                 Items="@Elements"
+                 ReadOnly="false"
+                 Dense="true"
+                 EditMode="@DataGridEditMode.Cell"
+                 EditTrigger="@DataGridEditTrigger.OnRowClick"
+                 StartedEditingItem="@StartedEditingItem"
+                 CanceledEditingItem="@CanceledEditingItem"
+                 CommittedItemChanges="@CommittedItemChanges"
+                 Bordered="true"
+                 ColumnResizeMode="@ResizeMode.Container">
+        <Columns>
+            <TemplateColumn CellStyle="width: 1%; white-space: nowrap;" HeaderStyle="width: 1%; white-space: nowrap;">
+                <EditTemplate>
+                    <MudStack Row Spacing="0">
+                        <MudIconButton Color="Color.Error" Size="@Size.Small" Icon="@Icons.Material.Outlined.Delete" OnClick="@(() => DeleteItem(context.Item))" />
+                    </MudStack>
+                </EditTemplate>
+            </TemplateColumn>
+            <PropertyColumn Property="x => x.Table_ID" Title="Table ID" Editable="!DisableTableId" />
+            <PropertyColumn Property="x => x.Descr" Title="Description" />
+            <PropertyColumn Property="x => x.Field1" Title="Field1" />
+            <PropertyColumn Property="x => x.Field2" Title="Field2" />
+            <PropertyColumn Property="x => x.Field3" Title="Field3" />
+            <PropertyColumn Property="x => x.Field4" Title="Field4" />
+        </Columns>
+    </MudDataGrid>
+</div>
+
+@code {
+    [Parameter] public List<MiscTablesRecord> Elements { get; set; } = null!;
+    [Parameter] public bool DisableTableId { get; set; }
+    [Parameter] public string Title { get; set; } = null!;
+    [Parameter] public EventCallback OnUpdate { get; set; }
+
+    private void StartedEditingItem(MiscTablesRecord item)
+    {
+    }
+
+    private void CanceledEditingItem(MiscTablesRecord item)
+    {
+    }
+
+    private async Task<DataGridEditFormAction> CommittedItemChanges(MiscTablesRecord item)
+    {
+        await OnUpdate.InvokeAsync();
+        return DataGridEditFormAction.Close;
+    }
+
+    private void OnAdd() { }
+    
+    private void EditItem(MiscTablesRecord item)
+    {
+    }
+
+    private void DeleteItem(MiscTablesRecord item)
+    {
+    }
+}
+
+

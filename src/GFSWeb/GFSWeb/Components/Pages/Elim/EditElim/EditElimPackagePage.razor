@@ -1,0 +1,118 @@
+﻿@page "/editElimPackages/{packageId}"
+@using GFSWeb.sdk.Models
+@using GFSWeb.sdk.Store
+@using Toolbox.Data
+
+<ReturnUrlButton ReturnUrl=@returnUrl />
+
+@if (!_initialized)
+{
+    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Rounded="true" Size="Size.Medium" Value="100" Style="margin:20px" />
+}
+else
+{
+    <BlockContainer>
+        <MudText Typo="Typo.h5" style="margin-top:20px" GutterBottom="true">@_currentRecord.NotNull().Description</MudText>
+
+        <MudText Typo="Typo.body1" GutterBottom="true">
+            Elim Package contains all the details on how to query and construct report.
+        </MudText>
+
+        <BlockToolBar OnSave="@OnSave" OnCancel="@OnCancel" />
+
+        <CascadingValue Value="_editPackageContext">
+            <MudTabs>
+                <MudTabPanel Text="Parameters">
+                    @foreach(var item in _sections)
+                    {
+                        <EditProperties Title="@item.Title" Elements="GetSection(item.SectionId)" DisableTableId="item.DisableTableId" OnUpdate="OnUpdate" />
+                    }
+                </MudTabPanel>
+                <MudTabPanel Text="SAP Query">
+                    <EditElimSelect OnUpdate="OnUpdate" />
+                </MudTabPanel>
+                <MudTabPanel Text="Mapping">
+                    <EditProperties Title="@SectionId.FieldSelect.GetTitle()" Elements="GetSection(SectionId.FieldSelect)" OnUpdate="OnUpdate" />
+                    <EditProperties Title="@SectionId.OutSelect.GetTitle()" Elements="GetSection(SectionId.OutSelect)" OnUpdate="OnUpdate" />
+                </MudTabPanel>
+                <MudTabPanel Text="SQL Commands">
+                    <EditSqlCommands Title="@SectionId.Sql.GetTitle()" Elements="GetSection(SectionId.Sql)" OnUpdate="OnUpdate" />
+                </MudTabPanel>
+            </MudTabs>
+        </CascadingValue>
+
+    </BlockContainer>
+}
+
+@code {
+    @inject NavigationManager _nav;
+    @inject ReportPackageStore _store;
+    [Parameter] public string PackageId { get; set; } = null!;
+    [Parameter, SupplyParameterFromQuery] public string returnUrl { get; set; } = null!;
+
+    private bool _initialized = false;
+    private EditPackageContext _editPackageContext = null!;
+    private ReportPackageRecord? _currentRecord;
+    private ReportPackageModel? _reportPackageModel;
+
+    private record EditProperty(SectionId SectionId, string Title, bool DisableTableId);
+
+    private EditProperty[] _sections = [
+        new EditProperty(SectionId.Parameters, SectionId.Parameters.GetTitle(), false),
+        new EditProperty(SectionId.ReconExcel, SectionId.ReconExcel.GetTitle(), true),
+        // new EditProperty(SectionId.Sql, SectionId.Sql.GetTitle(), true),
+        new EditProperty(SectionId.Pivot, SectionId.Pivot.GetTitle(), true),
+        new EditProperty(SectionId.Je, SectionId.Je.GetTitle(), true),
+        // new EditProperty(SectionId.FieldSelect, SectionId.FieldSelect.GetTitle(), true),
+        // new EditProperty(SectionId.OutSelect, SectionId.OutSelect.GetTitle(), true),
+        new EditProperty(SectionId.Data2Excel, SectionId.Data2Excel.GetTitle(), true),
+    ];
+
+    private List<MiscTablesRecord> GetSection(SectionId sectionId)
+    {
+        if (_reportPackageModel is null) return new List<MiscTablesRecord>();
+        return _reportPackageModel.MiscTables.Where(x => x.GetSectionId() == sectionId).ToList();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await LoadPackage();
+            StateHasChanged();
+        }
+    }
+
+    private async Task LoadPackage()
+    {
+        _currentRecord = (await _store.Get(PackageId)).BeOk().Return();
+        _reportPackageModel = _currentRecord.Unpack();
+
+        _editPackageContext = new EditPackageContext
+        {
+            PackageId = _reportPackageModel.PackageId,
+            Description = _reportPackageModel.Description,
+            PackageType = _reportPackageModel.PackageType,
+            Elimination = _reportPackageModel.Elimination,
+            ElimSelects = _reportPackageModel.ElimSelects.ToDictionary(_ => Guid.NewGuid().ToString(), x => new ElimSelectRecord
+            {
+                FieldName = x.FieldName,
+                Oper = x.Oper,
+                IncExcl = x.IncExcl,
+                FromVal = x.FromVal,
+                ThruVal = x.ThruVal,
+            }),
+            MiscTables = _reportPackageModel.MiscTables.ToDictionary(_ => Guid.NewGuid().ToString(), x => x with { }),
+        };
+
+        _initialized = true;
+    }
+
+    private void OnSave() => _nav.GotoElimPackages();
+    private void OnCancel() => _nav.GotoElimPackages();
+
+    public async Task OnUpdate()
+    {
+        await Task.CompletedTask;
+    }
+}

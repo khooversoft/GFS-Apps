@@ -1,1 +1,1 @@
-{"packageId":"U19","sortKey":null,"description":"U19 - Parker","menuId":"9","packageType":"none","elimination":null,"elimSelects":[],"sqlCommand":[],"sqlSelect":[]}
+{"packageId":"U19","sortKey":null,"description":"U19 - Parker","menuId":"9","packageType":"none","elimination":null,"elimSelects":[],"miscTables":[{"table_ID":"Inputs","id":"U19","descr":"Year","field1":"hide","field2":"","field3":"","field4":null,"field5":null,"field6":null},{"table_ID":"Inputs","id":"U19","descr":"Month","field1":"hide","field2":"","field3":"","field4":null,"field5":null,"field6":null}]}

@@ -1,4 +1,6 @@
-﻿namespace GFSWeb.Application.Models;
+﻿using Toolbox.Tools;
+
+namespace GFSWeb.Application.Models;
 
 public enum AndOr
 {
@@ -26,7 +28,7 @@ public record WhereClause
     public string? Value2 { get; set; }
 }
 
-public static class OperatorExtensions
+public static class OperatorTool
 {
     public static string ToSymbol(this Operator op)
     {
@@ -41,6 +43,17 @@ public static class OperatorExtensions
             _ => throw new ArgumentOutOfRangeException(nameof(op), op, null)
         };
     }
+
+    public static Operator ToOperator(string? oper, string? incExcl) => (oper.NotEmpty(), incExcl.NotEmpty() == "I" ? true : false) switch
+    {
+        ("EQ", true) => Operator.Equal,
+        ("EQ", false) => Operator.NotEqual,
+        ("BT", true) => Operator.Between,
+        ("BT", false) => Operator.NotBetween,
+        ("CP", true) => Operator.ComparePattern,
+        ("CP", false) => Operator.NotComparePattern,
+        _ => throw new ArgumentOutOfRangeException(nameof(oper), oper, null)
+    };
 
     public static bool IsValue2Required(this WhereClause where) => where.Operator is Operator.Between or Operator.NotBetween;
 }

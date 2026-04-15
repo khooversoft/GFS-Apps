@@ -17,22 +17,9 @@
                 </MudStack>
             </EditTemplate>
         </TemplateColumn>
-        <PropertyColumn Property="x => x.AndOr"
-                        Title="And/Or"
-                        CellStyle="width: 1%; white-space: nowrap;"
-                        HeaderStyle="width: 1%; white-space: nowrap;">
+        <PropertyColumn Property="x => x.FieldName" Title="Field Name" CellStyle="width: 1%; white-space: nowrap;" HeaderStyle="width: 1%; white-space: nowrap;">
             <EditTemplate>
-                <MudSelect T="AndOr" @bind-Value="context.Item.AndOr" @bind-Value:after="OnWhereItemsChanged" Required RequiredError="Select operator" Margin="@Margin.Dense" Dense="true">
-                    @foreach (var op in Enum.GetValues<AndOr>())
-                    {
-                        <MudSelectItem Value="@op">@op</MudSelectItem>
-                    }
-                </MudSelect>
-            </EditTemplate>
-        </PropertyColumn>
-        <PropertyColumn Property="x => x.FieldName" Title="Field Name">
-            <EditTemplate>
-                <MudSelect T="string" @bind-Value="context.Item.FieldName" Required RequiredError="Select field" Margin="@Margin.Dense">
+                <MudSelect T="string" @bind-Value="context.Item.FieldName" @bind-Value:after="OnWhereItemsChanged" Required RequiredError="Select field" Margin="@Margin.Dense">
                     @foreach (var field in EditContext.FieldNames)
                     {
                         <MudSelectItem Value="@field">@field</MudSelectItem>
@@ -64,7 +51,7 @@
 
 
 @code {
-    [CascadingParameter] public WhereEditContext EditContext { get; set; } = null!;
+    [Parameter] public WhereEditContext EditContext { get; set; } = null!;
     [Parameter] public EventCallback OnUpdate { get; set; }
 
     private List<WhereClause> _whereItems = null!;

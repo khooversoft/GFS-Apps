@@ -10,10 +10,9 @@ namespace Toolbox.Data;
 [DebuggerDisplay("Name={Name}, Value={Value}")]
 public class SqlSimpleParameter : ISqlParameter
 {
-    public SqlSimpleParameter(string name, object value)
+    public SqlSimpleParameter(string name, object? value)
     {
         name.NotEmpty();
-        value.NotNull();
 
         Name = name;
         Value = value;
@@ -25,9 +24,9 @@ public class SqlSimpleParameter : ISqlParameter
     public string Name { get; set; }
 
     /// <summary>
-    /// Value of the parameter
+    /// Value of the parameter — null is mapped to DBNull.Value when sent to SQL Server
     /// </summary>
-    public object Value { get; set; }
+    public object? Value { get; set; }
 
     /// <summary>
     /// Convert to SQL Parameter
@@ -35,6 +34,6 @@ public class SqlSimpleParameter : ISqlParameter
     /// <returns>SQL parameter</returns>
     public SqlParameter ToSqlParameter()
     {
-        return new SqlParameter(Name, Value);
+        return new SqlParameter(Name, Value ?? DBNull.Value);
     }
 }
