@@ -1,4 +1,6 @@
-﻿<div style="margin-top:10px">
+﻿@using Microsoft.SqlServer.TransactSql.ScriptDom;
+
+<div style="margin-top:10px">
     <BlockToolBar OnAdd="OnAdd" />
 
     <MudDataGrid T="MiscTablesRecord"
@@ -29,7 +31,45 @@
     <MudDrawerContainer>
         <div style="margin:10px">
             <BlockToolBar OnSave="OnSave" OnCancel="OnCancel" />
-            <MudTextField @bind-Value="_sqlCommands" Label="Edit SQL Command" Variant="Variant.Outlined" Clearable="true" Sizing="InputSizing.Auto" Lines="10" />
+            <div style="margin-top:20px">
+                <MudToolBar>
+                    <MudSpacer />
+                    <MudTooltip Text="Clear">
+                        <MudIconButton Icon="@Icons.Material.Outlined.Clear" OnClick="OnClear" Disabled="@(string.IsNullOrEmpty(_sqlCommands))" />
+                    </MudTooltip>
+                    <MudTooltip Text="Format">
+                        <MudIconButton Icon="@Icons.Material.Outlined.FormatLineSpacing" OnClick="OnFormat" Disabled="@(string.IsNullOrEmpty(_sqlCommands) || _syntaxErrors.Count > 0)" />
+                    </MudTooltip>
+                    <MudTooltip Text="Undo">
+                        <MudIconButton Icon="@Icons.Material.Outlined.Undo" OnClick="OnUndo" Disabled="@(_undoStack.Count == 0)" />
+                    </MudTooltip>
+                </MudToolBar>
+                <MudTextField Label="Edit SQL Command"
+                              Variant="Variant.Outlined"
+                              Sizing="InputSizing.Auto"
+                              Lines="5"
+                              @bind-Value="@_sqlCommands"
+                              @bind-Value:after="@OnChange"
+                              Immediate="true" />
+
+                @if (_syntaxErrors.Count > 0)
+                {
+                    <MudAlert Severity="Severity.Error" Dense="true" Class="my-2">
+                        <MudText Typo="Typo.body2"><strong>Syntax Errors:</strong></MudText>
+                        <ul style="margin: 0; padding-left: 20px;">
+                            @foreach (var error in _syntaxErrors)
+                            {
+                                <li>Line @error.Line, Column @error.Column: @error.Message</li>
+                            }
+                        </ul>
+                    </MudAlert>
+                }
+
+                <MudText Style="margin-top:10px" Typo="Typo.body2">Generated Script</MudText>
+                <MudPaper Elevation="1" Style="padding:10px">
+                    <pre style="margin:0; font-family: 'Consolas', 'Courier New', monospace; white-space: pre-wrap; word-wrap: break-word;">@_formattedSql</pre>
+                </MudPaper>
+            </div>
         </div>
     </MudDrawerContainer>
     <MudDivider />
@@ -43,7 +83,10 @@
 
     private bool _openSettings = false;
     private string _sqlCommands = "";
+    private string _formattedSql = "";
+    private IList<ParseError> _syntaxErrors = [];
     private MiscTablesRecord? _editRecord;
+    private Stack<string> _undoStack = new();
 
     private void OnAdd() { }
 
@@ -52,19 +95,98 @@
     private void OnCancel()
     {
         _openSettings = false;
-        _sqlCommands = "";    
+        _sqlCommands = "";
+        _formattedSql = "";
+        _syntaxErrors = [];
         _editRecord = null;
+        _undoStack.Clear();
+    }
+
+    private void OnChange()
+    {
+        if (_undoStack.Count == 0 || _undoStack.Peek() != _sqlCommands)
+        {
+            _undoStack.Push(_sqlCommands);
+        }
+        (_formattedSql, _syntaxErrors) = Format(_sqlCommands);
     }
 
     private void EditItem(MiscTablesRecord item)
     {
-        _editRecord = item;
         _sqlCommands = item.Descr;
+        _editRecord = item;
+        _undoStack.Clear();
+        _undoStack.Push(_sqlCommands);
+        (_formattedSql, _syntaxErrors) = Format(_sqlCommands);
         _openSettings = true;
     }
 
     private void DeleteItem(MiscTablesRecord item)
     {
+    }
+
+    private void OnClear()
+    {
+        if (!string.IsNullOrEmpty(_sqlCommands))
+        {
+            _undoStack.Push(_sqlCommands);
+        }
+        _sqlCommands = "";
+        _formattedSql = "";
+        _syntaxErrors = [];
+    }
+
+    private void OnFormat()
+    {
+        if (_syntaxErrors.Count == 0 && !string.IsNullOrEmpty(_formattedSql))
+        {
+            _undoStack.Push(_sqlCommands);
+            _sqlCommands = _formattedSql;
+        }
+    }
+
+    private void OnUndo()
+    {
+        if (_undoStack.Count > 0)
+        {
+            _sqlCommands = _undoStack.Pop();
+            (_formattedSql, _syntaxErrors) = Format(_sqlCommands);
+        }
+    }
+
+    private static (string FormattedSql, IList<ParseError> Errors) Format(string sql)
+    {
+        var parser = new TSql150Parser(false);
+        var fragment = parser.Parse(new StringReader(sql), out var errors);
+
+        if (errors.Count > 0)
+        {
+            return (sql, errors);
+        }
+
+        var generator = new Sql150ScriptGenerator(
+            new SqlScriptGeneratorOptions
+            {
+                KeywordCasing = KeywordCasing.Uppercase,
+                IndentationSize = 4,
+                IndentSetClause = true,
+                IndentViewBody = true,
+                AlignClauseBodies = true,
+                MultilineInsertSourcesList = true,
+                MultilineInsertTargetsList = true,
+                MultilineSelectElementsList = true,
+                MultilineSetClauseItems = true,
+                MultilineViewColumnsList = true,
+                MultilineWherePredicatesList = true,
+                IncludeSemicolons = true,
+                NewLineBeforeFromClause = true,
+                NewLineBeforeWhereClause = true,
+                NewLineBeforeGroupByClause = true,
+                NewLineBeforeOrderByClause = true,
+            });
+
+        generator.GenerateScript(fragment, out var formattedSql);
+        return (formattedSql, []);
     }
 }
 

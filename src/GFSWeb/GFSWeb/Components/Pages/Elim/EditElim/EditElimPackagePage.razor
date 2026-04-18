@@ -23,7 +23,7 @@ else
         <CascadingValue Value="_editPackageContext">
             <MudTabs>
                 <MudTabPanel Text="Parameters">
-                    @foreach(var item in _sections)
+                    @foreach (var item in _sections)
                     {
                         <EditProperties Title="@item.Title" Elements="GetSection(item.SectionId)" DisableTableId="item.DisableTableId" OnUpdate="OnUpdate" />
                     }
@@ -94,14 +94,7 @@ else
             Description = _reportPackageModel.Description,
             PackageType = _reportPackageModel.PackageType,
             Elimination = _reportPackageModel.Elimination,
-            ElimSelects = _reportPackageModel.ElimSelects.ToDictionary(_ => Guid.NewGuid().ToString(), x => new ElimSelectRecord
-            {
-                FieldName = x.FieldName,
-                Oper = x.Oper,
-                IncExcl = x.IncExcl,
-                FromVal = x.FromVal,
-                ThruVal = x.ThruVal,
-            }),
+            ElimSelects = _reportPackageModel.ElimSelects.ToDictionary(_ => Guid.NewGuid().ToString(), x => x with { }),
             MiscTables = _reportPackageModel.MiscTables.ToDictionary(_ => Guid.NewGuid().ToString(), x => x with { }),
         };
 
