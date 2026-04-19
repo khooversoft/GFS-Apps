@@ -3,14 +3,27 @@
 @using GFSWeb.sdk.Store
 @using Toolbox.Data
 
-<ReturnUrlButton ReturnUrl=@returnUrl />
+<MudStack Spacing="2">
+    <ReturnUrlButton ReturnUrl=@returnUrl />
 
-<div style="margin-top:20px">
-    <MudText Typo="Typo.h5" GutterBottom="true">Run Elim Report</MudText>
-    <MudText Typo="Typo.body1" GutterBottom="true">
-        This page is for running Elim reports.  Select a report from the list and click the Run button.
-    </MudText>
-</div>
+    @if (!_initialized)
+    {
+        <MudProgressLinear Color="Color.Primary" Indeterminate="true" Rounded="true" Size="Size.Medium" Value="100" Style="margin:20px" />
+    }
+    else
+    {
+        <MudTabs>
+            <MudTabPanel Text="Run">
+                <MudStack Spacing="4" Style="margin-top:20px">
+                    <MudText Typo="Typo.body1">@GetPackageDesecription()</MudText>
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick=OnRun Style="max-width:90px">Run</MudButton>
+                </MudStack>
+            </MudTabPanel>
+            <MudTabPanel Text="Schedule">
+            </MudTabPanel>
+        </MudTabs>
+    }
+</MudStack>
 
 
 @code {
@@ -20,5 +33,30 @@
     [Parameter] public string PackageId { get; set; } = null!;
     [Parameter, SupplyParameterFromQuery] public string returnUrl { get; set; } = null!;
 
-    private bool _runDisabled = true;
+    private bool _initialized = false;
+    private ReportPackageRecord? _currentRecord;
+    private ReportPackageModel? _reportPackageModel;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await LoadPackage();
+            StateHasChanged();
+        }
+    }
+
+    private async Task LoadPackage()
+    {
+        _currentRecord = (await _store.Get(PackageId)).BeOk().Return();
+        _reportPackageModel = _currentRecord.Unpack();
+
+        _initialized = true;
+    }
+
+    private string GetPackageDesecription() => _reportPackageModel is not null ? $"Package: {_reportPackageModel.Description}" : "Not loaded";
+
+    private async Task OnRun()
+    {
+    }
 }
