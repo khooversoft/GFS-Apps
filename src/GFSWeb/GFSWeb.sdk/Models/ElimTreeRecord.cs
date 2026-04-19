@@ -23,7 +23,7 @@ public static class ElimTreeRecordTool
         var elimIdAndType = ExtractElimIdAndType(record);
         var shortNameAndDef = ExtractShortNameAndDef(record);
 
-        if( elimIdAndType == null && shortNameAndDef == null) return record;
+        if (elimIdAndType == null && shortNameAndDef == null) return record;
 
         var newRecord = record with
         {
@@ -42,7 +42,7 @@ public static class ElimTreeRecordTool
         { Length: 3 } => (char.IsLetter(record.Id[0]), int.TryParse(record.Id[1..], out int value)) switch
         {
             (true, true) => (elimType: record.Id[0].ToString(), elimId: value),
-             _ => null
+            _ => null
         },
         _ => null,
     };

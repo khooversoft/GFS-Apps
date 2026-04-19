@@ -23,7 +23,8 @@ public class EditElimContextTests
             Description = "Description",
             PackageType = PackageType.GLSUs,
             Elimination = new EliminationRecord { ID = 1 },
-            ElimSelects = new Dictionary<string, ElimSelectRecord> {
+            ElimSelects = new Dictionary<string, ElimSelectRecord>
+            {
                 ["key"] = new ElimSelectRecord { ElimID = "2" }
             },
             MiscTables = new Dictionary<string, MiscTablesRecord>
@@ -39,7 +40,7 @@ public class EditElimContextTests
             Elimination = new EliminationRecord { ID = 1 },
             ElimSelects = new Dictionary<string, ElimSelectRecord>
             {
-                ["key"] = new ElimSelectRecord { ElimID = "2" } 
+                ["key"] = new ElimSelectRecord { ElimID = "2" }
             },
             MiscTables = new Dictionary<string, MiscTablesRecord>
             {

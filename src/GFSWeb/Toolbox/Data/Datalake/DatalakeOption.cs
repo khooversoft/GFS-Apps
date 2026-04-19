@@ -1,6 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using Azure.Core;
+using Azure.Storage.Files.DataLake;
+using Toolbox.Extensions;
 using Toolbox.Tools;
 using Toolbox.Types;
 
@@ -59,22 +59,5 @@ public static class DatalakeOptionTool
         if (newPath.StartsWith("/")) newPath = newPath[1..];
 
         return newPath;
-    }
-
-    public static DatalakeOption Create(string datalakeConnectionString, string clientSecretConnectionString)
-    {
-        var datalakeOptionDict = datalakeConnectionString.ToDictionaryFromString();
-        var datalakeOption = datalakeOptionDict.ToObject<DatalakeOption>();
-
-        var dictClientSecretDict = clientSecretConnectionString.ToDictionaryFromString();
-        var clientSecretOption = dictClientSecretDict.ToObject<ClientSecretOption>();
-
-        datalakeOption = datalakeOption with
-        {
-            Credentials = clientSecretOption,
-        };
-
-        datalakeOption.Validate().ThrowOnError("Invalid DatalakeOption, correct connection strings");
-        return datalakeOption;
     }
 }

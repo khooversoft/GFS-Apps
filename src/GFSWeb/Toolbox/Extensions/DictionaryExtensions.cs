@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Toolbox.Extensions;
+﻿namespace Toolbox.Extensions;
 
 public static class DictionaryExtensions
 {

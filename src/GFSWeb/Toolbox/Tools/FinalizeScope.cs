@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Toolbox.Tools;
+﻿namespace Toolbox.Tools;
 
 public sealed class FinalizeScope : IDisposable
 {

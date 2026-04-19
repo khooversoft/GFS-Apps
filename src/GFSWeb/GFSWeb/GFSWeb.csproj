@@ -5,7 +5,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <BlazorDisableThrowNavigationException>true</BlazorDisableThrowNavigationException>
-    <UserSecretsId>8d31686a-c752-4ee5-9890-f4d553bc755c</UserSecretsId>
+    <UserSecretsId>gfs-web-secrets</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>

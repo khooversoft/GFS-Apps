@@ -1,10 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using Azure;
+using Azure.Storage.Files.DataLake;
+using Azure.Storage.Files.DataLake.Models;
+using Microsoft.Extensions.Logging;
 using Toolbox.Tools;
 using Toolbox.Types;
 
-namespace Toolbox.Data.Datalake;
+namespace Toolbox.Data;
 
 public partial class DatalakeStore
 {

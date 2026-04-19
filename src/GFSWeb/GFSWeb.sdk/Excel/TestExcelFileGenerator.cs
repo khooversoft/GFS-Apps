@@ -1,14 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using ClosedXML.Excel;
-using Toolbox.Data;
+﻿using ClosedXML.Excel;
+using Toolbox.Types;
 
 namespace GFSWeb.sdk.Excel;
 
 public class TestExcelFileGenerator
 {
-    public static BlobData Generate()
+    public static DataETag Generate()
     {
         using var workbook = new XLWorkbook();
         var worksheet = workbook.AddWorksheet("Sample Sheet");
@@ -17,6 +14,6 @@ public class TestExcelFileGenerator
 
         using var stream = new MemoryStream();
         workbook.SaveAs(stream);
-        return new BlobData(stream.ToArray());
+        return new DataETag(stream.ToArray());
     }
 }
