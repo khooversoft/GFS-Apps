@@ -8,7 +8,7 @@ using Toolbox.test.Application;
 using Toolbox.Tools;
 using Toolbox.Types;
 
-namespace Toolbox.Test.Store.KeyStore;
+namespace Toolbox.test.Data.Datalake;
 
 public class Datalake_ETagTests
 {

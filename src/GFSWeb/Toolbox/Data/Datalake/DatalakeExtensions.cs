@@ -2,6 +2,7 @@
 using Azure.Storage.Files.DataLake;
 using Azure.Storage.Files.DataLake.Models;
 using Microsoft.Extensions.Logging;
+using Toolbox.Extensions;
 using Toolbox.Tools;
 using Toolbox.Types;
 
@@ -103,5 +104,45 @@ public static class DatalakeExtensions
 
         var result = await store.Delete(path);
         return result;
+    }
+
+    public static async Task<Option<string>> ForceSet(this DatalakeStore keyStore, string path, DataETag data)
+    {
+        keyStore.NotNull();
+        path.NotEmpty();
+
+        var writeOption = await keyStore.Set(path, data.StripETag());
+        if (writeOption.IsOk() || !writeOption.IsLocked()) return StatusCode.OK;
+
+        await keyStore.BreakLease(path);
+
+        var result = await keyStore.Set(path, data);
+        return result;
+    }
+
+    public static async Task<Option<string>> Add<T>(this DatalakeStore keyStore, string key, T value)
+    {
+        var data = value.ToDataETag();
+        return await keyStore.NotNull().Add(key, data);
+    }
+
+    public static async Task<Option<string>> Set<T>(this DatalakeStore keyStore, string key, T value)
+    {
+        var data = value.ToDataETag();
+        return await keyStore.NotNull().Set(key, data);
+    }
+
+    public static Task<Option<T>> Get<T>(this DatalakeStore keyStore, string key) => Get<T>(keyStore, key, data => data.ToObject<T>().NotNull());
+
+    public static async Task<Option<T>> Get<T>(this DatalakeStore keyStore, string key, Func<DataETag, Option<T>> converter)
+    {
+        keyStore.NotNull();
+        converter.NotNull();
+
+        var getOption = await keyStore.Get(key);
+        if (getOption.IsError()) return getOption.ToOptionStatus<T>();
+
+        DataETag data = getOption.Return();
+        return converter(data);
     }
 }
