@@ -1,7 +1,4 @@
-﻿using Toolbox.Tools;
-using Toolbox.Types;
-
-namespace Toolbox.Data;
+﻿namespace Toolbox.Data;
 
 public enum LeaseStatus
 {
@@ -26,19 +23,4 @@ public record StorePathDetail
     public LeaseStatus LeaseStatus { get; init; }
     public LeaseDuration LeaseDuration { get; init; }
     public string? ContentHash { get; init; }
-}
-
-public static class StorePathDetailExtensions
-{
-    public static StorePathDetail ConvertTo(this DataETag dataETag, string path) => new StorePathDetail
-    {
-        Path = path,
-        ContentLength = dataETag.Data.Length,
-        ETag = dataETag.ETag.NotEmpty(),
-    };
-
-    public static StorePathDetail WithContextHash(this StorePathDetail subject, string contentHash) => subject with
-    {
-        ContentHash = contentHash,
-    };
 }

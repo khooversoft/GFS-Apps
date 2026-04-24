@@ -1,0 +1,60 @@
+﻿@using Toolbox.Data;
+
+<div style="margin-top:10px">
+    <BlockToolBar OnRefresh="OnRefersh" />
+
+    <MudDataGrid T="ReportFileDetail"
+                 Items="@_elements"
+                 ReadOnly="true"
+                 Dense="true"
+                 EditMode="@DataGridEditMode.Cell"
+                 Bordered="true">
+        <Columns>
+            <TemplateColumn CellStyle="width: 1%; white-space: nowrap; text-align: left;" HeaderStyle="width: 1%; white-space: nowrap;">
+                <CellTemplate>
+                    <MudStack Row Spacing="0">
+                        <MudIconButton Color="Color.Success" Size="@Size.Small" Icon="@Icons.Material.Outlined.Edit" OnClick="@(() => EditItem(context.Item))" />
+                        <MudIconButton Color="Color.Error" Size="@Size.Small" Icon="@Icons.Material.Outlined.Delete" OnClick="@(() => DeleteItem(context.Item))" />
+                    </MudStack>
+                </CellTemplate>
+            </TemplateColumn>
+            <PropertyColumn Property="x => x.PackageId" Title="Package Id" CellStyle="width: 1%; white-space: nowrap;" HeaderStyle="width: 1%; white-space: nowrap;" />
+            <PropertyColumn Property="x => x.FileName" Title="File Name" />
+            <PropertyColumn Property="x => x.CreatedDate" Title="Created Date" CellStyle="width: 1%; white-space: nowrap;" HeaderStyle="width: 1%; white-space: nowrap;" />
+            <PropertyColumn Property="x => x.ContentLength" Title="Content Length" CellStyle="width: 1%; white-space: nowrap;" HeaderStyle="width: 1%; white-space: nowrap;" />
+        </Columns>
+    </MudDataGrid>
+</div>
+
+@code {
+    @inject UserDatalakeStore _userDatalakeStore;
+    [Parameter] public string PackageId { get; set; } = null!;
+
+    private bool _initialized = false;
+    private IReadOnlyList<ReportFileDetail> _elements = [];
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await Load();
+            StateHasChanged();
+        }
+    }
+
+    private async Task Load()
+    {
+        _elements = await _userDatalakeStore.ListReportFiles(PackageId);
+        _initialized = true;
+    }
+
+    private void OnRefersh() { }
+
+    private void DeleteItem(ReportFileDetail item)
+    {
+    }
+
+    private void EditItem(ReportFileDetail item)
+    {
+    }
+}

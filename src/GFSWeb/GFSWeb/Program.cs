@@ -48,13 +48,15 @@ builder.Logging.AddOpenTelemetry(o =>
     o.IncludeFormattedMessage = true;
 });
 
-var appRegOption = builder.Configuration.GetSection("AppRegistration").Get<AppRegistrationOption>().NotNull("AppRegistration not in appsettings.json");
+var appRegOption = builder.Configuration.GetSection("AppConfig").Get<GfsWebOption>().NotNull("AppConfig not in appsettings.json");
 appRegOption.Validate().ThrowOnError();
 
-TokenCredential credential = appRegOption.ClientSecret switch
+TokenCredential credential = appRegOption.Credentials.ClientSecret switch
 {
-    string => new ClientSecretCredential(appRegOption.TenantId, appRegOption.ClientId, appRegOption.ClientSecret).Action(_ => Console.WriteLine("Using ClientSecretCredential")),
-    null => new DefaultAzureCredential().Action(_ => Console.WriteLine("Using default credential")),
+    string => new ClientSecretCredential(appRegOption.Credentials.TenantId, appRegOption.Credentials.ClientId, appRegOption.Credentials.ClientSecret)
+        .Action(_ => Console.WriteLine("Using ClientSecretCredential")),
+    null => new DefaultAzureCredential()
+        .Action(_ => Console.WriteLine("Using default credential")),
 };
 
 // Add Azure Key Vault configuration (after defaults so KV overrides others)
@@ -87,33 +89,11 @@ builder.Services.AddAuthentication(options =>
     options.SlidingExpiration = true;
     options.Cookie.SecurePolicy = CookieSecurePolicy.Always; // <-- ensure secure cookies behind TLS-terminating proxy
 })
-// Microsoft personal accounts (Outlook/Hotmail/Xbox) via Microsoft Identity Platform (consumers tenant)
-//.AddOpenIdConnect("Microsoft", options =>
-//{
-//    options.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-//    options.Authority = "https://login.microsoftonline.com/consumers/v2.0";
-//    options.ClientId = authOption.Microsoft.ClientId;
-//    options.ClientSecret = authOption.Microsoft.ClientSecret;
-//    options.CallbackPath = "/signin-oidc-microsoft";
-//    options.ResponseType = "code";
-//    options.UsePkce = true;
-//    options.SaveTokens = true;
-
-//    // Force account picker so the user can enter/select an email every time
-//    options.Prompt = "select_account";
-
-//    options.Scope.Clear();
-//    options.Scope.Add("openid");
-//    options.Scope.Add("profile");
-//    options.Scope.Add("email");
-
-//    options.GetClaimsFromUserInfoEndpoint = true;
-//})
 // Entra ID (work/school) in specified tenant
 .AddOpenIdConnect("EntraId", options =>
 {
     options.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-    options.Authority = $"https://login.microsoftonline.com/{appRegOption.TenantId}/v2.0";
+    options.Authority = $"https://login.microsoftonline.com/{appRegOption.Credentials.TenantId}/v2.0";
     options.ClientId = authOption.Microsoft.ClientId;
     options.ClientSecret = authOption.Microsoft.ClientSecret;
     options.CallbackPath = "/signin-oidc-entra";
@@ -129,9 +109,8 @@ builder.Services.AddAuthentication(options =>
     options.GetClaimsFromUserInfoEndpoint = true;
 });
 
-var gfsWebOption = builder.Configuration.GetSection("AdminDatabase").Get<GfsWebOption>().NotNull("AdminDatabase not in appsettings.json");
 var gfsSapOption = builder.Configuration.GetSection("AdminDatabase").Get<GfsSapOption>().NotNull("AdminDatabase not in appsettings.json");
-builder.Services.AddGFSWeb(gfsWebOption, gfsSapOption);
+builder.Services.AddGFSWeb(appRegOption, gfsSapOption);
 builder.Services.AddTransient<IAuthAccess, AuthenticationAccess>();
 
 var app = builder.Build();

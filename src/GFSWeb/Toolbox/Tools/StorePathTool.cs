@@ -55,4 +55,40 @@ public static class StorePathTool
 
         return fullPath.ToLowerInvariant();
     }
+
+    public static string ToSafePath(string path, string? extension = null)
+    {
+        path.NotEmpty();
+
+        // Ensure extension starts with '.'
+        if (extension is not null)
+        {
+            if (!extension.StartsWith('.')) extension = "." + extension;
+
+            // Remove existing extension from original path before converting to safe chars
+            int lastSlash = path.LastIndexOf('/');
+            int lastDot = path.LastIndexOf('.');
+
+            if (lastDot > lastSlash && lastDot > 0) path = path[..lastDot];
+        }
+
+        var safeChars = path
+            .Select(c => c switch
+            {
+                >= 'a' and <= 'z' => c,
+                >= 'A' and <= 'Z' => char.ToLowerInvariant(c),
+                >= '0' and <= '9' => c,
+                '-' or '_' or '/' or '@' or '.' => c,
+                _ => '_'
+            })
+            .ToArray();
+
+        var result = new string(safeChars);
+
+        return extension switch
+        {
+            null => result.ToLowerInvariant(),
+            _ => result + extension.ToLowerInvariant()
+        };
+    }
 }

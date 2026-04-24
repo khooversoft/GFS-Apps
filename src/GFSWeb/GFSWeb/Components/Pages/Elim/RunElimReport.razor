@@ -1,7 +1,5 @@
 ﻿@page "/runElimReport/{packageId}"
-@using GFSWeb.sdk.Models
-@using GFSWeb.sdk.Store
-@using Toolbox.Data
+@using GFSWeb.Components.Pages.Elim.EditElim
 
 <MudStack Spacing="2">
     <ReturnUrlButton ReturnUrl=@returnUrl />
@@ -21,6 +19,9 @@
             </MudTabPanel>
             <MudTabPanel Text="Schedule">
             </MudTabPanel>
+            <MudTabPanel Text="History">
+                <ElimHistory PackageId="@PackageId" />
+            </MudTabPanel>
         </MudTabs>
     }
 </MudStack>
@@ -29,7 +30,7 @@
 @code {
     @inject NavigationManager _nav;
     @inject ReportPackageStore _store;
-    @inject ISnackbar _snackbar;
+    @inject UserDatalakeStore _userDatalakeStore;
     [Parameter] public string PackageId { get; set; } = null!;
     [Parameter, SupplyParameterFromQuery] public string returnUrl { get; set; } = null!;
 
@@ -58,5 +59,7 @@
 
     private async Task OnRun()
     {
+        DataETag testReport = TestExcelFileGenerator.Generate();
+        (await _userDatalakeStore.Add(testReport, _reportPackageModel.NotNull().PackageId, _reportPackageModel.Description, ".xlxs")).BeOk();
     }
 }

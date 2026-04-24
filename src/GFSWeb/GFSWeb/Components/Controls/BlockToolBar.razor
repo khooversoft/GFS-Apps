@@ -56,6 +56,7 @@
     [Parameter] public EventCallback<string?> OnSearch { get; set; }
     [Parameter] public EventCallback OnBack { get; set; }
     [Parameter] public EventCallback OnRun { get; set; }
+    [Parameter] public EventCallback OnRefresh { get; set; }
     [Parameter] public bool DisableEdit { get; set; }
     [Parameter] public bool DisableAdd { get; set; }
     [Parameter] public bool DisableDelete { get; set; }
@@ -63,6 +64,7 @@
     [Parameter] public bool DisableSave { get; set; }
     [Parameter] public bool DisableCancel { get; set; }
     [Parameter] public bool DisableRun { get; set; }
+    [Parameter] public bool DisableRefresh { get; set; }
     [Parameter] public string? Title { get; set; }
     [Parameter] public string? Width { get; set; }
 
@@ -75,7 +77,9 @@
         OnDelete.HasDelegate ||
         OnSearch.HasDelegate ||
         OnSave.HasDelegate ||
-        OnCancel.HasDelegate;
+        OnCancel.HasDelegate ||
+        OnRun.HasDelegate ||
+        OnRefresh.HasDelegate;
 
     private string _searchString = string.Empty;
 
@@ -103,12 +107,13 @@
 
     private IEnumerable<ToolbarAction> Actions => new[]
     {
-        new ToolbarAction(Icons.Material.Outlined.ArrowBack, Color.Info,      OnBack,   false,         "Back"),
-        new ToolbarAction(Icons.Material.Outlined.Add,       Color.Info,      OnAdd,    DisableAdd,    "Add"),
-        new ToolbarAction(Icons.Material.Outlined.Edit,      Color.Info,      OnEdit,   DisableEdit,   "Edit"),
-        new ToolbarAction(Icons.Material.Outlined.Save,      Color.Success,   OnSave,   DisableSave,   "Save"),
-        new ToolbarAction(Icons.Material.Outlined.Delete,    Color.Secondary, OnDelete, DisableDelete, "Delete"),
-        new ToolbarAction(Icons.Material.Outlined.Cancel,    Color.Surface,   OnCancel, DisableCancel, "Cancel"),
-        new ToolbarAction(Icons.Material.Outlined.PlayArrow, Color.Surface,   OnRun,    DisableRun,    "Run"),
+        new ToolbarAction(Icons.Material.Outlined.ArrowBack, Color.Info,      OnBack,       false,          "Back"),
+        new ToolbarAction(Icons.Material.Outlined.Add,       Color.Info,      OnAdd,        DisableAdd,     "Add"),
+        new ToolbarAction(Icons.Material.Outlined.Edit,      Color.Info,      OnEdit,       DisableEdit,    "Edit"),
+        new ToolbarAction(Icons.Material.Outlined.Save,      Color.Success,   OnSave,       DisableSave,    "Save"),
+        new ToolbarAction(Icons.Material.Outlined.Delete,    Color.Secondary, OnDelete,     DisableDelete,  "Delete"),
+        new ToolbarAction(Icons.Material.Outlined.Cancel,    Color.Surface,   OnCancel,     DisableCancel,  "Cancel"),
+        new ToolbarAction(Icons.Material.Outlined.PlayArrow, Color.Surface,   OnRun,        DisableRun,     "Run"),
+        new ToolbarAction(Icons.Material.Outlined.Refresh,   Color.Surface,   OnRefresh,    DisableRefresh, "Refresh"),
     };
 }
