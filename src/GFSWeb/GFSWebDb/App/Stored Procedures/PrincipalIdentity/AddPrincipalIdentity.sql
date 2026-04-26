@@ -29,15 +29,6 @@ BEGIN
     SET NOCOUNT ON;
     SET XACT_ABORT ON;
 
-    BEGIN TRAN;
-
-    IF EXISTS (SELECT 1 FROM [AppDbo].[PrincipalIdentity] WHERE [NameIdentifier] = @NameIdentifier)
-    BEGIN
-        RAISERROR('PrincipalIdentity record already exists for the specified NameIdentifier', 16, 1);
-        ROLLBACK TRAN;
-        RETURN;
-    END
-
     INSERT INTO [AppDbo].[PrincipalIdentity] (
         [NameIdentifier], [UserName], [Email], [Disabled], [Role], [Parker], [ParkerPost],
         [UserID_SAP], [FirstName], [NickName], [MiddleName], [LastName], [Location], [ParkPost], [PostEmail],
@@ -48,5 +39,5 @@ BEGIN
         @UserID_SAP, @FirstName, @NickName, @MiddleName, @LastName, @Location, @ParkPost, @PostEmail,
         @CCEmail1, @CCEmail2, @Elim, @Co_Update, @Co_View, @CC_NodeID, @Flex1, @Flex2, @Flex3, @PostEmail2
     );
-    COMMIT TRAN;
+
 END

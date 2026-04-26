@@ -1,5 +1,9 @@
-﻿@page "/runElimReport/{packageId}"
+﻿@page "/elimPackage/{packageId}"
+
 @using GFSWeb.Components.Pages.Elim.EditElim
+@using GFSWeb.sdk.Models
+@using GFSWeb.sdk.Store
+@using Toolbox.Data
 
 <MudStack Spacing="2">
     <ReturnUrlButton ReturnUrl=@returnUrl />
@@ -13,13 +17,17 @@
         <BlockHeader Title="Package" SubTitle="@GetPackageDesecription()" />
         <BlockToolBar OnRun="OnRun" OnEdit="OnEdit" />
 
-        <MudTabs>
+        <MudTabs @ref="_tabs">
             <MudTabPanel Text="Run">
                 <MudPaper Elevation="2">
                     <MudStack Spacing="4" Style="margin-top:20px;padding:10px;">
+                        <MudPaper Height="100px">
+                            <MudText Typo="Typo.body2">Report parameters if needed.</MudText>
+                        </MudPaper>
+
                         @if (_history.Count > 0)
                         {
-                            <div style="margin-top:10px">
+                            <div style="margin-top:5px">
                                 <MudProgressLinear Color="Color.Info" Value="@GetProgressValue()" Class="my-7" />
 
                                 @foreach (var item in _history)
@@ -31,10 +39,10 @@
                     </MudStack>
                 </MudPaper>
             </MudTabPanel>
-            <MudTabPanel Text="Schedule">
-            </MudTabPanel>
             <MudTabPanel Text="History">
                 <ElimHistory PackageId="@PackageId" />
+            </MudTabPanel>
+            <MudTabPanel Text="Schedule">
             </MudTabPanel>
         </MudTabs>
     }
@@ -49,6 +57,7 @@
     [Parameter, SupplyParameterFromQuery] public string returnUrl { get; set; } = null!;
 
     private bool _initialized = false;
+    private MudTabs _tabs = null!;
     private ReportPackageRecord? _currentRecord;
     private ReportPackageModel? _reportPackageModel;
     private List<string> _history = [];
@@ -72,14 +81,18 @@
     }
 
     private int GetProgressValue() => _progressStack.Count == 0 ? 0 : ((4 / _progressStack.Count) + 1) * 20;
+
     private string GetPackageDesecription() => _reportPackageModel is not null ? _reportPackageModel.Description : "Not loaded";
 
     private async Task OnEdit()
     {
+        _nav.GotoEditElimReportHref(PackageId, $"{NavHelper.ElimPackagePath}/{PackageId}");
     }
 
     private async Task OnRun()
     {
+        await _tabs.ActivatePanelAsync(0);
+
         string[] list = [
             "Read report package...",
             "Querying data from SAP system...",

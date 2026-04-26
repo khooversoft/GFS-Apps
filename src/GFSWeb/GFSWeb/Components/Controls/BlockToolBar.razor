@@ -1,4 +1,4 @@
-﻿<MudPaper Elevation="1">
+﻿<MudPaper Elevation="0" Square="true" Style="border-bottom-color:gray;border-bottom-style:solid;border-bottom-width:1px">
     <MudToolBar Dense=true Gutters=false>
         @if (Title is not null)
         {
@@ -9,7 +9,7 @@
         @foreach (var action in Actions.Where(a => a.Show))
         {
             <MudButton StartIcon="@action.Icon"
-                       Variant="Variant.Outlined"
+                       Variant="Variant.Text"
                        Color="@action.Color"
                        OnClick="@action.OnClick"
                        Disabled="@action.Disabled"
@@ -110,10 +110,10 @@
         new ToolbarAction(Icons.Material.Outlined.ArrowBack, Color.Info,      OnBack,       false,          "Back"),
         new ToolbarAction(Icons.Material.Outlined.Add,       Color.Info,      OnAdd,        DisableAdd,     "Add"),
         new ToolbarAction(Icons.Material.Outlined.Edit,      Color.Info,      OnEdit,       DisableEdit,    "Edit"),
-        new ToolbarAction(Icons.Material.Outlined.Save,      Color.Success,   OnSave,       DisableSave,    "Save"),
-        new ToolbarAction(Icons.Material.Outlined.Delete,    Color.Secondary, OnDelete,     DisableDelete,  "Delete"),
+        new ToolbarAction(Icons.Material.Outlined.Save,      Color.Info,      OnSave,       DisableSave,    "Save"),
+        new ToolbarAction(Icons.Material.Outlined.Delete,    Color.Error,     OnDelete,     DisableDelete,  "Delete"),
         new ToolbarAction(Icons.Material.Outlined.Cancel,    Color.Surface,   OnCancel,     DisableCancel,  "Cancel"),
-        new ToolbarAction(Icons.Material.Outlined.PlayArrow, Color.Surface,   OnRun,        DisableRun,     "Run"),
+        new ToolbarAction(Icons.Material.Outlined.PlayArrow, Color.Info,      OnRun,        DisableRun,     "Run"),
         new ToolbarAction(Icons.Material.Outlined.Refresh,   Color.Surface,   OnRefresh,    DisableRefresh, "Refresh"),
     };
 }

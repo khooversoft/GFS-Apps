@@ -5,6 +5,4 @@ AS
             ,x.[MenuId]
             ,x.[Data]
             ,x.[Disabled]
-            ,x.[DateTimeStamp]
-            ,x.[UserStamp]
     FROM    [AppDbo].[ReportPackage] x;

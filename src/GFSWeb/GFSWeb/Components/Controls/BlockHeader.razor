@@ -1,0 +1,13 @@
+﻿<div style="padding: 20px 0">
+    <MudText Typo="Typo.h6">@Title</MudText>
+
+    @if (SubTitle.IsNotEmpty())
+    {
+        <MudText Typo="Typo.body1">@SubTitle</MudText>
+    }
+</div>
+
+@code {
+    [Parameter] public string Title { get; set; } = null!;
+    [Parameter] public string? SubTitle { get; set; }
+}

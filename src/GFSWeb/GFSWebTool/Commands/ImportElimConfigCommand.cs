@@ -55,6 +55,9 @@ internal class ImportElimConfigCommand : ICommand
         await WritePrincipalIdentities(identityStore, reportDirectory);
         await WriteUserAccess(identityStore, reportDirectory);
         await WriteReportPackages(packageStore, reportPackages, reportDirectory);
+
+        _logger.LogInformation("Running import fixup");
+        await packageStore.ImportFixup();
     }
 
     private async Task WriteMenu(ReportPackageStore store, ReportDirectoryModel reportDirectory)

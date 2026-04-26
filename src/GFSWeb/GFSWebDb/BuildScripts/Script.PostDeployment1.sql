@@ -24,3 +24,17 @@ WHEN NOT MATCHED BY TARGET THEN
     VALUES (src.[NameIdentifier], src.[UserName], src.[Email], [Role]);
 
 
+-- Setup PrincipalGroup records
+MERGE [AppDbo].[PrincipalGroup] AS target
+USING (VALUES
+    ('Corporate'),
+    ('Latm'),
+    ('Paris'),
+    ('Branches')
+) AS src ([GroupName])
+    ON target.[GroupName] = src.[GroupName]
+WHEN NOT MATCHED BY TARGET THEN
+    INSERT ([GroupName])
+    VALUES (src.[GroupName]);
+
+

@@ -1,6 +1,4 @@
-﻿@using Microsoft.SqlServer.TransactSql.ScriptDom;
-
-<div style="margin-top:10px">
+﻿<MudStack Spacing="2">
     <BlockToolBar OnAdd="OnAdd" />
 
     <MudDataGrid T="MiscTablesRecord"
@@ -15,6 +13,8 @@
                     <MudStack Row Spacing="0">
                         <MudIconButton Color="Color.Success" Size="@Size.Small" Icon="@Icons.Material.Outlined.Edit" OnClick="@(() => EditItem(context.Item))" />
                         <MudIconButton Color="Color.Error" Size="@Size.Small" Icon="@Icons.Material.Outlined.Delete" OnClick="@(() => DeleteItem(context.Item))" />
+                        <MudIconButton Color="Color.Info" Size="@Size.Small" Icon="@Icons.Material.Outlined.ArrowUpward" OnClick="@(() => MoveUp(context.Item))" Disabled="@IsUpDisable(context.Item)" />
+                        <MudIconButton Color="Color.Info" Size="@Size.Small" Icon="@Icons.Material.Outlined.ArrowDownward" OnClick="@(() => MoveDown(context.Item))" Disabled="@IsDownDisable(context.Item)" />
                     </MudStack>
                 </CellTemplate>
             </TemplateColumn>
@@ -22,58 +22,12 @@
             <PropertyColumn Property="x => x.Descr" Title="SQL Line" />
         </Columns>
     </MudDataGrid>
-</div>
+</MudStack>
 
-<MudDrawer @bind-Open="@_openSettings" Anchor="Anchor.End" Elevation="1" Variant="@DrawerVariant.Temporary" OverlayAutoClose=true Width="90%">
-    <MudDrawerHeader>
-        <MudText Typo="Typo.h6">Edit SQL Command</MudText>
-    </MudDrawerHeader>
-    <MudDrawerContainer>
-        <div style="margin:10px">
-            <BlockToolBar OnSave="OnSave" OnCancel="OnCancel" />
-            <div style="margin-top:20px">
-                <MudToolBar>
-                    <MudSpacer />
-                    <MudTooltip Text="Clear">
-                        <MudIconButton Icon="@Icons.Material.Outlined.Clear" OnClick="OnClear" Disabled="@(string.IsNullOrEmpty(_sqlCommands))" />
-                    </MudTooltip>
-                    <MudTooltip Text="Format">
-                        <MudIconButton Icon="@Icons.Material.Outlined.FormatLineSpacing" OnClick="OnFormat" Disabled="@(string.IsNullOrEmpty(_sqlCommands) || _syntaxErrors.Count > 0)" />
-                    </MudTooltip>
-                    <MudTooltip Text="Undo">
-                        <MudIconButton Icon="@Icons.Material.Outlined.Undo" OnClick="OnUndo" Disabled="@(_undoStack.Count == 0)" />
-                    </MudTooltip>
-                </MudToolBar>
-                <MudTextField Label="Edit SQL Command"
-                              Variant="Variant.Outlined"
-                              Sizing="InputSizing.Auto"
-                              Lines="5"
-                              @bind-Value="@_sqlCommands"
-                              @bind-Value:after="@OnChange"
-                              Immediate="true" />
-
-                @if (_syntaxErrors.Count > 0)
-                {
-                    <MudAlert Severity="Severity.Error" Dense="true" Class="my-2">
-                        <MudText Typo="Typo.body2"><strong>Syntax Errors:</strong></MudText>
-                        <ul style="margin: 0; padding-left: 20px;">
-                            @foreach (var error in _syntaxErrors)
-                            {
-                                <li>Line @error.Line, Column @error.Column: @error.Message</li>
-                            }
-                        </ul>
-                    </MudAlert>
-                }
-
-                <MudText Style="margin-top:10px" Typo="Typo.body2">Generated Script</MudText>
-                <MudPaper Elevation="1" Style="padding:10px">
-                    <pre style="margin:0; font-family: 'Consolas', 'Courier New', monospace; white-space: pre-wrap; word-wrap: break-word;">@_formattedSql</pre>
-                </MudPaper>
-            </div>
-        </div>
-    </MudDrawerContainer>
-    <MudDivider />
-</MudDrawer>
+<SqlCommandEditor @bind-Open="@_openSettings"
+                  SqlCommand="@_editRecord?.Descr"
+                  OnSaved="OnEditorSaved"
+                  OnCancelled="OnEditorCancelled" />
 
 
 @code {
@@ -82,111 +36,60 @@
     [Parameter] public EventCallback OnUpdate { get; set; }
 
     private bool _openSettings = false;
-    private string _sqlCommands = "";
-    private string _formattedSql = "";
-    private IList<ParseError> _syntaxErrors = [];
     private MiscTablesRecord? _editRecord;
-    private Stack<string> _undoStack = new();
 
     private void OnAdd() { }
 
-    private void OnSave() { }
-
-    private void OnCancel()
+    private void OnEditorSaved(string sql)
     {
-        _openSettings = false;
-        _sqlCommands = "";
-        _formattedSql = "";
-        _syntaxErrors = [];
+        // TODO: persist updated sql to _editRecord / Elements
         _editRecord = null;
-        _undoStack.Clear();
     }
 
-    private void OnChange()
+    private void OnEditorCancelled()
     {
-        if (_undoStack.Count == 0 || _undoStack.Peek() != _sqlCommands)
-        {
-            _undoStack.Push(_sqlCommands);
-        }
-        (_formattedSql, _syntaxErrors) = Format(_sqlCommands);
+        _editRecord = null;
     }
+
+    private bool IsUpDisable(MiscTablesRecord item) => GetIndex(item) == 0;
+    private bool IsDownDisable(MiscTablesRecord item) => GetIndex(item) == Elements.Count - 1;
 
     private void EditItem(MiscTablesRecord item)
     {
-        _sqlCommands = item.Descr;
         _editRecord = item;
-        _undoStack.Clear();
-        _undoStack.Push(_sqlCommands);
-        (_formattedSql, _syntaxErrors) = Format(_sqlCommands);
         _openSettings = true;
     }
 
     private void DeleteItem(MiscTablesRecord item)
     {
+        int index = GetIndex(item);
+        Elements.RemoveAt(index);
     }
 
-    private void OnClear()
+    private void MoveUp(MiscTablesRecord item)
     {
-        if (!string.IsNullOrEmpty(_sqlCommands))
-        {
-            _undoStack.Push(_sqlCommands);
-        }
-        _sqlCommands = "";
-        _formattedSql = "";
-        _syntaxErrors = [];
+        int index = GetIndex(item);
+        Swap(index - 1, index);
     }
 
-    private void OnFormat()
+    private void MoveDown(MiscTablesRecord item)
     {
-        if (_syntaxErrors.Count == 0 && !string.IsNullOrEmpty(_formattedSql))
-        {
-            _undoStack.Push(_sqlCommands);
-            _sqlCommands = _formattedSql;
-        }
+        int index = GetIndex(item);
+        Swap(index, index + 1);
+
     }
 
-    private void OnUndo()
+    private int GetIndex(MiscTablesRecord item)
     {
-        if (_undoStack.Count > 0)
-        {
-            _sqlCommands = _undoStack.Pop();
-            (_formattedSql, _syntaxErrors) = Format(_sqlCommands);
-        }
+        var dataIndex = Elements.Select((x, i) => (Record: x, Index: i)).FirstOrDefault(x => x.Record.ID == item.ID).Index;
+        return dataIndex;
     }
 
-    private static (string FormattedSql, IList<ParseError> Errors) Format(string sql)
+    private void Swap(int index1, int index2)
     {
-        var parser = new TSql150Parser(false);
-        var fragment = parser.Parse(new StringReader(sql), out var errors);
-
-        if (errors.Count > 0)
-        {
-            return (sql, errors);
-        }
-
-        var generator = new Sql150ScriptGenerator(
-            new SqlScriptGeneratorOptions
-            {
-                KeywordCasing = KeywordCasing.Uppercase,
-                IndentationSize = 4,
-                IndentSetClause = true,
-                IndentViewBody = true,
-                AlignClauseBodies = true,
-                MultilineInsertSourcesList = true,
-                MultilineInsertTargetsList = true,
-                MultilineSelectElementsList = true,
-                MultilineSetClauseItems = true,
-                MultilineViewColumnsList = true,
-                MultilineWherePredicatesList = true,
-                IncludeSemicolons = true,
-                NewLineBeforeFromClause = true,
-                NewLineBeforeWhereClause = true,
-                NewLineBeforeGroupByClause = true,
-                NewLineBeforeOrderByClause = true,
-            });
-
-        generator.GenerateScript(fragment, out var formattedSql);
-        return (formattedSql, []);
+        var save = Elements[index1];
+        Elements[index1] = Elements[index2];
+        Elements[index2] = save;
     }
 }
 

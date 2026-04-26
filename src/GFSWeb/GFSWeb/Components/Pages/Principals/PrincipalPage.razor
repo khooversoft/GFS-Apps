@@ -3,15 +3,9 @@
 @using GFSWeb.sdk.Store
 @using Toolbox.Data
 
-<ReturnUrlButton ReturnUrl=@returnUrl />
-
-<BlockContainer>
-    <MudText Typo="Typo.h5" GutterBottom="true">Access Management</MudText>
-
-    <MudText Typo="Typo.body1" GutterBottom="true">
-        This page is for managing user access to GFS Tools.  User access is managed by assigning users to roles,
-        and then granting those roles access to specific tools and reports.
-    </MudText>
+<MudStack Spacing="2">
+    <ReturnUrlButton ReturnUrl=@returnUrl />
+    <BlockHeader Title="Registered Principalst" />
 
     <div style="margin-top:10px">
         @if (!_initialized)
@@ -20,7 +14,6 @@
         }
         else
         {
-            <MudText Typo="Typo.h6">Registered Principals</MudText>
             <BlockToolBar OnAdd=OnAdd
                           OnEdit=OnEdit
                           OnDelete=OnDelete
@@ -34,7 +27,7 @@
             <Question Show=_deleteAsk Title="Delete Principal" Descriptions=@_deleteDescriptions OnYes=DeleteOnYes OnNo=DeleteOnNo OnClose=DeleteOnClose />
         }
     </div>
-</BlockContainer>
+</MudStack>
 
 @code {
     @inject NavigationManager _nav;
@@ -123,10 +116,10 @@
         _deleteAsk = false;
         if (_selectedItems.Count == 0) return;
 
-        foreach(var item in _selectedItems)
+        foreach (var item in _selectedItems)
         {
             var deleteOption = await _store.Delete(item.NameIdentifier);
-            if( deleteOption.IsError())
+            if (deleteOption.IsError())
             {
                 _snackbar.Add($"Failed to delete principal '{item.NameIdentifier}', statusCode={deleteOption.StatusCode}, error={deleteOption.Error}", Severity.Error, config =>
                 {

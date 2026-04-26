@@ -66,15 +66,16 @@
     <Folder Include="App\Views\" />
     <Folder Include="App\Stored Procedures\PrincipalIdentity" />
     <Folder Include="App\Stored Procedures\ReportPackage" />
-    <Folder Include="App\Stored Procedures\ReportAccess" />
     <Folder Include="App\Stored Procedures\Menu" />
     <Folder Include="App\Stored Procedures\UserAccess" />
+    <Folder Include="App\Stored Procedures\Group" />
+    <Folder Include="App\Stored Procedures\Operations" />
   </ItemGroup>
   <ItemGroup>
     <Build Include="AppDbo\Tables\PrincipalIdentity.sql" />
     <Build Include="Security\AppDbo.sql" />
     <Build Include="Security\App.sql" />
-    <Build Include="AppDbo\Tables\ReportAccess.sql" />
+    <Build Include="AppDbo\Tables\GroupPackageAccess.sql" />
     <Build Include="AppDbo\Tables\ReportPackage.sql" />
     <Build Include="App\Views\PrincipalIdentity.sql" />
     <Build Include="App\Stored Procedures\PrincipalIdentity\AddPrincipalIdentity.sql" />
@@ -85,21 +86,30 @@
     <Build Include="App\Stored Procedures\ReportPackage\AddOrUpdateReportPackage.sql" />
     <Build Include="App\Stored Procedures\ReportPackage\UpdateReportPackageData.sql" />
     <Build Include="App\Stored Procedures\ReportPackage\UpdateReportPackage.sql" />
-    <Build Include="App\Stored Procedures\ReportAccess\AddReportAccess.sql" />
-    <Build Include="App\Stored Procedures\ReportAccess\DeleteReportAccess.sql" />
     <Build Include="AppDbo\Tables\Menu.sql" />
     <Build Include="App\Views\Menu.sql" />
     <Build Include="App\Stored Procedures\Menu\AddOrUpdateMenu.sql" />
     <Build Include="App\Stored Procedures\Menu\UpdateMenu.sql" />
     <Build Include="App\Stored Procedures\Menu\DeleteMenu.sql" />
-    <Build Include="App\Views\ReportAccess.sql" />
-    <Build Include="App\Stored Procedures\ReportPackage\ListReportPackagesByNamePrincipal.sql" />
     <Build Include="App\Stored Procedures\ReportPackage\GetReportPackage.sql" />
     <Build Include="AppDbo\Tables\UserAccess.sql" />
     <Build Include="App\Stored Procedures\UserAccess\AddUserAccess.sql" />
     <Build Include="App\Stored Procedures\UserAccess\DeleteUserAccess.sql" />
     <Build Include="App\Views\UserAccess.sql" />
     <Build Include="App\Stored Procedures\UserAccess\AddOrUpdateUserAccess.sql" />
+    <Build Include="AppDbo\Tables\PrincipalGroup.sql" />
+    <Build Include="AppDbo\Tables\GroupMembership.sql" />
+    <Build Include="App\Stored Procedures\Group\AddPrincipalGroup.sql" />
+    <Build Include="App\Stored Procedures\Group\DeletePrincipalGroup.sql" />
+    <Build Include="App\Stored Procedures\Group\PrincipalGroup.sql" />
+    <Build Include="App\Stored Procedures\Group\UpsertGroupMembership.sql" />
+    <Build Include="App\Stored Procedures\Group\DeleteGroupMembership.sql" />
+    <Build Include="App\Stored Procedures\Group\GetPrincipalMembership.sql" />
+    <Build Include="App\Stored Procedures\Group\UpsertGroupPackageAccess.sql" />
+    <Build Include="App\Stored Procedures\Group\DeleteGroupPackageAccess.sql" />
+    <Build Include="App\Stored Procedures\Menu\GetMenuForPrincipalIdentity.sql" />
+    <Build Include="App\Stored Procedures\ReportPackage\GetPackageAccess.sql" />
+    <Build Include="App\Stored Procedures\Operations\ImportFixup.sql" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Publish\GFSWebDb.publish.xml" />

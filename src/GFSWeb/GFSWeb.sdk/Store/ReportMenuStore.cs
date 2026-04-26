@@ -79,7 +79,7 @@ public class ReportMenuStore
         if (nameIdentifier.IsEmpty()) return [];
 
         var result = await _client.Query()
-            .SetCommand("[App].[ListReportPackagesByNamePrincipal]", CommandType.StoredProcedure)
+            .SetCommand("[App].[GetMenuForPrincipalIdentity]", CommandType.StoredProcedure)
             .AddParameter("@NameIdentifier", nameIdentifier)
             .Execute<PrincipalMenuRecord>();
 

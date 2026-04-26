@@ -1,0 +1,55 @@
+﻿<div style="margin-top:10px">
+    <MudStack Spacing="2">
+        <BlockToolBar OnAdd="OnAdd" />
+
+        <MudDataGrid T="GroupPackageAccessRecord"
+                     Items="@_elements"
+                     ReadOnly="true"
+                     Dense="true"
+                     EditMode="@DataGridEditMode.Cell"
+                     Bordered="true">
+            <Columns>
+                <TemplateColumn CellStyle="width: 1%; white-space: nowrap; text-align: left;" HeaderStyle="width: 1%; white-space: nowrap;">
+                    <CellTemplate>
+                        <MudStack Row Spacing="0">
+                            <MudIconButton Color="Color.Error" Size="@Size.Small" Icon="@Icons.Material.Outlined.Delete" OnClick="@(() => DeleteItem(context.Item))" />
+                        </MudStack>
+                    </CellTemplate>
+                </TemplateColumn>
+                <PropertyColumn Property="x => x.GroupName" Title="GroupName" />
+                <PropertyColumn Property="x => x.Access" Title="Access" />
+            </Columns>
+        </MudDataGrid>
+    </MudStack>
+</div>
+
+@code {
+    @inject ReportPackageStore _store;
+    [Parameter] public string PackageId { get; set; } = null!;
+    [Parameter] public EventCallback OnUpdate { get; set; }
+
+    private bool _initialized = false;
+    private IReadOnlyList<GroupPackageAccessRecord> _elements = [];
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await Load();
+            StateHasChanged();
+        }
+    }
+
+    private async Task Load()
+    {
+        _elements = await _store.GetGroupAccess(PackageId);
+        _initialized = true;
+    }
+
+
+    private void OnAdd() { }
+
+    private void DeleteItem(GroupPackageAccessRecord item)
+    {
+    }
+}

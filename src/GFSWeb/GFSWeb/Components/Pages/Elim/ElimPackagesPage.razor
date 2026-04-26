@@ -6,12 +6,7 @@
 
 <ReturnUrlButton ReturnUrl=@returnUrl />
 
-<MudText Typo="Typo.h5" Style="margin-top:10px" GutterBottom="true">Edit Elim Report</MudText>
-
-<MudText Typo="Typo.body1">
-    Create or Edit Elim Package (Report Definitions).
-</MudText>
-
+<BlockHeader Title="Elim Packages" />
 <SelectElimPackage OnSelect="OnRowSelected" />
 
 
@@ -23,6 +18,6 @@
 
     private void OnRowSelected(MenuItem item)
     {
-        _nav.GotoEditElimReportHref(item.Key, NavHelper.ElimPackagePath);
+        _nav.GotoElimPackageHref(item.Key, NavHelper.ElimPackagesPath);
     }
 }

@@ -6,8 +6,6 @@ BEGIN
     SET NOCOUNT ON;
     SET XACT_ABORT ON;
 
-    BEGIN TRAN;
-
     MERGE [AppDbo].[Menu] AS target
     USING (SELECT @MenuId AS [MenuId], @Description AS [Description] ) AS source
     ON target.[MenuId] = source.[MenuId]
@@ -16,6 +14,4 @@ BEGIN
     WHEN NOT MATCHED THEN
         INSERT ([MenuId], [Description])
         VALUES (source.[MenuId], source.[Description]);
-
-    COMMIT TRAN;
 END

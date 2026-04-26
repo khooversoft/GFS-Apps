@@ -1,27 +1,38 @@
-﻿@page "/editElimPackages/{packageId}"
+﻿@page "/editElimPackage/{packageId}"
+@using GFSWeb.Components.Pages.Elim.EditElim
 @using GFSWeb.sdk.Models
 @using GFSWeb.sdk.Store
 @using Toolbox.Data
 
-<ReturnUrlButton ReturnUrl=@returnUrl />
+<MudStack Spacing="2">
+    <ReturnUrlButton ReturnUrl=@returnUrl />
 
-@if (!_initialized)
-{
-    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Rounded="true" Size="Size.Medium" Value="100" Style="margin:20px" />
-}
-else
-{
-    <BlockContainer>
-        <MudText Typo="Typo.h5" style="margin-top:20px" GutterBottom="true">@_currentRecord.NotNull().Description</MudText>
-
-        <MudText Typo="Typo.body1" GutterBottom="true">
-            Elim Package contains all the details on how to query and construct report.
-        </MudText>
-
+    @if (!_initialized)
+    {
+        <MudProgressLinear Color="Color.Primary" Indeterminate="true" Rounded="true" Size="Size.Medium" Value="100" Style="margin:20px" />
+    }
+    else
+    {
+        <BlockHeader Title="Package" SubTitle="@_currentRecord.NotNull().Description" />
         <BlockToolBar OnSave="@OnSave" OnCancel="@OnCancel" />
 
         <CascadingValue Value="_editPackageContext">
             <MudTabs>
+                <MudTabPanel Text="Properties">
+                    <MudGrid Spacing="2" Style="margin:0; width:100%; box-sizing:border-box; padding:10px 12px 8px 8px;">
+                        <MudItem xs="6" Class="pr-2">
+                            <MudTextField T="string"
+                                          Label="Description"
+                                          Variant="Variant.Outlined"
+                                          Required="true"
+                                          Immediate="true"
+                                          @bind-Value="@_reportPackageModel!.Description"
+                                          @bind-Value:after="OnEditorChanged" />
+
+                            <MudCheckBox @bind-Value="@_disabled">Disabled</MudCheckBox>
+                        </MudItem>
+                    </MudGrid>
+                </MudTabPanel>
                 <MudTabPanel Text="Parameters">
                     @foreach (var item in _sections)
                     {
@@ -38,11 +49,14 @@ else
                 <MudTabPanel Text="SQL Commands">
                     <EditSqlCommands Title="@SectionId.Sql.GetTitle()" Elements="GetSection(SectionId.Sql)" OnUpdate="OnUpdate" />
                 </MudTabPanel>
+                <MudTabPanel Text="Access">
+                    <ElimAccess PackageId="@PackageId" />
+                </MudTabPanel>
             </MudTabs>
         </CascadingValue>
 
-    </BlockContainer>
-}
+    }
+</MudStack>
 
 @code {
     @inject NavigationManager _nav;
@@ -54,6 +68,7 @@ else
     private EditPackageContext _editPackageContext = null!;
     private ReportPackageRecord? _currentRecord;
     private ReportPackageModel? _reportPackageModel;
+    private bool _disabled;
 
     private record EditProperty(SectionId SectionId, string Title, bool DisableTableId);
 
@@ -84,6 +99,7 @@ else
     {
         _currentRecord = (await _store.Get(PackageId)).BeOk().Return();
         _reportPackageModel = _currentRecord.Unpack();
+        _disabled = _currentRecord.Disabled;
 
         _editPackageContext = new EditPackageContext
         {
@@ -99,10 +115,14 @@ else
     }
 
     private void OnSave() => _nav.GotoElimPackages();
-    private void OnCancel() => _nav.GotoElimPackages();
+    private void OnCancel() => _nav.GotoElimPackageHref(PackageId);
 
-    public async Task OnUpdate()
+    private async Task OnUpdate()
     {
         await Task.CompletedTask;
+    }
+
+    private void OnEditorChanged()
+    {
     }
 }

@@ -20,11 +20,11 @@ public class ReportPackageStore
         _authAccess = authAccess.NotNull();
         _logger = logger.NotNull();
 
-        Access = new(_client, _authAccess, logger);
+        //Access = new(_client, _authAccess, logger);
         Menu = new(_client, _authAccess, logger);
     }
 
-    public ReportAccessStore Access { get; }
+    //public ReportAccessStore Access { get; }
     public ReportMenuStore Menu { get; }
 
     public async Task<Option<ReportPackageRecord>> Get(string packageId)
@@ -60,6 +60,16 @@ public class ReportPackageStore
         return result;
     }
 
+    public async Task<IReadOnlyList<GroupPackageAccessRecord>> GetGroupAccess(string packageId)
+    {
+        var result = await _client.Query()
+            .SetCommand("[App].[GetPackageAccess]", CommandType.StoredProcedure)
+            .AddParameter("@PackageId", packageId)
+            .Execute<GroupPackageAccessRecord>();
+
+        return result;
+    }
+
     public async Task<Option<int>> AddOrUpdate(ReportPackageRecord record)
     {
         record.NotNull().Validate().ThrowOnError();
@@ -83,6 +93,15 @@ public class ReportPackageStore
         var result = await _client.Query()
             .SetCommand("[App].[DeleteReportPackage]", CommandType.StoredProcedure)
             .AddParameter("@PackageId", packageId)
+            .ExecuteNonQuery();
+
+        return result;
+    }
+
+    public async Task<Option<int>> ImportFixup()
+    {
+        var result = await _client.Query()
+            .SetCommand("[App].[ImportFixup]", CommandType.StoredProcedure)
             .ExecuteNonQuery();
 
         return result;

@@ -5,7 +5,9 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
-    DECLARE @role NVARCHAR(20) = (SELECT [Role] FROM [AppDbo].[PrincipalIdentity] WHERE [NameIdentifier] = @NameIdentifier);
+    DECLARE @role NVARCHAR(20) = (
+        SELECT [Role] FROM [AppDbo].[PrincipalIdentity] WHERE [NameIdentifier] = @NameIdentifier
+    );
 
     IF @role IS NULL
     BEGIN
@@ -13,25 +15,25 @@ BEGIN
         RETURN;
     END
 
-    IF @role IN ('contributor', 'owner')
-    BEGIN
-        SELECT  x.[PackageId]
-                ,x.[Description]
-                ,x.[MenuId]
-                ,x.[Data]
-                ,x.[Disabled]
-        FROM    [AppDbo].[ReportPackage] x
-        WHERE   x.[PackageId] = @PackageId;
-        RETURN;
-    END
-
-    SELECT  x.[PackageId]
+    SELECT DISTINCT
+            x.[PackageId]
             ,x.[Description]
             ,x.[MenuId]
             ,x.[Data]
             ,x.[Disabled]
     FROM    [AppDbo].[ReportPackage] x
-            INNER JOIN [AppDbo].[ReportAccess] a ON x.[PackageId] = a.[PackageId]
     WHERE   x.[PackageId] = @PackageId
-    AND     a.[NameIdentifier] = @NameIdentifier;
+    AND     (
+                @role IN ('contributor', 'owner')
+                OR (
+                    x.[Disabled] = 0
+                    AND EXISTS (
+                        SELECT 1
+                        FROM   [AppDbo].[GroupPackageAccess] a
+                               INNER JOIN [AppDbo].[GroupMembership] gm ON a.[GroupName] = gm.[GroupName]
+                        WHERE  a.[PackageId] = x.[PackageId]
+                        AND    gm.[NameIdentifier] = @NameIdentifier
+                    )
+                )
+            );
 END

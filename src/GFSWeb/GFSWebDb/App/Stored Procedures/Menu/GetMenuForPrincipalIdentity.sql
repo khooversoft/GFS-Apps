@@ -1,4 +1,4 @@
-﻿CREATE PROCEDURE [App].[ListReportPackagesByNamePrincipal]
+﻿CREATE PROCEDURE [App].[GetMenuForPrincipalIdentity]
     @NameIdentifier NVARCHAR(50)
 AS
 BEGIN
@@ -32,7 +32,9 @@ BEGIN
             ,x.[Data]
     FROM    [AppDbo].[ReportPackage] x
             INNER JOIN [AppDbo].[Menu] m ON x.[MenuId] = m.[MenuId]
-            INNER JOIN [AppDbo].[ReportAccess] a ON x.[PackageId] = a.[PackageId]
-    WHERE   a.[NameIdentifier] = @NameIdentifier
+            INNER JOIN [AppDbo].[GroupPackageAccess] a ON x.[PackageId] = a.[PackageId]
+            INNER JOIN [AppDbo].[GroupMembership] gm ON a.[GroupName] = gm.[GroupName]
+            INNER JOIN [AppDbo].[PrincipalIdentity] p ON gm.[NameIdentifier] = p.[NameIdentifier]
+    WHERE   p.[NameIdentifier] = @NameIdentifier
     AND     x.[Disabled] = 0;
 END

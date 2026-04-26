@@ -1,7 +1,8 @@
 ﻿@using Toolbox.Data;
+@using Microsoft.JSInterop;
 
 <div style="margin-top:10px">
-    <BlockToolBar OnRefresh="OnRefersh" />
+    <BlockToolBar OnRefresh="Load" />
 
     <MudDataGrid T="ReportFileDetail"
                  Items="@_elements"
@@ -13,8 +14,8 @@
             <TemplateColumn CellStyle="width: 1%; white-space: nowrap; text-align: left;" HeaderStyle="width: 1%; white-space: nowrap;">
                 <CellTemplate>
                     <MudStack Row Spacing="0">
-                        <MudIconButton Color="Color.Success" Size="@Size.Small" Icon="@Icons.Material.Outlined.Edit" OnClick="@(() => EditItem(context.Item))" />
-                        <MudIconButton Color="Color.Error" Size="@Size.Small" Icon="@Icons.Material.Outlined.Delete" OnClick="@(() => DeleteItem(context.Item))" />
+                        <MudIconButton Color="Color.Success" Size="@Size.Small" Icon="@Icons.Material.Filled.FileDownload" OnClick="@(() => ViewItem(context.Item))" />
+                        <MudIconButton Color="Color.Error" Size="@Size.Small" Icon="@Icons.Material.Outlined.Delete" OnClick="@(() => AskDelete(context.Item))" />
                     </MudStack>
                 </CellTemplate>
             </TemplateColumn>
@@ -24,14 +25,25 @@
             <PropertyColumn Property="x => x.ContentLength" Title="Content Length" CellStyle="width: 1%; white-space: nowrap;" HeaderStyle="width: 1%; white-space: nowrap;" />
         </Columns>
     </MudDataGrid>
+
+    <Question Show="@_askDeleteQuestion"
+              Title="Delete Confirmation"
+              Descriptions="@_descriptions"
+              OnYes="@(() => DeleteItem(_currentFileDetail!))"
+              OnNo="@(() => _askDeleteQuestion = false)" />
 </div>
 
 @code {
     @inject UserDatalakeStore _userDatalakeStore;
+    @inject IJSRuntime JSRuntime;
+    @inject ISnackbar _snackbar;
     [Parameter] public string PackageId { get; set; } = null!;
 
     private bool _initialized = false;
     private IReadOnlyList<ReportFileDetail> _elements = [];
+    private ReportFileDetail? _currentFileDetail;
+    private bool _askDeleteQuestion;
+    private IReadOnlyList<string> _descriptions = [];
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -48,13 +60,46 @@
         _initialized = true;
     }
 
-    private void OnRefersh() { }
-
-    private void DeleteItem(ReportFileDetail item)
+    private async Task AskDelete(ReportFileDetail item)
     {
+        _currentFileDetail = item;
+        _askDeleteQuestion = true;
+        _descriptions = new[] { $"Do you want to delete {item.FileName}?" };
     }
 
-    private void EditItem(ReportFileDetail item)
+    private async Task DeleteItem(ReportFileDetail item)
     {
+        _askDeleteQuestion = false;
+
+        string filePath = $"{item.UserEmail}/{item.PackageId}/{item.FileName}";
+        var fileResult = await _userDatalakeStore.Delete(filePath);
+
+        if (fileResult.IsError())
+        {
+            _snackbar.Add($"Can not delete {filePath}", Severity.Error);
+            return;
+        }
+
+        _snackbar.Add($"Deleted {filePath}", Severity.Info);
+        await Load();
+        StateHasChanged();
+    }
+
+    private async Task ViewItem(ReportFileDetail item)
+    {
+        string filePath = $"{item.UserEmail}/{item.PackageId}/{item.FileName}";
+        var fileResult = await _userDatalakeStore.Get(filePath);
+
+        if (fileResult.IsError())
+        {
+            _snackbar.Add($"Can not find {filePath}", Severity.Error);
+            return;
+        }
+
+        byte[] fileData = fileResult.Return().Data.ToArray();
+        var fileStream = new MemoryStream(fileData);
+        using var streamRef = new DotNetStreamReference(stream: fileStream);
+
+        await JSRuntime.InvokeVoidAsync("downloadFileFromStream", item.FileName, streamRef);
     }
 }

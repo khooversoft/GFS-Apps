@@ -9,12 +9,12 @@ public static class NavHelper
 {
     public static string AccessManagement => "/access";
     public static string UnderConstructionPath => "/underConstruction";
-    public static string ElimReportsPath => "/elimReports";
-    public static string ElimPackagePath => "/elimPackages";
-    public static string EditElimPackagePath => "/editElimPackages";
+    public static string ElimPackagesPath => "/elimPackages";
+    public static string ElimPackagePath => "/elimPackage";
+    public static string EditElimPackagePath => "/editElimPackage";
 
     public static void GotoAcessManagement(this NavigationManager nav) => nav.NotNull().NavigateTo(AccessManagement);
-    public static void GotoElimPackages(this NavigationManager nav) => nav.NotNull().NavigateTo(ElimPackagePath);
+    public static void GotoElimPackages(this NavigationManager nav) => nav.NotNull().NavigateTo(ElimPackagesPath);
 
     //public static void GotoCalendar(this NavigationManager nav) => nav.NotNull().NavigateTo(MarathonCalendarPath);
 
@@ -32,16 +32,16 @@ public static class NavHelper
         nav.NotNull().NavigateTo(url);
     }
 
-    public static string GetRunElimReportHref(string packageId, string? returnUrl = null)
+    public static string GetElimPackageHref(string packageId, string? returnUrl = null)
     {
         packageId = Uri.EscapeDataString(packageId);
-        var url = Build(["/runElimReport", packageId], BuildReturnUrl(returnUrl));
+        var url = Build([ElimPackagePath, packageId], BuildReturnUrl(returnUrl));
         return url;
     }
 
-    public static void GotoRunElimReportHref(this NavigationManager nav, string packageId, string? returnUrl = null)
+    public static void GotoElimPackageHref(this NavigationManager nav, string packageId, string? returnUrl = null)
     {
-        var url = GetRunElimReportHref(packageId, returnUrl);
+        var url = GetElimPackageHref(packageId, returnUrl);
         nav.NotNull().NavigateTo(url);
     }
 

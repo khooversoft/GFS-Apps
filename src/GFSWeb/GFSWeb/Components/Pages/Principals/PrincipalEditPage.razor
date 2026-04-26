@@ -3,71 +3,67 @@
 @using GFSWeb.sdk.Store
 @using MudBlazor.Charts
 
-<ReturnUrlButton ReturnUrl=@returnUrl />
+<MudStack Spacing="2">
+    <ReturnUrlButton ReturnUrl=@returnUrl />
+    <BlockHeader Title="Registered Principals" />
+    <BlockToolBar OnSave=OnSave OnDelete=OnDelete OnCancel=OnCancel DisableSave="@_saveDisabled" DisableDelete="@_deleteDisabled" />
 
-<BlockToolBar Title="Registered Principals"
-              OnSave=OnSave
-              OnDelete=OnDelete
-              OnCancel=OnCancel
-              DisableSave="@_saveDisabled"
-              DisableDelete="@_deleteDisabled">
-</BlockToolBar>
+    <div class="form-content">
+        <MudStack Row=true>
+            <MudPaper Elevation=1 Style="flex: 0 0 65%; overflow-x: hidden;">
+                <MudGrid Spacing="2" Style="margin:0; width:100%; box-sizing:border-box; padding:0px 12px 8px 8px;">
+                    @foreach (var control in _requiredControls)
+                    {
+                        <MudItem xs="12" Class="pr-2">
+                            <MudTextField T="string"
+                                          Label="@control.Label"
+                                          Variant="Variant.Outlined"
+                                          Required="@control.Required"
+                                          Immediate="true"
+                                          Disabled="@control.Disabled"
+                                          @bind-Value="control.Value"
+                                          @bind-Value:after="OnEditorChanged" />
+                        </MudItem>
+                    }
+                </MudGrid>
 
-<div class="form-content">
-    <MudStack Row=true>
-        <MudPaper Elevation=1 Style="flex: 0 0 65%; overflow-x: hidden;">
-            <MudGrid Spacing="2" Style="margin:0; width:100%; box-sizing:border-box; padding:0px 12px 8px 8px;">
-                @foreach (var control in _requiredControls)
-                {
-                    <MudItem xs="12" Class="pr-2">
-                        <MudTextField T="string"
-                                      Label="@control.Label"
-                                      Variant="Variant.Outlined"
-                                      Required="@control.Required"
-                                      Immediate="true"
-                                      Disabled="@control.Disabled"
-                                      @bind-Value="control.Value"
-                                      @bind-Value:after="OnEditorChanged" />
-                    </MudItem>
-                }
-            </MudGrid>
+                <MudDivider Style="border-top-width: 3px; border-top-color: rgba(0, 0, 0, 0.55);" DividerType="DividerType.Middle" />
 
-            <MudDivider Style="border-top-width: 3px; border-top-color: rgba(0, 0, 0, 0.55);" DividerType="DividerType.Middle" />
-
-            <MudGrid Spacing="2" Style="margin:0; width:100%; box-sizing:border-box; padding:0px 12px 8px 8px;">
-                @foreach (var control in _editControls)
-                {
-                    <MudItem xs="6" Class="pr-2">
-                        <MudTextField T="string"
-                                      Label="@control.Label"
-                                      Variant="Variant.Outlined"
-                                      Required="@control.Required"
-                                      Immediate="true"
-                                      Disabled="@control.Disabled"
-                                      @bind-Value="control.Value"
-                                      @bind-Value:after="OnEditorChanged" />
-                    </MudItem>
-                }
-            </MudGrid>
-        </MudPaper>
-        <MudPaper Style="flex: 1 1 0;">
-            <div style="margin:20px">
-                <MudText>Roles</MudText>
+                <MudGrid Spacing="2" Style="margin:0; width:100%; box-sizing:border-box; padding:0px 12px 8px 8px;">
+                    @foreach (var control in _editControls)
+                    {
+                        <MudItem xs="6" Class="pr-2">
+                            <MudTextField T="string"
+                                          Label="@control.Label"
+                                          Variant="Variant.Outlined"
+                                          Required="@control.Required"
+                                          Immediate="true"
+                                          Disabled="@control.Disabled"
+                                          @bind-Value="control.Value"
+                                          @bind-Value:after="OnEditorChanged" />
+                        </MudItem>
+                    }
+                </MudGrid>
+            </MudPaper>
+            <MudPaper Style="flex: 1 1 0;">
+                <div style="margin:20px">
+                    <MudText>Roles</MudText>
                 
-                <MudSwitch T="bool" Label="Disabled" Color="Color.Primary" @bind-Value="_record.Disabled" @bind-Value:after="OnEditorChanged" />
+                    <MudSwitch T="bool" Label="Disabled" Color="Color.Primary" @bind-Value="_record.Disabled" @bind-Value:after="OnEditorChanged" />
 
-                <MudRadioGroup T="string" @bind-Value="_record.Role" @bind-Value:after="OnEditorChanged">
-                    <MudRadio Value=IdentityRole.ReaderRole Color="@GetColor(() => _record.IsReader)" Size="Size.Medium">Reader</MudRadio>
-                    <MudRadio Value=IdentityRole.ContributorRole Color="@GetColor(() => _record.IsContributor)" Size="Size.Medium">Contributor</MudRadio>
-                    <MudRadio Value=IdentityRole.OwnerRole Color="@GetColor(() => _record.IsOwner)" Size="Size.Medium">Owner</MudRadio>
-                </MudRadioGroup>
+                    <MudRadioGroup T="string" @bind-Value="_record.Role" @bind-Value:after="OnEditorChanged">
+                        <MudRadio Value=IdentityRole.ReaderRole Color="@GetColor(() => _record.IsReader)" Size="Size.Medium">Reader</MudRadio>
+                        <MudRadio Value=IdentityRole.ContributorRole Color="@GetColor(() => _record.IsContributor)" Size="Size.Medium">Contributor</MudRadio>
+                        <MudRadio Value=IdentityRole.OwnerRole Color="@GetColor(() => _record.IsOwner)" Size="Size.Medium">Owner</MudRadio>
+                    </MudRadioGroup>
 
-                <MudCheckBox @bind-Value=_record.Parker @bind-Value:after="OnEditorChanged" Color="@GetColor(() => _record.Parker)">Parker</MudCheckBox>
-                <MudCheckBox @bind-Value=_record.ParkerPost @bind-Value:after="OnEditorChanged" Color="@GetColor(() => _record.ParkerPost)">Parker Post</MudCheckBox>
-            </div>
-        </MudPaper>
-    </MudStack>
-</div>
+                    <MudCheckBox @bind-Value=_record.Parker @bind-Value:after="OnEditorChanged" Color="@GetColor(() => _record.Parker)">Parker</MudCheckBox>
+                    <MudCheckBox @bind-Value=_record.ParkerPost @bind-Value:after="OnEditorChanged" Color="@GetColor(() => _record.ParkerPost)">Parker Post</MudCheckBox>
+                </div>
+            </MudPaper>
+        </MudStack>
+    </div>
+</MudStack>
 
 <Question Show=_showDeleteAsk Title="Delete Principal" Descriptions=@_deleteDescriptions OnYes=OnAskDeleteYes OnNo=OnAskDeleteNo />
 
@@ -161,6 +157,7 @@
             {
                 config.RequireInteraction = true;
             });
+
             _nav.GotoAcessManagement();
             return;
         }
