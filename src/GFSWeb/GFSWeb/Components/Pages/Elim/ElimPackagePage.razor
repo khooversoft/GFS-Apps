@@ -44,6 +44,8 @@
             </MudTabPanel>
             <MudTabPanel Text="Schedule">
             </MudTabPanel>
+            <MudTabPanel Text="Pipeline">
+            </MudTabPanel>
         </MudTabs>
     }
 </MudStack>
@@ -104,7 +106,7 @@
         _progressStack = new Stack<string>(list.Reverse());
 
         DataETag testReport = TestExcelFileGenerator.Generate();
-        (await _userDatalakeStore.Add(testReport, _reportPackageModel.NotNull().PackageId, _reportPackageModel.Description, ".xlxs")).BeOk();
+        (await _userDatalakeStore.Add(testReport, _reportPackageModel.NotNull().PackageId, _reportPackageModel.Description, ".xlsx")).BeOk();
         await SimulateProgressAsync();
     }
 

@@ -110,6 +110,7 @@
     <Build Include="App\Stored Procedures\Menu\GetMenuForPrincipalIdentity.sql" />
     <Build Include="App\Stored Procedures\ReportPackage\GetPackageAccess.sql" />
     <Build Include="App\Stored Procedures\Operations\ImportFixup.sql" />
+    <Build Include="App\Stored Procedures\Group\GetPrincipalGroups.sql" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Publish\GFSWebDb.publish.xml" />

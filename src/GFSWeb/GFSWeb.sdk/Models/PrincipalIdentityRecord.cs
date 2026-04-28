@@ -104,8 +104,6 @@ public record PrincipalIdentityRecord
     public bool IsContributor => Role == IdentityRole.ContributorRole;
     public bool IsOwner => Role == IdentityRole.OwnerRole;
 
-    public bool Like(string? pattern) => NameIdentifier.Like(pattern) || UserName.Like(pattern) || Email.Like(pattern);
-
     public static IValidator<PrincipalIdentityRecord> Validator { get; } = new Validator<PrincipalIdentityRecord>()
         .RuleFor(x => x.NameIdentifier).NotEmpty()
         .RuleFor(x => x.UserName).NotEmpty()
@@ -118,6 +116,19 @@ public record PrincipalIdentityRecord
 public static class PrincipalIdentityRecordExtensions
 {
     public static Option<IValidatorResult> Validate(this PrincipalIdentityRecord record) => PrincipalIdentityRecord.Validator.Validate(record);
+
+    public static bool Like(this PrincipalIdentityRecord record, string? pattern) => pattern switch
+    {
+        null => false,
+        string v when v.HasWildCard() => record.InternalLike(v),
+        string v => record.InternalLike($"*{v}*"),
+    };
+
+    private static bool InternalLike(this PrincipalIdentityRecord record, string? pattern) => pattern switch
+    {
+        null => false,
+        string v => record.NameIdentifier.Like(v) || record.UserName.Like(v) || record.Email.Like(v)
+    };
 
     public static PrincipalIdentityRecord ConvertTo(this UserRecord record) => new PrincipalIdentityRecord
     {

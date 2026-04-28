@@ -18,9 +18,11 @@ public class PrincipalIdentityStore
         _logger = logger.NotNull();
 
         UserAccess = new UserAccessStore(client, logger);
+        PrincipalGroup = new PrincipalGroupStore(client, logger);
     }
 
     public UserAccessStore UserAccess { get; }
+    public PrincipalGroupStore PrincipalGroup { get; }
 
     public async Task<Option<PrincipalIdentityRecord>> Get(string nameIdentifier)
     {

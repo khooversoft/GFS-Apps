@@ -1,32 +1,37 @@
-﻿S@page "/accessno"
-@using GFSWeb.sdk.Models
-@using GFSWeb.sdk.Store
-@using Toolbox.Data
+﻿@page "/access"
 
 <MudStack Spacing="2">
     <ReturnUrlButton ReturnUrl=@returnUrl />
-    <BlockHeader Title="Registered Principalst" />
+    <BlockHeader Title="Principal Access" />
 
-    <div style="margin-top:10px">
-        @if (!_initialized)
-        {
-            <MudProgressLinear Color="Color.Primary" Indeterminate="true" Rounded="true" Size="Size.Medium" Value="100" Style="margin:20px" />
-        }
-        else
-        {
-            <BlockToolBar OnAdd=OnAdd
-                          OnEdit=OnEdit
-                          OnDelete=OnDelete
-                          OnSearch=OnSearch
-                          DisableEdit="@_editDisabled"
-                          DisableDelete="@_deleteDisabled"
-                          DisableSearch="@_searchDisabled">
-            </BlockToolBar>
+    @if (!_initialized)
+    {
+        <MudProgressLinear Color="Color.Primary" Indeterminate="true" Rounded="true" Size="Size.Medium" Value="100" Style="margin:20px" />
+    }
+    else
+    {
+        <MudTabs>
+            <MudTabPanel Text="Principals">
+                <div style="padding: 10px 0px">
+                    <BlockToolBar OnAdd=OnAdd
+                                  OnEdit=OnEdit
+                                  OnDelete=OnDelete
+                                  OnSearch=OnSearch
+                                  DisableEdit="@_editDisabled"
+                                  DisableDelete="@_deleteDisabled"
+                                  DisableSearch="@_searchDisabled">
+                    </BlockToolBar>
 
-            <PrincipalList List=GetList() OnSelect=OnRowsSelect />
-            <Question Show=_deleteAsk Title="Delete Principal" Descriptions=@_deleteDescriptions OnYes=DeleteOnYes OnNo=DeleteOnNo OnClose=DeleteOnClose />
-        }
-    </div>
+                    <PrincipalList List=GetList() OnSelect=OnRowsSelect />
+                    <Question Show=_deleteAsk Title="Delete Principal" Descriptions=@_deleteDescriptions OnYes=DeleteOnYes OnNo=DeleteOnNo OnClose=DeleteOnClose />
+                </div>
+            </MudTabPanel>
+            <MudTabPanel Text="Groups">
+                <div style="padding: 10px 0px">
+                </div>
+            </MudTabPanel>
+        </MudTabs>
+    }
 </MudStack>
 
 @code {

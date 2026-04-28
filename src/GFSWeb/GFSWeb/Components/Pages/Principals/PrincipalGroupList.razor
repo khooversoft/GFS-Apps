@@ -1,0 +1,43 @@
+﻿@* <MudStack Spacing="2">
+    <MudDataGrid T="PrincipalGroupRecord"
+                 Items="List"
+                 Dense="true"
+                 Hover="true"
+                 Elevation="0"
+                 SelectedItemsChanged="@SelectedItemsChanged"
+                 RowStyleFunc="GetRowStyle"
+                 SortMode="SortMode.Multiple"
+                 ColumnResizeMode="ResizeMode.Column"
+                 MultiSelection=true
+                 @ref=_grid>
+
+        <Columns>
+            <TemplateColumn CellStyle="width: 1%; white-space: nowrap; text-align: left;" HeaderStyle="width: 1%; white-space: nowrap;">
+                <CellTemplate>
+                    <MudStack Row Spacing="0">
+                        <MudIconButton Color="Color.Success" Size="@Size.Small" Icon="@Icons.Material.Outlined.Edit" OnClick="@(() => EditItem(context.Item))" />
+                        <MudIconButton Color="Color.Error" Size="@Size.Small" Icon="@Icons.Material.Outlined.Delete" OnClick="@(() => DeleteItem(context.Item))" />
+                    </MudStack>
+                </CellTemplate>
+            </TemplateColumn>
+            <PropertyColumn Property="x => x.NameIdentifier" Title="Name Identifier" Sortable="true" />
+            <PropertyColumn Property="x => x.UserName" Title="User Name" Sortable="true" />
+            <PropertyColumn Property="x => x.Email" Title="Email" Sortable="true" />
+            <PropertyColumn Property="x => x.Disabled" Title="Disabled" Sortable="true" />
+            <TemplateColumn Title="Roles">
+                <CellTemplate>
+                    <MudStack Row>
+                        @foreach (var role in GetRoleLabels(context.Item))
+                        {
+                            <MudChip T="string" Variant="Variant.Outlined" Color=@role.color Size="Size.Small" Style="margin: 0px;font-size: 11px">@role.role</MudChip>
+                        }
+                    </MudStack>
+                </CellTemplate>
+            </TemplateColumn>
+        </Columns>
+    </MudDataGrid>
+</MudStack>
+ *@
+@code {
+
+}

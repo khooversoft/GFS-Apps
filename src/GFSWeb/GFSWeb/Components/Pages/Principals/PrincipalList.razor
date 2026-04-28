@@ -8,9 +8,7 @@
              Items="List"
              Dense="true"
              Hover="true"
-             Bordered="false"
              Elevation="0"
-             Striped=true
              SelectedItemsChanged="@SelectedItemsChanged"
              RowStyleFunc="GetRowStyle"
              SortMode="SortMode.Multiple"
@@ -19,12 +17,15 @@
              @ref=_grid>
 
     <Columns>
-        <SelectColumn T="PrincipalIdentityRecord" />
-        <PropertyColumn Property="x => x.NameIdentifier" Title="Name Identifier" Sortable="true">
+        <TemplateColumn CellStyle="width: 1%; white-space: nowrap; text-align: left;" HeaderStyle="width: 1%; white-space: nowrap;">
             <CellTemplate>
-                <a href="@NavHelper.GetPrincipalHref(context.Item.NameIdentifier, _returnUrl)" class="table-link">@context.Item.NameIdentifier</a>
+                <MudStack Row Spacing="0">
+                    <MudIconButton Color="Color.Success" Size="@Size.Small" Icon="@Icons.Material.Outlined.Edit" OnClick="@(() => EditItem(context.Item))" />
+                    <MudIconButton Color="Color.Error" Size="@Size.Small" Icon="@Icons.Material.Outlined.Delete" OnClick="@(() => DeleteItem(context.Item))" />
+                </MudStack>
             </CellTemplate>
-        </PropertyColumn>
+        </TemplateColumn>
+        <PropertyColumn Property="x => x.NameIdentifier" Title="Name Identifier" Sortable="true" />
         <PropertyColumn Property="x => x.UserName" Title="User Name" Sortable="true" />
         <PropertyColumn Property="x => x.Email" Title="Email" Sortable="true" />
         <PropertyColumn Property="x => x.Disabled" Title="Disabled" Sortable="true" />
@@ -42,6 +43,7 @@
 </MudDataGrid>
 
 @code {
+    @inject NavigationManager _nav;
     [Parameter] public IReadOnlyList<PrincipalIdentityRecord> List { get; set; } = null!;
     [Parameter] public EventCallback<HashSet<PrincipalIdentityRecord>> OnSelect { get; set; }
 
@@ -53,6 +55,15 @@
     {
         _selectedItems = items;
         await OnSelect.InvokeAsync(items);
+    }
+
+    private void EditItem(PrincipalIdentityRecord item)
+    {
+        _nav.GotoPrincipalEditPage(item.NameIdentifier, _returnUrl);
+    }
+
+    private void DeleteItem(PrincipalIdentityRecord item)
+    {
     }
 
     private string GetRowStyle(PrincipalIdentityRecord item, int index)
