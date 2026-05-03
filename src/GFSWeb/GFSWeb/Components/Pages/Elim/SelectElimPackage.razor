@@ -26,8 +26,9 @@ else
 
 
 @code {
+    @inject GFSAdminStore _store;
     [Parameter] public EventCallback<MenuItem> OnSelect { get; set; }
-    @inject ReportPackageStore _store;
+
     private bool _initialized = false;
     private IReadOnlyList<PrincipalMenuRecord> _list = Array.Empty<PrincipalMenuRecord>();
     private string? _searchString;

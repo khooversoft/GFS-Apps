@@ -1,8 +1,4 @@
 ﻿@page "/editElimPackage/{packageId}"
-@using GFSWeb.Components.Pages.Elim.EditElim
-@using GFSWeb.sdk.Models
-@using GFSWeb.sdk.Store
-@using Toolbox.Data
 
 <MudStack Spacing="2">
     <ReturnUrlButton ReturnUrl=@returnUrl />
@@ -60,7 +56,7 @@
 
 @code {
     @inject NavigationManager _nav;
-    @inject ReportPackageStore _store;
+    @inject GFSAdminStore _store;
     [Parameter] public string PackageId { get; set; } = null!;
     [Parameter, SupplyParameterFromQuery] public string returnUrl { get; set; } = null!;
 
@@ -97,7 +93,7 @@
 
     private async Task LoadPackage()
     {
-        _currentRecord = (await _store.Get(PackageId)).BeOk().Return();
+        _currentRecord = (await _store.Package.Get(PackageId)).BeOk().Return();
         _reportPackageModel = _currentRecord.Unpack();
         _disabled = _currentRecord.Disabled;
 

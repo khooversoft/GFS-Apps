@@ -4,7 +4,7 @@ using Microsoft.Extensions.Logging;
 using Toolbox.Data;
 using Toolbox.Tools;
 
-namespace GFSWeb.sdk.Store;
+namespace GFSWeb.sdk.Store.V1;
 
 public class CorpAccountStore
 {

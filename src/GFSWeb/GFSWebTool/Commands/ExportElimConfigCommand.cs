@@ -2,6 +2,7 @@
 using System.CommandLine;
 using GFSWeb.sdk.Models;
 using GFSWeb.sdk.Store;
+using GFSWeb.sdk.Store.V1;
 using GFSWebTool.Model;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;

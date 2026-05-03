@@ -1,9 +1,9 @@
-﻿CREATE PROCEDURE [dbo].[GetPrincipalGroups]
+﻿CREATE PROCEDURE [App].[GetPrincipalGroups]
 AS
 BEGIN
     SET NOCOUNT ON;
 
-    SELECT  x.[GroupName]
-    FROM    [AppDbo].[PrincipalGroup] x;
+    SELECT  x.*
+    FROM    [App].[PrincipalGroupView] x;
 
 END

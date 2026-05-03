@@ -1,18 +1,19 @@
 ﻿using System.Data;
+using GFSWeb.sdk;
 using GFSWeb.sdk.Models;
 using Microsoft.Extensions.Logging;
 using Toolbox.Data;
 using Toolbox.Tools;
 using Toolbox.Types;
 
-namespace GFSWeb.sdk.Store;
+namespace GFSWeb.sdk.Store.V2;
 
-public class UserAccessStore
+public class UserAccessEntity
 {
     private readonly ISqlClient _client;
     private readonly ILogger _logger;
 
-    public UserAccessStore(ISqlClient client, ILogger logger)
+    public UserAccessEntity(ISqlClient client, ILogger logger)
     {
         _client = client.NotNull();
         _logger = logger.NotNull();

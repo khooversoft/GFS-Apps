@@ -5,26 +5,27 @@ using Toolbox.Data;
 using Toolbox.Tools;
 using Toolbox.Types;
 
-namespace GFSWeb.sdk.Store;
+namespace GFSWeb.sdk.Store.V2;
 
-public class PrincipalGroupStore
+public class PrincipalGroupEntity
 {
     private readonly ISqlClient _client;
     private readonly ILogger _logger;
 
-    public PrincipalGroupStore(ISqlClient client, ILogger logger)
+    public PrincipalGroupEntity(ISqlClient client, ILogger logger)
     {
         _client = client.NotNull();
         _logger = logger.NotNull();
     }
 
-    public async Task<Option<int>> Add(string groupName)
+    public async Task<Option<int>> Add(PrincipalGroupRecord subject)
     {
-        groupName.NotEmpty();
+        subject.NotNull().Validate().ThrowOnError();
 
         var result = await _client.Query()
             .SetCommand("[App].[AddPrincipalGroup]", CommandType.StoredProcedure)
-            .AddParameter("@GroupName", groupName)
+            .AddParameter("@GroupName", subject.GroupName)
+            .AddParameter("@Description", subject.Description)
             .ExecuteNonQuery();
 
         return result;
@@ -33,7 +34,7 @@ public class PrincipalGroupStore
     public async Task<IReadOnlyList<PrincipalGroupRecord>> Get()
     {
         var result = await _client.Query()
-            .SetCommand("[dbo].[GetPrincipalGroups]", CommandType.StoredProcedure)
+            .SetCommand("[App].[GetPrincipalGroups]", CommandType.StoredProcedure)
             .Execute<PrincipalGroupRecord>();
 
         return result;
@@ -47,6 +48,18 @@ public class PrincipalGroupStore
             .SetCommand("[App].[DeletePrincipalGroup]", CommandType.StoredProcedure)
             .AddParameter("@GroupName", groupName)
             .ExecuteNonQuery();
+
+        return result;
+    }
+
+    public async Task<IReadOnlyList<PrincipalGroupRecord>> GetGroupMembership(string groupName)
+    {
+        groupName.NotEmpty();
+
+        var result = await _client.Query()
+            .SetCommand("[App].[GetGroupMembership]", CommandType.StoredProcedure)
+            .AddParameter("@GroupName", groupName)
+            .Execute<PrincipalGroupRecord>();
 
         return result;
     }

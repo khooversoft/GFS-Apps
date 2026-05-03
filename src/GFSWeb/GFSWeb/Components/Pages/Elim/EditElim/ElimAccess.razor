@@ -24,7 +24,7 @@
 </div>
 
 @code {
-    @inject ReportPackageStore _store;
+    @inject GFSAdminStore _store;
     [Parameter] public string PackageId { get; set; } = null!;
     [Parameter] public EventCallback OnUpdate { get; set; }
 
@@ -42,10 +42,9 @@
 
     private async Task Load()
     {
-        _elements = await _store.GetGroupAccess(PackageId);
+        _elements = await _store.Package.GetGroupAccess(PackageId);
         _initialized = true;
     }
-
 
     private void OnAdd() { }
 

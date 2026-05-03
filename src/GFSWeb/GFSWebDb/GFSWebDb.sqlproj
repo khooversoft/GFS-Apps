@@ -80,7 +80,7 @@
     <Build Include="App\Views\PrincipalIdentity.sql" />
     <Build Include="App\Stored Procedures\PrincipalIdentity\AddPrincipalIdentity.sql" />
     <Build Include="App\Stored Procedures\PrincipalIdentity\DeletePrincipalIdentity.sql" />
-    <Build Include="App\Stored Procedures\PrincipalIdentity\UpdateOrAddPrincipalIdentity.sql" />
+    <Build Include="App\Stored Procedures\PrincipalIdentity\UpsertPrincipalIdentity.sql" />
     <Build Include="App\Views\ReportPackage.sql" />
     <Build Include="App\Stored Procedures\ReportPackage\DeleteReportPackage.sql" />
     <Build Include="App\Stored Procedures\ReportPackage\AddOrUpdateReportPackage.sql" />
@@ -101,16 +101,19 @@
     <Build Include="AppDbo\Tables\GroupMembership.sql" />
     <Build Include="App\Stored Procedures\Group\AddPrincipalGroup.sql" />
     <Build Include="App\Stored Procedures\Group\DeletePrincipalGroup.sql" />
-    <Build Include="App\Stored Procedures\Group\PrincipalGroup.sql" />
     <Build Include="App\Stored Procedures\Group\UpsertGroupMembership.sql" />
     <Build Include="App\Stored Procedures\Group\DeleteGroupMembership.sql" />
-    <Build Include="App\Stored Procedures\Group\GetPrincipalMembership.sql" />
     <Build Include="App\Stored Procedures\Group\UpsertGroupPackageAccess.sql" />
     <Build Include="App\Stored Procedures\Group\DeleteGroupPackageAccess.sql" />
     <Build Include="App\Stored Procedures\Menu\GetMenuForPrincipalIdentity.sql" />
     <Build Include="App\Stored Procedures\ReportPackage\GetPackageAccess.sql" />
     <Build Include="App\Stored Procedures\Operations\ImportFixup.sql" />
     <Build Include="App\Stored Procedures\Group\GetPrincipalGroups.sql" />
+    <Build Include="App\Stored Procedures\PrincipalIdentity\GetPrincipalMembership.sql" />
+    <Build Include="App\Stored Procedures\PrincipalIdentity\GetPrincipalIdentity.sql" />
+    <Build Include="App\Stored Procedures\PrincipalIdentity\PrincipalIdentityView.sql" />
+    <Build Include="App\Stored Procedures\Group\GetGroupMembership.sql" />
+    <Build Include="App\Stored Procedures\Group\PrincipalGroupView.sql" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Publish\GFSWebDb.publish.xml" />

@@ -1,4 +1,4 @@
-﻿create  procedure [App].[UpdateOrAddPrincipalIdentity]
+﻿create  procedure [App].[UpsertPrincipalIdentity]
     @NameIdentifier NVARCHAR(50),
     @UserName NVARCHAR(100),
     @Email NVARCHAR(50),

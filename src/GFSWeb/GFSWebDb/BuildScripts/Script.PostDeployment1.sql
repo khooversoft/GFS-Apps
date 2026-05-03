@@ -27,14 +27,16 @@ WHEN NOT MATCHED BY TARGET THEN
 -- Setup PrincipalGroup records
 MERGE [AppDbo].[PrincipalGroup] AS target
 USING (VALUES
-    ('Corporate'),
-    ('Latm'),
-    ('Paris'),
-    ('Branches')
-) AS src ([GroupName])
+    ('Corporate', 'All corporate users'),
+    ('Latm', 'Latm division'),
+    ('Paris', 'Paris branch'),
+    ('Branches', 'All branches offices except Latm')
+) AS src ([GroupName], [Description])
     ON target.[GroupName] = src.[GroupName]
-WHEN NOT MATCHED BY TARGET THEN
-    INSERT ([GroupName])
-    VALUES (src.[GroupName]);
+WHEN NOT MATCHED THEN
+    INSERT ([GroupName], [Description])
+    VALUES (src.[GroupName], src.[Description])
+WHEN MATCHED THEN
+    UPDATE SET [Description] = src.[Description];
 
 

@@ -1,4 +1,5 @@
 ﻿using System.Data;
+using GFSWeb.sdk;
 using GFSWeb.sdk.Models;
 using Microsoft.Extensions.Logging;
 using Toolbox.Data;
@@ -6,15 +7,15 @@ using Toolbox.Extensions;
 using Toolbox.Tools;
 using Toolbox.Types;
 
-namespace GFSWeb.sdk.Store;
+namespace GFSWeb.sdk.Store.V2;
 
-public class ReportMenuStore
+public class ReportMenuEntity
 {
     private readonly ISqlClient _client;
     private readonly ILogger _logger;
     private readonly IAuthAccess _authAccess;
 
-    public ReportMenuStore(ISqlClient client, IAuthAccess authAccess, ILogger<ReportPackageStore> logger)
+    public ReportMenuEntity(ISqlClient client, IAuthAccess authAccess, ILogger logger)
     {
         _client = client.NotNull();
         _authAccess = authAccess.NotNull();

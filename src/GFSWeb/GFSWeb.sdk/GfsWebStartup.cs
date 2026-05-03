@@ -1,4 +1,5 @@
 ﻿using GFSWeb.sdk.Store;
+using GFSWeb.sdk.Store.V2;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Toolbox;
@@ -14,20 +15,14 @@ public static class GfsWebStartup
         webOption.NotNull();
         sapOption.NotNull();
 
-        services.AddSqlClient<PrincipalIdentityStore>(c =>
-        {
-            c.ConnectionString = webOption.AdminConnectionString;
-        });
-
-        services.AddSqlClient<ReportPackageStore>(c =>
+        services.AddSqlClient<GFSAdminStore>(c =>
         {
             c.ConnectionString = webOption.AdminConnectionString;
         });
 
         services.AddSingleton<GfsWebOption>(webOption);
         services.AddSingleton<GfsSapOption>(sapOption);
-        services.AddScoped<PrincipalIdentityStore>();
-        services.AddScoped<ReportPackageStore>();
+        services.AddScoped<GFSAdminStore>();
 
         services.AddTransient<UserDatalakeStore>(service =>
         {

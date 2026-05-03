@@ -3,7 +3,7 @@ using Toolbox.Data;
 using Toolbox.Tools;
 using Toolbox.Types;
 
-namespace GFSWeb.sdk.Store;
+namespace GFSWeb.sdk.Store.Azure;
 
 public class ScheduleDatalakeStore : DatalakeStore
 {

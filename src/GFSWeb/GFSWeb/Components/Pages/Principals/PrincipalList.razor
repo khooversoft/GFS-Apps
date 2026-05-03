@@ -1,69 +1,119 @@
-﻿@using GFSWeb.sdk.Models
-@using GFSWeb.sdk.Store
-@using GFSWeb.Application
-@using System.Collections.Frozen
+﻿@if (!_initialized)
+{
+    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Rounded="true" Size="Size.Medium" Value="100" Style="margin:20px" />
+}
+else
+{
+    <MudStack Spacing="2">
 
+        <BlockToolBar OnAdd=OnAdd
+                      OnEdit=OnEdit
+                      OnDelete=OnDelete
+                      OnSearch=OnSearch
+                      DisableEdit="@_editDisabled"
+                      DisableDelete="@_deleteDisabled"
+                      DisableSearch="@_searchDisabled">
+        </BlockToolBar>
 
-<MudDataGrid T="PrincipalIdentityRecord"
-             Items="List"
-             Dense="true"
-             Hover="true"
-             Elevation="0"
-             SelectedItemsChanged="@SelectedItemsChanged"
-             RowStyleFunc="GetRowStyle"
-             SortMode="SortMode.Multiple"
-             ColumnResizeMode="ResizeMode.Column"
-             MultiSelection=true
-             @ref=_grid>
+        <MudDataGrid T="PrincipalIdentityRecord"
+                     Items="@GetList()"
+                     Dense="true"
+                     Hover="true"
+                     Elevation="0"
+                     SelectedItemsChanged="@SelectedItemsChanged"
+                     RowStyleFunc="GetRowStyle"
+                     SortMode="SortMode.Multiple"
+                     ColumnResizeMode="ResizeMode.Column"
+                     MultiSelection=true
+                     @ref=_grid>
 
-    <Columns>
-        <TemplateColumn CellStyle="width: 1%; white-space: nowrap; text-align: left;" HeaderStyle="width: 1%; white-space: nowrap;">
-            <CellTemplate>
-                <MudStack Row Spacing="0">
-                    <MudIconButton Color="Color.Success" Size="@Size.Small" Icon="@Icons.Material.Outlined.Edit" OnClick="@(() => EditItem(context.Item))" />
-                    <MudIconButton Color="Color.Error" Size="@Size.Small" Icon="@Icons.Material.Outlined.Delete" OnClick="@(() => DeleteItem(context.Item))" />
-                </MudStack>
-            </CellTemplate>
-        </TemplateColumn>
-        <PropertyColumn Property="x => x.NameIdentifier" Title="Name Identifier" Sortable="true" />
-        <PropertyColumn Property="x => x.UserName" Title="User Name" Sortable="true" />
-        <PropertyColumn Property="x => x.Email" Title="Email" Sortable="true" />
-        <PropertyColumn Property="x => x.Disabled" Title="Disabled" Sortable="true" />
-        <TemplateColumn Title="Roles">
-            <CellTemplate>
-                <MudStack Row>
-                    @foreach (var role in GetRoleLabels(context.Item))
-                    {
-                        <MudChip T="string" Variant="Variant.Outlined" Color=@role.color Size="Size.Small" Style="margin: 0px;font-size: 11px">@role.role</MudChip>
-                    }
-                </MudStack>
-            </CellTemplate>
-        </TemplateColumn>
-    </Columns>
-</MudDataGrid>
+            <Columns>
+                <SelectColumn T="PrincipalIdentityRecord" />
+                <TemplateColumn Title="Name Identifier">
+                    <CellTemplate>
+                        <MudLink Color="Color.Info" Href="@(NavHelper.GetPrincipalHref(@context.Item.NameIdentifier))">@context.Item.NameIdentifier</MudLink>
+                    </CellTemplate>
+                </TemplateColumn>
+                <PropertyColumn Property="x => x.UserName" Title="User Name" Sortable="true" />
+                <PropertyColumn Property="x => x.Email" Title="Email" Sortable="true" />
+                <PropertyColumn Property="x => x.Disabled" Title="Disabled" Sortable="true" />
+                <TemplateColumn Title="Roles">
+                    <CellTemplate>
+                        <MudStack Row>
+                            @foreach (var role in GetRoleLabels(context.Item))
+                            {
+                                <MudChip T="string" Variant="Variant.Outlined" Color=@role.color Size="Size.Small" Style="margin: 0px;font-size: 11px">@role.role</MudChip>
+                            }
+                        </MudStack>
+                    </CellTemplate>
+                </TemplateColumn>
+            </Columns>
+        </MudDataGrid>
+    </MudStack>
+
+    <Question Show=_deleteAsk Title="Delete Principal" Descriptions=@_deleteDescriptions OnYes=DeleteOnYes OnNo=DeleteCancel OnClose=DeleteCancel />
+}
 
 @code {
+    @inject GFSAdminStore _store;
     @inject NavigationManager _nav;
-    [Parameter] public IReadOnlyList<PrincipalIdentityRecord> List { get; set; } = null!;
-    [Parameter] public EventCallback<HashSet<PrincipalIdentityRecord>> OnSelect { get; set; }
+    @inject ISnackbar _snackbar;
 
     private MudDataGrid<PrincipalIdentityRecord> _grid = null!;
     private HashSet<PrincipalIdentityRecord> _selectedItems = new();
-    private string _returnUrl = Uri.EscapeDataString(NavHelper.AccessManagement);
+    private bool _initialized = false;
+    private bool _editDisabled = true;
+    private bool _deleteDisabled = true;
+    private bool _searchDisabled = true;
+    private string? _searchString;
+    private IReadOnlyList<PrincipalIdentityRecord> _list = null!;
+    private bool _deleteAsk = false;
+    private IReadOnlyList<string> _deleteDescriptions = Array.Empty<string>();
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await Load();
+            StateHasChanged();
+        }
+    }
+
+    private IReadOnlyList<PrincipalIdentityRecord> GetList() => _searchString switch
+    {
+        null => _list,
+        string v => _list.Where(x => x.Like(_searchString)).ToArray(),
+    };
+
+    private async Task Load()
+    {
+        _list = await _store.Identity.GetAll();
+        _searchDisabled = _list.Count == 0;
+        _initialized = true;
+    }
+
+    // private void OnRowsSelect(HashSet<PrincipalIdentityRecord> items)
+    // {
+    //     _selectedItems = items;
+
+    //     (_editDisabled, _deleteDisabled) = items.Count switch
+    //     {
+    //         0 => (true, true),
+    //         1 => (false, false),
+    //         _ => (true, false)
+    //     };
+    // }
 
     private async Task SelectedItemsChanged(HashSet<PrincipalIdentityRecord> items)
     {
         _selectedItems = items;
-        await OnSelect.InvokeAsync(items);
-    }
 
-    private void EditItem(PrincipalIdentityRecord item)
-    {
-        _nav.GotoPrincipalEditPage(item.NameIdentifier, _returnUrl);
-    }
-
-    private void DeleteItem(PrincipalIdentityRecord item)
-    {
+        (_editDisabled, _deleteDisabled) = items.Count switch
+        {
+            0 => (true, true),
+            1 => (false, false),
+            _ => (true, false)
+        };
     }
 
     private string GetRowStyle(PrincipalIdentityRecord item, int index)
@@ -80,4 +130,62 @@
         if (item.Parker) yield return ("Parker", Color.Info);
         if (item.ParkerPost) yield return ("Parker Post", Color.Warning);
     }
+
+    private void OnAdd() => _nav.GotoPrincipalEditPage("new-record", NavHelper.PrincipalAccess.BasePath);
+
+    private void OnEdit()
+    {
+        if (_selectedItems.Count != 1) return;
+        _nav.GotoPrincipalEditPage(_selectedItems.First().NameIdentifier, NavHelper.PrincipalAccess.BasePath);
+    }
+
+    private void OnSearch(string? searchString)
+    {
+        searchString = searchString.ToNullIfEmpty();
+        if (_searchString == searchString) return;
+
+        _searchString = searchString;
+        _ = InvokeAsync(StateHasChanged);
+    }
+
+    private void OnDelete()
+    {
+        if (_selectedItems.Count == 0) return;
+
+        var names = _selectedItems.Select(x => x.NameIdentifier).Join(", ");
+
+        _deleteDescriptions = _selectedItems.Count switch
+        {
+            1 => ["Are you sure you want to delete principal?", $"Name Identifier: '{names}'"],
+            _ => ["Are you sure you want to delete these?", $"Name Identifiers: {names}"],
+        };
+
+        _deleteAsk = true;
+    }
+
+    private async Task DeleteOnYes()
+    {
+        _deleteAsk = false;
+        if (_selectedItems.Count == 0) return;
+
+        foreach (var item in _selectedItems)
+        {
+            var deleteOption = await _store.Identity.Delete(item.NameIdentifier);
+            if (deleteOption.IsError())
+            {
+                _snackbar.Add($"Failed to delete principal '{item.NameIdentifier}', statusCode={deleteOption.StatusCode}, error={deleteOption.Error}", Severity.Error, config =>
+                {
+                    config.RequireInteraction = true;
+                });
+
+                return;
+            }
+
+            _snackbar.Add($"Principal '{item.NameIdentifier}' deleted", Severity.Success);
+        }
+
+        await Load();
+    }
+
+    public void DeleteCancel() => _deleteAsk = false;
 }

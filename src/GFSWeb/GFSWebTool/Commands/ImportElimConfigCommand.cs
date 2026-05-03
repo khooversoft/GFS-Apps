@@ -1,6 +1,7 @@
 ﻿using System.CommandLine;
 using GFSWeb.sdk.Models;
 using GFSWeb.sdk.Store;
+using GFSWeb.sdk.Store.V2;
 using GFSWebTool.Model;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -48,19 +49,18 @@ internal class ImportElimConfigCommand : ICommand
 
         var reportDirectory = await ReadReportDirectory(outputFolder);
 
-        ReportPackageStore packageStore = CreatePackageStore(config);
-        PrincipalIdentityStore identityStore = CreateIdentityStore(config);
+        GFSAdminStore store = CreateAdminStore(config);
 
-        await WriteMenu(packageStore, reportDirectory);
-        await WritePrincipalIdentities(identityStore, reportDirectory);
-        await WriteUserAccess(identityStore, reportDirectory);
-        await WriteReportPackages(packageStore, reportPackages, reportDirectory);
+        await WriteMenu(store, reportDirectory);
+        await WritePrincipalIdentities(store, reportDirectory);
+        await WriteUserAccess(store, reportDirectory);
+        await WriteReportPackages(store, reportPackages, reportDirectory);
 
         _logger.LogInformation("Running import fixup");
-        await packageStore.ImportFixup();
+        await store.Package.ImportFixup();
     }
 
-    private async Task WriteMenu(ReportPackageStore store, ReportDirectoryModel reportDirectory)
+    private async Task WriteMenu(GFSAdminStore store, ReportDirectoryModel reportDirectory)
     {
         _logger.LogInformation("Importing menu from ReportDirectory, total={total}", reportDirectory.Items.Count);
         foreach (var item in reportDirectory.Items)
@@ -70,18 +70,18 @@ internal class ImportElimConfigCommand : ICommand
         }
     }
 
-    public async Task WritePrincipalIdentities(PrincipalIdentityStore store, ReportDirectoryModel reportDirectory)
+    public async Task WritePrincipalIdentities(GFSAdminStore store, ReportDirectoryModel reportDirectory)
     {
         _logger.LogInformation("Importing users from ReportDirectory, total={total}", reportDirectory.Items.Count);
 
         foreach (var item in reportDirectory.Users)
         {
-            (await store.AddOrUpdate(item)).BeOk();
+            (await store.Identity.AddOrUpdate(item)).BeOk();
             _logger.LogInformation("Import user nameIdentifier={menuId}", item.NameIdentifier);
         }
     }
 
-    public async Task WriteUserAccess(PrincipalIdentityStore store, ReportDirectoryModel reportDirectory)
+    public async Task WriteUserAccess(GFSAdminStore store, ReportDirectoryModel reportDirectory)
     {
         _logger.LogInformation("Importing userAccess from ReportDirectory, total={total}", reportDirectory.Items.Count);
 
@@ -100,7 +100,7 @@ internal class ImportElimConfigCommand : ICommand
         }
     }
 
-    private async Task WriteReportPackages(ReportPackageStore store, IReadOnlyList<ReportPackageModel> reportPackages, ReportDirectoryModel reportDirectory)
+    private async Task WriteReportPackages(GFSAdminStore store, IReadOnlyList<ReportPackageModel> reportPackages, ReportDirectoryModel reportDirectory)
     {
         foreach (ReportPackageModel reportPackage in reportPackages)
         {
@@ -118,7 +118,7 @@ internal class ImportElimConfigCommand : ICommand
                 Data = reportPackage.ToJson(),
             };
 
-            (await store.AddOrUpdate(reportPackageRecord)).BeOk();
+            (await store.Package.AddOrUpdate(reportPackageRecord)).BeOk();
             _logger.LogInformation("Imported Report package packageId={packageId}", reportPackage.PackageId);
         }
     }
@@ -146,25 +146,14 @@ internal class ImportElimConfigCommand : ICommand
         return reportDirectory;
     }
 
-    private ReportPackageStore CreatePackageStore(FileInfo connector)
+    private GFSAdminStore CreateAdminStore(FileInfo connector)
     {
         var config = new ConfigurationBuilder()
             .AddJsonFile(connector.FullName)
             .Build();
 
         var sqlWebToolOption = config.Get<GfsWebToolOption>().NotNull();
-        var store = SqlClientTool.CreateSqlStore<ReportPackageStore>(sqlWebToolOption.GfsWebConnection, _serviceProvider);
-        return store;
-    }
-
-    private PrincipalIdentityStore CreateIdentityStore(FileInfo connector)
-    {
-        var config = new ConfigurationBuilder()
-            .AddJsonFile(connector.FullName)
-            .Build();
-
-        var sqlWebToolOption = config.Get<GfsWebToolOption>().NotNull();
-        var store = SqlClientTool.CreateSqlStore<PrincipalIdentityStore>(sqlWebToolOption.GfsWebConnection, _serviceProvider);
+        var store = SqlClientTool.CreateSqlStore<GFSAdminStore>(sqlWebToolOption.GfsWebConnection, _serviceProvider);
         return store;
     }
 }

@@ -53,7 +53,7 @@
 
 @code {
     @inject NavigationManager _nav;
-    @inject ReportPackageStore _store;
+    @inject GFSAdminStore _store;
     @inject UserDatalakeStore _userDatalakeStore;
     [Parameter] public string PackageId { get; set; } = null!;
     [Parameter, SupplyParameterFromQuery] public string returnUrl { get; set; } = null!;
@@ -76,7 +76,7 @@
 
     private async Task LoadPackage()
     {
-        _currentRecord = (await _store.Get(PackageId)).BeOk().Return();
+        _currentRecord = (await _store.Package.Get(PackageId)).BeOk().Return();
         _reportPackageModel = _currentRecord.Unpack();
 
         _initialized = true;
@@ -88,7 +88,7 @@
 
     private async Task OnEdit()
     {
-        _nav.GotoEditElimReportHref(PackageId, $"{NavHelper.ElimPackagePath}/{PackageId}");
+        _nav.GotoEditElimReportHref(PackageId, NavHelper.ElimPackage.Href(PackageId));
     }
 
     private async Task OnRun()

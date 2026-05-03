@@ -1,4 +1,5 @@
 ﻿using System.Data;
+using GFSWeb.sdk;
 using GFSWeb.sdk.Models;
 using Microsoft.Extensions.Logging;
 using Toolbox.Data;
@@ -6,26 +7,20 @@ using Toolbox.Extensions;
 using Toolbox.Tools;
 using Toolbox.Types;
 
-namespace GFSWeb.sdk.Store;
+namespace GFSWeb.sdk.Store.V2;
 
-public class ReportPackageStore
+public class ReportPackageEntity
 {
-    private readonly ISqlClient<ReportPackageStore> _client;
-    private readonly ILogger<ReportPackageStore> _logger;
+    private readonly ISqlClient _client;
+    private readonly ILogger _logger;
     private readonly IAuthAccess _authAccess;
 
-    public ReportPackageStore(ISqlClient<ReportPackageStore> client, IAuthAccess authAccess, ILogger<ReportPackageStore> logger)
+    public ReportPackageEntity(ISqlClient client, IAuthAccess authAccess, ILogger logger)
     {
         _client = client.NotNull();
-        _authAccess = authAccess.NotNull();
         _logger = logger.NotNull();
-
-        //Access = new(_client, _authAccess, logger);
-        Menu = new(_client, _authAccess, logger);
+        _authAccess = authAccess.NotNull();
     }
-
-    //public ReportAccessStore Access { get; }
-    public ReportMenuStore Menu { get; }
 
     public async Task<Option<ReportPackageRecord>> Get(string packageId)
     {

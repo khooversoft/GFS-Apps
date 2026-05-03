@@ -1,47 +1,55 @@
-﻿@if (!_initialized)
-{
-    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Rounded="true" Size="Size.Medium" Value="100" Style="margin:20px" />
-}
-else
-{
-    <MudStack Spacing="2">
+﻿@page "/access/membership/{groupId}"
 
-        <BlockToolBar OnAdd=OnAdd
-                      OnEdit=OnEdit
-                      OnDelete=OnDelete
-                      OnSearch=OnSearch
-                      DisableEdit="@_editDisabled"
-                      DisableDelete="@_deleteDisabled"
-                      DisableSearch="@_searchDisabled">
-        </BlockToolBar>
+<MudStack Spacing="2">
+    <ReturnUrlButton ReturnUrl=@returnUrl />
 
-        <MudDataGrid T="PrincipalGroupRecord"
-                     Items="@_list"
-                     Dense="true"
-                     Hover="true"
-                     Elevation="0"
-                     SelectedItemsChanged="@SelectedItemsChanged"
-                     RowStyleFunc="GetRowStyle"
-                     SortMode="SortMode.Multiple"
-                     ColumnResizeMode="ResizeMode.Column"
-                     MultiSelection=true
-                     @ref=_grid>
+    @if (!_initialized)
+    {
+        <MudProgressLinear Color="Color.Primary" Indeterminate="true" Rounded="true" Size="Size.Medium" Value="100" Style="margin:20px" />
+    }
+    else
+    {
+        <MudStack Spacing="2">
 
-            <Columns>
-                <SelectColumn T="PrincipalGroupRecord" />
-                <PropertyColumn Property="x => x.GroupName" Title="Group Name" Sortable="true" />
-                <PropertyColumn Property="x => x.Description" Title="Description" Sortable="true" />
-            </Columns>
-        </MudDataGrid>
-    </MudStack>
+            <BlockToolBar OnAdd=OnAdd
+                          OnEdit=OnEdit
+                          OnDelete=OnDelete
+                          OnSearch=OnSearch
+                          DisableEdit="@_editDisabled"
+                          DisableDelete="@_deleteDisabled"
+                          DisableSearch="@_searchDisabled">
+            </BlockToolBar>
 
-    <Question Show=_deleteAsk Title="Delete Group" Descriptions=@_deleteDescriptions OnYes=DeleteOnYes OnNo=DeleteCancel OnClose=DeleteCancel />
-}
+            <MudDataGrid T="PrincipalGroupRecord"
+                         Items="@_list"
+                         Dense="true"
+                         Hover="true"
+                         Elevation="0"
+                         SelectedItemsChanged="@SelectedItemsChanged"
+                         RowStyleFunc="GetRowStyle"
+                         SortMode="SortMode.Multiple"
+                         ColumnResizeMode="ResizeMode.Column"
+                         MultiSelection=true
+                         @ref=_grid>
+
+                <Columns>
+                    <SelectColumn T="PrincipalGroupRecord" />
+                    <PropertyColumn Property="x => x.GroupName" Title="Group Name" Sortable="true" />
+                    <PropertyColumn Property="x => x.Description" Title="Description" Sortable="true" />
+                </Columns>
+            </MudDataGrid>
+        </MudStack>
+
+        <Question Show=_deleteAsk Title="Delete Group" Descriptions=@_deleteDescriptions OnYes=DeleteOnYes OnNo=DeleteCancel OnClose=DeleteCancel />
+    }
+</MudStack>
 
 @code {
     @inject GFSAdminStore _store;
     @inject NavigationManager _nav;
     @inject ISnackbar _snackbar;
+    [Parameter] public string GroupId { get; set; } = null!;
+    [Parameter, SupplyParameterFromQuery] public string returnUrl { get; set; } = null!;
 
     private MudDataGrid<PrincipalGroupRecord> _grid = null!;
     private HashSet<PrincipalGroupRecord> _selectedItems = new();
@@ -65,7 +73,7 @@ else
 
     private async Task Load()
     {
-        _list = await _store.PrincipalGroup.Get();
+        _list = await _store.PrincipalGroup.GetGroupMembership(GroupId);
         _searchDisabled = _list.Count == 0;
         _initialized = true;
     }

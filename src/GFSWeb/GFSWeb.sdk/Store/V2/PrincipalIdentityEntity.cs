@@ -1,40 +1,29 @@
 ﻿using System.Data;
+using GFSWeb.sdk;
 using GFSWeb.sdk.Models;
 using Microsoft.Extensions.Logging;
 using Toolbox.Data;
 using Toolbox.Tools;
 using Toolbox.Types;
 
-namespace GFSWeb.sdk.Store;
+namespace GFSWeb.sdk.Store.V2;
 
-public class PrincipalIdentityStore
+public class PrincipalIdentityEntity
 {
-    private readonly ISqlClient<PrincipalIdentityStore> _client;
-    private readonly ILogger<PrincipalIdentityStore> _logger;
+    private readonly ISqlClient _client;
+    private readonly ILogger _logger;
 
-    public PrincipalIdentityStore(ISqlClient<PrincipalIdentityStore> client, ILogger<PrincipalIdentityStore> logger)
+    public PrincipalIdentityEntity(ISqlClient client, ILogger logger)
     {
         _client = client.NotNull();
         _logger = logger.NotNull();
-
-        UserAccess = new UserAccessStore(client, logger);
-        PrincipalGroup = new PrincipalGroupStore(client, logger);
     }
-
-    public UserAccessStore UserAccess { get; }
-    public PrincipalGroupStore PrincipalGroup { get; }
 
     public async Task<Option<PrincipalIdentityRecord>> Get(string nameIdentifier)
     {
-        var cmd = """
-            SELECT  x.*
-            FROM    [App].[PrincipalIdentity] x
-            WHERE   x.[NameIdentifier] = @NameIdentifier
-            """;
-
         var result = await _client.Query()
-            .SetCommand(cmd, CommandType.Text)
-            .AddParameter("NameIdentifier", nameIdentifier)
+            .SetCommand("[App].[GetPrincipalIdentity]", CommandType.StoredProcedure)
+            .AddParameter("@NameIdentifier", nameIdentifier)
             .Execute<PrincipalIdentityRecord>();
 
         return result.Count switch
@@ -47,16 +36,19 @@ public class PrincipalIdentityStore
 
     public async Task<IReadOnlyList<PrincipalIdentityRecord>> GetAll()
     {
-        var cmd = """
-            SELECT  x.*
-            FROM    [App].[PrincipalIdentity] x
-            ORDER BY x.[NameIdentifier]
-            """;
-
         var result = await _client.Query()
-            .SetCommand(cmd, CommandType.Text)
+            .SetCommand("[App].[GetPrincipalIdentity]", CommandType.StoredProcedure)
             .Execute<PrincipalIdentityRecord>();
 
+        return result;
+    }
+
+    public async Task<IReadOnlyList<PrincipalGroupRecord>> GetGroupMembership(string nameIdentifier)
+    {
+        var result = await _client.Query()
+            .SetCommand("[App].[GetPrincipalMembership]", CommandType.StoredProcedure)
+            .AddParameter("@NameIdentifier", nameIdentifier)
+            .Execute<PrincipalGroupRecord>();
         return result;
     }
 
@@ -65,7 +57,7 @@ public class PrincipalIdentityStore
         record.NotNull().Validate().ThrowOnError();
 
         var result = await _client.Query()
-            .SetCommand("[App].[UpdateOrAddPrincipalIdentity]", CommandType.StoredProcedure)
+            .SetCommand("[App].[UpsertPrincipalIdentity]", CommandType.StoredProcedure)
             .AddParameter("@NameIdentifier", record.NameIdentifier)
             .AddParameter("@UserName", record.UserName)
             .AddParameter("@Email", record.Email)

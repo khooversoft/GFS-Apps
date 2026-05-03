@@ -1,6 +1,6 @@
 ﻿using Toolbox.Tools;
 
-namespace GFSWeb.sdk.Store;
+namespace GFSWeb.sdk.Store.Azure;
 
 public record ReportFileDetail
 {
