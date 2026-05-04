@@ -1,5 +1,6 @@
 ﻿using System.Data;
 using GFSWeb.sdk.Models;
+using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Logging;
 using Toolbox.Data;
 using Toolbox.Tools;
@@ -31,7 +32,23 @@ public class PrincipalGroupEntity
         return result;
     }
 
-    public async Task<IReadOnlyList<PrincipalGroupRecord>> Get()
+    public async Task<Option<PrincipalGroupRecord>> Get(string groupName)
+    {
+        groupName.NotEmpty();
+        var result = await _client.Query()
+            .SetCommand("[App].[GetPrincipalGroup]", CommandType.StoredProcedure)
+            .AddParameter("@GroupName", groupName)
+            .Execute<PrincipalGroupRecord>();
+
+        return result.Count switch
+        {
+            0 => StatusCode.NotFound,
+            1 => result[0],
+            _ => throw new InvalidOperationException($"Multiple records found for GroupName: {groupName}")
+        };
+    }
+
+    public async Task<IReadOnlyList<PrincipalGroupRecord>> GetAll()
     {
         var result = await _client.Query()
             .SetCommand("[App].[GetPrincipalGroups]", CommandType.StoredProcedure)
@@ -52,14 +69,69 @@ public class PrincipalGroupEntity
         return result;
     }
 
-    public async Task<IReadOnlyList<PrincipalGroupRecord>> GetGroupMembership(string groupName)
+    public async Task<Option<int>> Update(string groupName, string description)
+    {
+        groupName.NotEmpty();
+        description.NotEmpty();
+
+        var result = await _client.Query()
+            .SetCommand("[App].[UpdatePrincipalGroup]", CommandType.StoredProcedure)
+            .AddParameter("@GroupName", groupName)
+            .AddParameter("@Description", description)
+            .ExecuteNonQuery();
+
+        return result;
+    }
+
+    public async Task<IReadOnlyList<PrincipalGroupMembershipRecord>> GetGroupMembership(string groupName)
     {
         groupName.NotEmpty();
 
         var result = await _client.Query()
             .SetCommand("[App].[GetGroupMembership]", CommandType.StoredProcedure)
             .AddParameter("@GroupName", groupName)
-            .Execute<PrincipalGroupRecord>();
+            .Execute<PrincipalGroupMembershipRecord>(factory);
+
+        return result;
+
+        static IReadOnlyList<PrincipalGroupMembershipRecord> factory(SqlDataReader reader)
+        {
+            var groups = reader.MapToList<PrincipalGroupRecord>().Assert(x => x.Count == 1, "Multiple groups returned");
+            reader.NextResult();
+            var identities = reader.MapToList<PrincipalIdentityRecord>();
+
+            return identities.Select(x => new PrincipalGroupMembershipRecord
+            {
+                Group = groups[0],
+                Identity = x,
+            }).ToList();
+        }
+    }
+
+    public async Task<Option<int>> DeleteGroupMembership(string groupName, string nameIdentifier)
+    {
+        groupName.NotEmpty();
+        nameIdentifier.NotEmpty();
+
+        var result = await _client.Query()
+            .SetCommand("[App].[DeleteGroupMembership]", CommandType.StoredProcedure)
+            .AddParameter("@GroupName", groupName)
+            .AddParameter("@NameIdentifier", nameIdentifier)
+            .ExecuteNonQuery();
+
+        return result;
+    }
+
+    public async Task<Option<int>> UpsertGroupMembership(string groupName, string nameIdentifier)
+    {
+        groupName.NotEmpty();
+        nameIdentifier.NotEmpty();
+
+        var result = await _client.Query()
+            .SetCommand("[App].[UpsertGroupMembership]", CommandType.StoredProcedure)
+            .AddParameter("@GroupName", groupName)
+            .AddParameter("@NameIdentifier", nameIdentifier)
+            .ExecuteNonQuery();
 
         return result;
     }

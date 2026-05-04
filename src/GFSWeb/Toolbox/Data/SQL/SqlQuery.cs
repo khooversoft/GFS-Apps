@@ -84,7 +84,7 @@ public class SqlQuery
         };
     }
 
-    public async Task<IReadOnlyList<T>> Execute<T>() where T : class, new()
+    public async Task<IReadOnlyList<T>> Execute<T>(Func<SqlDataReader, IReadOnlyList<T>>? factory = null) where T : class, new()
     {
         var result = await Execute(async () =>
         {
@@ -98,7 +98,12 @@ public class SqlQuery
             conn.Open();
 
             using SqlDataReader reader = await cmd.ExecuteReaderAsync();
-            var result = reader.MapToList<T>();
+
+            var result = factory switch
+            {
+                null => reader.MapToList<T>(),
+                _ => factory(reader),
+            };
 
             _logger.LogDebug("Execute, command={command}, return count={count}", Command, result.Count);
             return result;

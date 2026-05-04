@@ -1,14 +1,17 @@
 ﻿
 <div style="margin-top:10px">
-    <BlockToolBar OnRefresh="Load" />
+    <BlockToolBar OnRefresh="Load" OnDelete="OnDelete" DisableDelete="@_disableDelete" />
 
     <MudDataGrid T="ReportFileDetail"
                  Items="@_elements"
                  ReadOnly="true"
                  Dense="true"
                  EditMode="@DataGridEditMode.Cell"
+                 SelectedItemsChanged="@SelectedItemsChanged"
+                 MultiSelection="true"
                  Bordered="true">
         <Columns>
+            <SelectColumn T="ReportFileDetail" />
             <TemplateColumn CellStyle="width: 1%; white-space: nowrap; text-align: left;" HeaderStyle="width: 1%; white-space: nowrap;">
                 <CellTemplate>
                     <MudStack Row Spacing="0">
@@ -27,7 +30,7 @@
     <Question Show="@_askDeleteQuestion"
               Title="Delete Confirmation"
               Descriptions="@_descriptions"
-              OnYes="@(() => DeleteItem(_currentFileDetail!))"
+              OnYes="@(() => DeleteItem())"
               OnNo="@(() => _askDeleteQuestion = false)" />
 </div>
 
@@ -38,24 +41,46 @@
     [Parameter] public string PackageId { get; set; } = null!;
 
     private bool _initialized = false;
+    private bool _disableDelete = false;
     private IReadOnlyList<ReportFileDetail> _elements = [];
     private ReportFileDetail? _currentFileDetail;
     private bool _askDeleteQuestion;
     private IReadOnlyList<string> _descriptions = [];
+    private HashSet<ReportFileDetail> _selectedItems = new();
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
             await Load();
-            StateHasChanged();
         }
     }
 
-    private async Task Load()
+    public async Task Load()
     {
         _elements = await _userDatalakeStore.ListReportFiles(PackageId);
         _initialized = true;
+        StateHasChanged();
+    }
+
+    private async Task SelectedItemsChanged(HashSet<ReportFileDetail> items)
+    {
+        _selectedItems = items;
+
+        _disableDelete = items.Count switch
+        {
+            0 => true,
+            _ => false,
+        };
+    }
+
+    private async Task OnDelete()
+    {
+        _currentFileDetail = null;
+        _askDeleteQuestion = true;
+
+        var line = _selectedItems.Select(x => x.FileName);
+        _descriptions = new[] { $"Do you want to delete?" }.Concat(line).ToArray();
     }
 
     private async Task AskDelete(ReportFileDetail item)
@@ -65,20 +90,32 @@
         _descriptions = new[] { $"Do you want to delete {item.FileName}?" };
     }
 
-    private async Task DeleteItem(ReportFileDetail item)
+    private async Task DeleteItem()
     {
         _askDeleteQuestion = false;
 
-        string filePath = $"{item.UserEmail}/{item.PackageId}/{item.FileName}";
-        var fileResult = await _userDatalakeStore.Delete(filePath);
-
-        if (fileResult.IsError())
+        var list = _currentFileDetail switch
         {
-            _snackbar.Add($"Can not delete {filePath}", Severity.Error);
-            return;
+            null => _selectedItems.Select(x => $"{x.UserEmail}/{x.PackageId}/{x.FileName}").ToList(),
+            var v => new List<string> { $"{v.UserEmail}/{v.PackageId}/{v.FileName}" }
+        };
+
+        if (list.Count == 0) return;
+
+        foreach(var item in list)
+        {
+            var fileResult = await _userDatalakeStore.Delete(item);
+            if (fileResult.IsError())
+            {
+                _snackbar.Add($"Can not delete {item}", Severity.Error);
+                continue;
+            }
+
+            _snackbar.Add($"Deleted {item}", Severity.Info);
         }
 
-        _snackbar.Add($"Deleted {filePath}", Severity.Info);
+        // string filePath = $"{_currentFileDetail.UserEmail}/{_currentFileDetail.PackageId}/{_currentFileDetail.FileName}";
+
         await Load();
         StateHasChanged();
     }

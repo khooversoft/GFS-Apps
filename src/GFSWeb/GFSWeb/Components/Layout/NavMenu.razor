@@ -3,7 +3,12 @@
     <MudNavLink Icon="@Icons.Material.Outlined.QueryStats" Href="@NavHelper.ElimPackages.BasePath" Match="NavLinkMatch.Prefix">Elim</MudNavLink>
     <MudNavLink Icon="@Icons.Material.Outlined.PostAdd" Href="/underConstruction" Match="NavLinkMatch.Prefix">Parker</MudNavLink>
     <MudNavLink Icon="@Icons.Material.Outlined.Schedule" Href="/underConstruction" Match="NavLinkMatch.Prefix">Schedules</MudNavLink>
-    <MudNavLink Icon="@Icons.Material.Outlined.People" Href=@NavHelper.PrincipalAccess.BasePath Match="NavLinkMatch.Prefix">Security</MudNavLink>
+
+    <MudNavGroup Title="Settings" Icon="@Icons.Material.Outlined.Settings" Expanded="true">
+        <MudNavLink Icon="@Icons.Material.Outlined.People" Href=@NavHelper.Principals.BasePath Match="NavLinkMatch.Prefix">Principals</MudNavLink>
+        <MudNavLink Icon="@Icons.Material.Outlined.Groups" Href=@NavHelper.PrincipalGroups.BasePath Match="NavLinkMatch.Prefix">Groups</MudNavLink>
+    </MudNavGroup>
+
     <MudNavLink Icon="@Icons.Material.Outlined.HelpCenter" Href="/underConstruction" Match="NavLinkMatch.Prefix">Help</MudNavLink>
 
 </MudNavMenu>

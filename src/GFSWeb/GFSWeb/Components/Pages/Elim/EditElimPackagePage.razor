@@ -110,8 +110,8 @@
         _initialized = true;
     }
 
-    private void OnSave() => _nav.GotoElimPackages();
-    private void OnCancel() => _nav.GotoElimPackageHref(PackageId);
+    private void OnSave() => NavHelper.ElimPackages.NavigateTo(_nav, returnUrl: _nav.Uri);
+    private void OnCancel() => _nav.NavigateTo(returnUrl);
 
     private async Task OnUpdate()
     {

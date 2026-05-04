@@ -72,7 +72,8 @@
 
     private async Task OnEdit()
     {
-        _nav.GotoEditElimReportHref(PackageId, NavHelper.ElimPackage.Href(PackageId));
+        NavHelper.EditElimPackage.NavigateTo(_nav, PackageId, _nav.Uri);
+        // _nav.GotoEditElimReportHref(PackageId, NavHelper.ElimPackage.Href(PackageId));
     }
 
     private async Task OnRun()

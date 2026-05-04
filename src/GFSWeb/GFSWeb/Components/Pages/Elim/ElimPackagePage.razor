@@ -1,55 +1,31 @@
 ﻿@page "/elimPackage/{packageId}"
 
-@using GFSWeb.Components.Pages.Elim.EditElim
-@using GFSWeb.sdk.Models
-@using GFSWeb.sdk.Store
-@using Toolbox.Data
+@if (!_initialized)
+{
+    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Rounded="true" Size="Size.Medium" Value="100" Style="margin:20px" />
+}
+else
+{
+    <MudStack Spacing="2">
+        <ReturnUrlButton ReturnUrl=@returnUrl />
 
-<MudStack Spacing="2">
-    <ReturnUrlButton ReturnUrl=@returnUrl />
-
-    @if (!_initialized)
-    {
-        <MudProgressLinear Color="Color.Primary" Indeterminate="true" Rounded="true" Size="Size.Medium" Value="100" Style="margin:20px" />
-    }
-    else
-    {
         <BlockHeader Title="Package" SubTitle="@GetPackageDesecription()" />
         <BlockToolBar OnRun="OnRun" OnEdit="OnEdit" />
 
         <MudTabs @ref="_tabs">
-            <MudTabPanel Text="Run">
-                <MudPaper Elevation="2">
-                    <MudStack Spacing="4" Style="margin-top:20px;padding:10px;">
-                        <MudPaper Height="100px">
-                            <MudText Typo="Typo.body2">Report parameters if needed.</MudText>
-                        </MudPaper>
-
-                        @if (_history.Count > 0)
-                        {
-                            <div style="margin-top:5px">
-                                <MudProgressLinear Color="Color.Info" Value="@GetProgressValue()" Class="my-7" />
-
-                                @foreach (var item in _history)
-                                {
-                                    <MudText Typo="Typo.body2">@item</MudText>
-                                }
-                            </div>
-                        }
-                    </MudStack>
-                </MudPaper>
-            </MudTabPanel>
             <MudTabPanel Text="History">
-                <ElimHistory PackageId="@PackageId" />
+                <ElimHistory @ref="_elimHistory" PackageId="@PackageId" />
             </MudTabPanel>
             <MudTabPanel Text="Schedule">
             </MudTabPanel>
             <MudTabPanel Text="Pipeline">
             </MudTabPanel>
         </MudTabs>
-    }
-</MudStack>
 
+    </MudStack>
+
+    <ElimRunDrawer Show="@_runInProgress" OnClose="RunOnClose" PackageId="@PackageId" Description="@_currentRecord.NotNull().Description" />
+}
 
 @code {
     @inject NavigationManager _nav;
@@ -59,11 +35,14 @@
     [Parameter, SupplyParameterFromQuery] public string returnUrl { get; set; } = null!;
 
     private bool _initialized = false;
+    private bool _runInProgress = false;
     private MudTabs _tabs = null!;
+    private ElimHistory _elimHistory = null!;
     private ReportPackageRecord? _currentRecord;
     private ReportPackageModel? _reportPackageModel;
     private List<string> _history = [];
     private Stack<string> _progressStack = new Stack<string>();
+
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -86,37 +65,13 @@
 
     private string GetPackageDesecription() => _reportPackageModel is not null ? _reportPackageModel.Description : "Not loaded";
 
-    private async Task OnEdit()
+    private async Task OnEdit() => NavHelper.EditElimPackage.NavigateTo(_nav, PackageId, _nav.Uri);
+
+    private void OnRun() => _runInProgress = true;
+
+    private async Task RunOnClose()
     {
-        _nav.GotoEditElimReportHref(PackageId, NavHelper.ElimPackage.Href(PackageId));
-    }
-
-    private async Task OnRun()
-    {
-        await _tabs.ActivatePanelAsync(0);
-
-        string[] list = [
-            "Read report package...",
-            "Querying data from SAP system...",
-            "Running ETL process...",
-            "Creating Excel file...",
-        ];
-
-        _history = [];
-        _progressStack = new Stack<string>(list.Reverse());
-
-        DataETag testReport = TestExcelFileGenerator.Generate();
-        (await _userDatalakeStore.Add(testReport, _reportPackageModel.NotNull().PackageId, _reportPackageModel.Description, ".xlsx")).BeOk();
-        await SimulateProgressAsync();
-    }
-
-    public async Task SimulateProgressAsync()
-    {
-        while (_progressStack.TryPop(out var str))
-        {
-            _history.Add(str);
-            StateHasChanged();
-            await Task.Delay(500);
-        }
+        _runInProgress = false;
+        await _elimHistory.Load();
     }
 }

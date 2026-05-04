@@ -57,6 +57,9 @@
     [Parameter] public EventCallback OnBack { get; set; }
     [Parameter] public EventCallback OnRun { get; set; }
     [Parameter] public EventCallback OnRefresh { get; set; }
+    [Parameter] public EventCallback OnAccess { get; set; }
+    [Parameter] public EventCallback OnUndo { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
     [Parameter] public bool DisableEdit { get; set; }
     [Parameter] public bool DisableAdd { get; set; }
     [Parameter] public bool DisableDelete { get; set; }
@@ -65,22 +68,14 @@
     [Parameter] public bool DisableCancel { get; set; }
     [Parameter] public bool DisableRun { get; set; }
     [Parameter] public bool DisableRefresh { get; set; }
+    [Parameter] public bool DisableAccess { get; set; }
+    [Parameter] public bool DisableUndo { get; set; }
+    [Parameter] public bool DisableClose { get; set; }
     [Parameter] public string? Title { get; set; }
     [Parameter] public string? Width { get; set; }
 
     private const string _buttonStyle = "margin: 0px 5px;";
     private const string _panelStyle = "margin-top:20px;border-bottom-width:1px;border-bottom-color: lightgray";
-
-    private bool ShowTooBar =>
-        OnAdd.HasDelegate ||
-        OnEdit.HasDelegate ||
-        OnDelete.HasDelegate ||
-        OnSearch.HasDelegate ||
-        OnSave.HasDelegate ||
-        OnCancel.HasDelegate ||
-        OnRun.HasDelegate ||
-        OnRefresh.HasDelegate;
-
     private string _searchString = string.Empty;
 
     private async Task OnSearchTextChanged() => await OnSearch.InvokeAsync(_searchString);
@@ -115,5 +110,8 @@
         new ToolbarAction(Icons.Material.Outlined.Cancel,    Color.Surface,   OnCancel,     DisableCancel,  "Cancel"),
         new ToolbarAction(Icons.Material.Outlined.PlayArrow, Color.Info,      OnRun,        DisableRun,     "Run"),
         new ToolbarAction(Icons.Material.Outlined.Refresh,   Color.Surface,   OnRefresh,    DisableRefresh, "Refresh"),
+        new ToolbarAction(Icons.Material.Outlined.Security,  Color.Info,      OnAccess,     DisableAccess,  "Access"),
+        new ToolbarAction(Icons.Material.Outlined.Security,  Color.Info,      OnUndo,       DisableUndo,    "Undo"),
+        new ToolbarAction(Icons.Material.Outlined.Close,     Color.Info,      OnClose,      DisableClose,   "Close"),
     };
 }

@@ -1,0 +1,116 @@
+﻿<!-- Settings Drawer -->
+<MudDrawer Open="@Show"
+           OpenChanged=Close
+           Anchor="Anchor.End"
+           Elevation="1"
+           Variant="@DrawerVariant.Temporary"
+           OverlayAutoClose=true
+           Width="50%">
+
+    <MudPaper Class="ma-2" Elevation="2">
+        <MudDrawerHeader>
+            <MudStack Spacing="2">
+                <MudText Typo="Typo.h6">Add Group</MudText>
+                <MudText Typo="Typo.body2">Select principals to add to the group</MudText>
+            </MudStack>
+        </MudDrawerHeader>
+        <MudDrawerContainer>
+            <BlockToolBar OnAdd="OnAdd" DisableAdd="_disableAdd" OnSearch="OnSearch" />
+
+            <MudStack Style="margin-top:20px" Spacing=2>
+                <MudDataGrid T="PrincipalIdentityRecord"
+                             @ref="_grid"
+                             Items="@_list"
+                             Dense="true"
+                             Hover="true"
+                             Elevation="0"
+                             MultiSelection="true"
+                             SortMode="SortMode.Multiple"
+                             SelectedItemsChanged="@SelectedItemsChanged"
+                             QuickFilter="QuickFilter"
+                             ColumnResizeMode="ResizeMode.Column">
+                    <Columns>
+                        <SelectColumn T="PrincipalIdentityRecord" />
+                        <PropertyColumn Property="x => x.NameIdentifier" Title="Name Identifier" Sortable="true" />
+                        <PropertyColumn Property="x => x.UserName" Title="User Name" Sortable="true" />
+                    </Columns>
+                </MudDataGrid>
+            </MudStack>
+        </MudDrawerContainer>
+    </MudPaper>
+</MudDrawer>
+
+@code {
+    @inject GFSAdminStore _store;
+    @inject ISnackbar _snackbar;
+
+    [Parameter] public bool Show { get; set; }
+    [Parameter] public string GroupId { get; set; } = null!;
+    [Parameter] public EventCallback OnClose { get; set; }
+    [Parameter] public EventCallback OnUpdate { get; set; }
+
+    private MudDataGrid<PrincipalIdentityRecord> _grid = null!;
+    private bool _initialized = false;
+    private bool _disableAdd = false;
+    private string? _searchText;
+    private IReadOnlyList<PrincipalIdentityRecord> _list = [];
+    private HashSet<PrincipalIdentityRecord> _selectedItems = [];
+    private bool _previousShow = false;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Show && !_previousShow)
+        {
+            await Load();
+            _selectedItems = [];
+            _disableAdd = true;
+            _searchText = null;
+
+            _grid?.Selection.Clear();
+        }
+
+        _previousShow = Show;
+    }
+
+    private async Task Load()
+    {
+        _list = await _store.Identity.GetAll();
+        _initialized = true;
+    }
+
+    private void Close() => OnClose.InvokeAsync();
+
+    private async Task OnAdd()
+    {
+        foreach (var item in _selectedItems)
+        {
+            await _store.PrincipalGroup.UpsertGroupMembership(GroupId, item.NameIdentifier);
+            _snackbar.Add($"Added {item.NameIdentifier} to {GroupId}", Severity.Info);
+        }
+
+        await OnUpdate.InvokeAsync();
+    }
+
+    private async Task SelectedItemsChanged(HashSet<PrincipalIdentityRecord> items)
+    {
+        _selectedItems = items;
+        _disableAdd = _selectedItems.Count == 0;
+    }
+
+    private void OnSearch(string? searchText)
+    {
+        searchText = searchText.ToNullIfEmpty();
+        if (_searchText == searchText) return;
+
+        _searchText = searchText;
+    }
+
+    private bool QuickFilter(PrincipalIdentityRecord subject)
+    {
+        if (subject is null) return true;
+        if (_searchText is null) return true;
+
+        return subject.NameIdentifier.Contains(_searchText, StringComparison.OrdinalIgnoreCase) ||
+            subject.UserName.Contains(_searchText, StringComparison.OrdinalIgnoreCase);
+    }
+}

@@ -30,25 +30,13 @@ public sealed record NavRoute(string BasePath)
 
 public static class NavHelper
 {
-    public static readonly NavRoute PrincipalAccess = new("/access");
+    public static readonly NavRoute Principals = new("/principals");
+    public static readonly NavRoute Principal = new("/principal");
+    public static readonly NavRoute PrincipalGroups = new("/principalGroups");
+    public static readonly NavRoute PrincipalGroup = new("/principalGroup");
+    public static readonly NavRoute PrincipalAccessMembership = new("/principalGroup/access");
     public static readonly NavRoute UnderConstruction = new("/underConstruction");
     public static readonly NavRoute ElimPackages = new("/elimPackages");
     public static readonly NavRoute ElimPackage = new("/elimPackage");
     public static readonly NavRoute EditElimPackage = new("/editElimPackage");
-
-    public static void GotoAccessManagement(this NavigationManager nav) => PrincipalAccess.NavigateTo(nav);
-    public static void GotoElimPackages(this NavigationManager nav) => ElimPackages.NavigateTo(nav);
-
-    public static string GetPrincipalHref(string id, string? returnUrl = null) => PrincipalAccess.Href(id, returnUrl);
-    public static string GetElimPackageHref(string packageId, string? returnUrl = null) => ElimPackage.Href(packageId, returnUrl);
-    public static string GetEditElimReportHref(string packageId, string? returnUrl = null) => EditElimPackage.Href(packageId, returnUrl);
-
-    public static void GotoPrincipalEditPage(this NavigationManager nav, string id, string? returnUrl = null)
-        => PrincipalAccess.NavigateTo(nav, id, returnUrl);
-
-    public static void GotoElimPackageHref(this NavigationManager nav, string packageId, string? returnUrl = null)
-        => ElimPackage.NavigateTo(nav, packageId, returnUrl);
-
-    public static void GotoEditElimReportHref(this NavigationManager nav, string packageId, string? returnUrl = null)
-        => EditElimPackage.NavigateTo(nav, packageId, returnUrl);
 }

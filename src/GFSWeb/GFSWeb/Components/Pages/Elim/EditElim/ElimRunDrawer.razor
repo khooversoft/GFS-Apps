@@ -1,0 +1,74 @@
+﻿<!-- Settings Drawer -->
+<MudDrawer Open="@Show"
+           OpenChanged=OnClose
+           Anchor="Anchor.End"
+           Elevation="1"
+           Variant="@DrawerVariant.Temporary"
+           OverlayAutoClose=true
+           Width="50%">
+
+    <MudPaper Elevation="2">
+        <MudStack Spacing="4" Style="margin-top:20px;padding:10px;">
+            <BlockToolBar OnRun="OnRun" OnClose="OnClose" />
+
+            <MudPaper Height="100px">
+                <MudText Typo="Typo.body2">Report parameters if needed.</MudText>
+            </MudPaper>
+
+            @if (_history.Count > 0)
+            {
+                <div style="margin-top:5px">
+                    <MudProgressLinear Color="Color.Info" Value="@GetProgressValue()" Class="my-7" />
+
+                    @foreach (var item in _history)
+                    {
+                        <MudText Typo="Typo.body2">@item</MudText>
+                    }
+                </div>
+            }
+        </MudStack>
+    </MudPaper>
+</MudDrawer>
+
+@code {
+    @inject GFSAdminStore _store;
+    @inject UserDatalakeStore _userDatalakeStore;
+    @inject ISnackbar _snackbar;
+
+    [Parameter] public bool Show { get; set; }
+    [Parameter] public string PackageId { get; set; } = null!;
+    [Parameter] public string Description { get; set; } = null!;
+    [Parameter] public EventCallback OnClose { get; set; }
+
+    private List<string> _history = [];
+    private Stack<string> _progressStack = new Stack<string>();
+
+    private int GetProgressValue() => _progressStack.Count == 0 ? 0 : ((4 / _progressStack.Count) + 1) * 20;
+
+    private async Task OnRun()
+    {
+        string[] list = [
+            "Read report package...",
+            "Querying data from SAP system...",
+            "Running ETL process...",
+            "Creating Excel file...",
+        ];
+
+        _history = [];
+        _progressStack = new Stack<string>(list.Reverse());
+
+        DataETag testReport = TestExcelFileGenerator.Generate();
+        (await _userDatalakeStore.Add(testReport, PackageId, Description, ".xlsx")).BeOk();
+        await SimulateProgressAsync();
+    }
+
+    private async Task SimulateProgressAsync()
+    {
+        while (_progressStack.TryPop(out var str))
+        {
+            _history.Add(str);
+            StateHasChanged();
+            await Task.Delay(500);
+        }
+    }
+}

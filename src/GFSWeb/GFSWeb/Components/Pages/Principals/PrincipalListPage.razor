@@ -1,10 +1,14 @@
-﻿@if (!_initialized)
+﻿@page "/principals"
+
+@if (!_initialized)
 {
     <MudProgressLinear Color="Color.Primary" Indeterminate="true" Rounded="true" Size="Size.Medium" Value="100" Style="margin:20px" />
 }
 else
 {
     <MudStack Spacing="2">
+        <ReturnUrlButton ReturnUrl=@returnUrl />
+        <BlockHeader Title="Users Registered" />
 
         <BlockToolBar OnAdd=OnAdd
                       OnEdit=OnEdit
@@ -31,7 +35,10 @@ else
                 <SelectColumn T="PrincipalIdentityRecord" />
                 <TemplateColumn Title="Name Identifier">
                     <CellTemplate>
-                        <MudLink Color="Color.Info" Href="@(NavHelper.GetPrincipalHref(@context.Item.NameIdentifier))">@context.Item.NameIdentifier</MudLink>
+                        <MudLink Color="Color.Info"
+                                 Href="@(NavHelper.Principal.Href(@context.Item.NameIdentifier, _nav.Uri))">
+                            @context.Item.NameIdentifier
+                        </MudLink>
                     </CellTemplate>
                 </TemplateColumn>
                 <PropertyColumn Property="x => x.UserName" Title="User Name" Sortable="true" />
@@ -58,6 +65,7 @@ else
     @inject GFSAdminStore _store;
     @inject NavigationManager _nav;
     @inject ISnackbar _snackbar;
+    [Parameter, SupplyParameterFromQuery] public string returnUrl { get; set; } = null!;
 
     private MudDataGrid<PrincipalIdentityRecord> _grid = null!;
     private HashSet<PrincipalIdentityRecord> _selectedItems = new();
@@ -92,18 +100,6 @@ else
         _initialized = true;
     }
 
-    // private void OnRowsSelect(HashSet<PrincipalIdentityRecord> items)
-    // {
-    //     _selectedItems = items;
-
-    //     (_editDisabled, _deleteDisabled) = items.Count switch
-    //     {
-    //         0 => (true, true),
-    //         1 => (false, false),
-    //         _ => (true, false)
-    //     };
-    // }
-
     private async Task SelectedItemsChanged(HashSet<PrincipalIdentityRecord> items)
     {
         _selectedItems = items;
@@ -131,12 +127,12 @@ else
         if (item.ParkerPost) yield return ("Parker Post", Color.Warning);
     }
 
-    private void OnAdd() => _nav.GotoPrincipalEditPage("new-record", NavHelper.PrincipalAccess.BasePath);
+    private void OnAdd() => NavHelper.Principal.NavigateTo(_nav, "new-record", _nav.Uri);
 
     private void OnEdit()
     {
         if (_selectedItems.Count != 1) return;
-        _nav.GotoPrincipalEditPage(_selectedItems.First().NameIdentifier, NavHelper.PrincipalAccess.BasePath);
+        NavHelper.Principal.NavigateTo(_nav, _selectedItems.First().NameIdentifier, _nav.Uri);
     }
 
     private void OnSearch(string? searchString)

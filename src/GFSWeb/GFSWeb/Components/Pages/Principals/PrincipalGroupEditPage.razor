@@ -1,0 +1,62 @@
+﻿@page "/principalGroup/{groupId}"
+
+@if (!_initialized)
+{
+    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Rounded="true" Size="Size.Medium" Value="100" Style="margin:20px" />
+}
+else
+{
+    <MudStack Spacing="2">
+        <ReturnUrlButton ReturnUrl=@returnUrl />
+        <BlockHeader Title="Principal Group" />
+        <MudText Typo="Typo.h6">@_group.GroupName</MudText>
+
+        <BlockToolBar OnSave=OnSave OnUndo=OnUndo DisableSave="@_saveDisabled" DisableUndo="@_saveDisabled" OnAccess="OnAccess" />
+        <MudTextField Label="Description" Variant="Variant.Outlined" @bind-Value=_group.Description @bind-Value:after="OnChange" Immediate="true" />
+    </MudStack>
+}
+
+@code {
+    @inject GFSAdminStore _store;
+    @inject NavigationManager _nav;
+    [Parameter] public string GroupId { get; set; } = null!;
+    [Parameter, SupplyParameterFromQuery] public string returnUrl { get; set; } = null!;
+
+    private bool _initialized = false;
+    private bool _saveDisabled = true;
+    private string _previousDescription = null!;
+    private PrincipalGroupRecord _group = null!;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _initialized = false;
+        await Load();
+    }
+
+    private async Task Load()
+    {
+        _group = (await _store.PrincipalGroup.Get(GroupId)).ThrowOnError().Return();
+        _previousDescription = _group.Description;
+        _initialized = true;
+        _saveDisabled = true;
+    }
+
+    private void OnSave()
+    {
+        var success = _store.PrincipalGroup.Update(GroupId, _group.Description).ThrowOnError().Return();
+        _nav.NavigateTo(returnUrl);
+    }
+
+    private void OnAccess() => NavHelper.PrincipalAccessMembership.NavigateTo(_nav, GroupId, NavHelper.PrincipalGroups.Href());
+
+    private void OnUndo()
+    {
+        _group.Description = _previousDescription;
+        _saveDisabled = true;
+    }
+
+    private void OnChange()
+    {
+        _saveDisabled = _group.Description == _previousDescription;
+    }
+}

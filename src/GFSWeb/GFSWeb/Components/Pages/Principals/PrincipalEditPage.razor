@@ -1,4 +1,4 @@
-﻿@page "/access/{nameIdentifier}"
+﻿@page "/principal/{nameIdentifier}"
 @using GFSWeb.sdk.Models
 @using GFSWeb.sdk.Store
 @using MudBlazor.Charts
@@ -138,7 +138,7 @@
         }
 
         _snackbar.Add($"Principal '{_record.NameIdentifier}' saved", Severity.Success);
-        _nav.GotoAccessManagement();
+        NavHelper.Principals.NavigateTo(_nav);
     }
 
     private void OnDelete()
@@ -158,17 +158,17 @@
                 config.RequireInteraction = true;
             });
 
-            _nav.GotoAccessManagement();
+            NavHelper.Principals.NavigateTo(_nav);
             return;
         }
 
         _snackbar.Add($"Principal '{_record.NameIdentifier}' deleted", Severity.Success);
-        _nav.GotoAccessManagement();
+        NavHelper.Principals.NavigateTo(_nav);
     }
 
     private void OnAskDeleteNo() => _showDeleteAsk = false;
 
-    private void OnCancel() => _nav.GotoAccessManagement();
+    private void OnCancel() => NavHelper.Principals.NavigateTo(_nav);
 
     private void OnEditorChanged() => EvaluateSaveState();
 

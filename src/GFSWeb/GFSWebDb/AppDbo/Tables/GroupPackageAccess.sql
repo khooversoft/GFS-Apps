@@ -7,7 +7,7 @@
 );
 GO
 
-CREATE CLUSTERED INDEX [PK_GroupAccess] ON [AppDbo].[GroupPackageAccess] ([PackageId], [GroupName]);
+CREATE UNIQUE CLUSTERED INDEX [PK_GroupAccess] ON [AppDbo].[GroupPackageAccess] ([PackageId], [GroupName]);
 GO
 
 CREATE INDEX [IX_GroupAccess_GroupName] ON [AppDbo].[GroupPackageAccess] ([GroupName]);

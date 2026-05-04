@@ -7,5 +7,5 @@
 )
 GO
 
-CREATE CLUSTERED INDEX [PK_GroupMembership] ON [AppDbo].[GroupMembership] ([GroupName], [NameIdentifier]);
+CREATE UNIQUE CLUSTERED INDEX [PK_GroupMembership] ON [AppDbo].[GroupMembership] ([GroupName], [NameIdentifier]);
 GO

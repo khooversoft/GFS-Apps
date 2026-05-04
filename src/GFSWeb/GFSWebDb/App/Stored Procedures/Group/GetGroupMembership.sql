@@ -4,9 +4,14 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
+    -- First result set: group records
     SELECT  x.*
-            ,p.*
     FROM    [App].[PrincipalGroupView] x
-            INNER JOIN [AppDbo].[GroupMembership] m ON x.[GroupName] = m.[GroupName]
-            INNER JOIN [App].[PrincipalIdentityView] p ON m.[NameIdentifier] = p.[NameIdentifier]
+    WHERE   x.[GroupName] = @GroupName;
+
+    -- Second result set: identity records
+    SELECT  p.*
+    FROM    [App].[PrincipalIdentityView] p
+            INNER JOIN [AppDbo].[GroupMembership] m ON m.[NameIdentifier] = p.[NameIdentifier]
+    WHERE   m.[GroupName] = @GroupName;
 END

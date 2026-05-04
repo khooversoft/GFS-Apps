@@ -35,9 +35,3 @@ public record EditPackageContext
         return hash.ToHashCode();
     }
 }
-
-//public record Keyed<T> where T : notnull
-//{
-//    public string Key { get; init; } = Guid.NewGuid().ToString();
-//    public T Value { get; set; } = default!;
-//}

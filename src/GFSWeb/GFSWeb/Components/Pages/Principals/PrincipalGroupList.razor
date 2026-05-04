@@ -1,18 +1,24 @@
-﻿@if (!_initialized)
+﻿@page "/principalGroups"
+
+@if (!_initialized)
 {
     <MudProgressLinear Color="Color.Primary" Indeterminate="true" Rounded="true" Size="Size.Medium" Value="100" Style="margin:20px" />
 }
 else
 {
     <MudStack Spacing="2">
+        <ReturnUrlButton ReturnUrl=@returnUrl />
+        <BlockHeader Title="Principal Groups" />
 
         <BlockToolBar OnAdd=OnAdd
                       OnEdit=OnEdit
                       OnDelete=OnDelete
                       OnSearch=OnSearch
+                      OnAccess="OnAccess"
                       DisableEdit="@_editDisabled"
                       DisableDelete="@_deleteDisabled"
-                      DisableSearch="@_searchDisabled">
+                      DisableSearch="@_searchDisabled"
+                      DisableAccess="@_editDisabled">
         </BlockToolBar>
 
         <MudDataGrid T="PrincipalGroupRecord"
@@ -25,13 +31,35 @@ else
                      SortMode="SortMode.Multiple"
                      ColumnResizeMode="ResizeMode.Column"
                      MultiSelection=true
+                     QuickFilter="QuickFilter"
                      @ref=_grid>
 
             <Columns>
+                <HierarchyColumn T="PrincipalGroupRecord" />
                 <SelectColumn T="PrincipalGroupRecord" />
+                <TemplateColumn Title="Group Name">
+                    <CellTemplate>
+                        <MudLink Color="Color.Info"
+                                 Href="@(NavHelper.PrincipalGroup.Href(@context.Item.GroupName, _nav.Uri))">@context.Item.GroupName</MudLink>
+                    </CellTemplate>
+                </TemplateColumn>
                 <PropertyColumn Property="x => x.GroupName" Title="Group Name" Sortable="true" />
                 <PropertyColumn Property="x => x.Description" Title="Description" Sortable="true" />
             </Columns>
+            <ChildRowContent>
+                <MudButton StartIcon="@Icons.Material.Outlined.Add" Variant="Variant.Text" Color="Color.Info" OnClick="@(() => OnAddMembership(context.Item.GroupName))">Add</MudButton>
+                <MudStack Spacing="2" Row="true" Class="pa-2" Style="flex-wrap:wrap">
+                    @foreach (var member in GetCachedMembers(context.Item))
+                    {
+                        <MudChip T="string"
+                                 Color="Color.Default"
+                                 OnClose="@(() => DeleteMember(context.Item.GroupName, member.NameIdentifier))"
+                                 CloseIcon="@Icons.Material.Filled.Close">
+                            @member.NameIdentifier
+                        </MudChip>
+                    }
+                </MudStack>
+            </ChildRowContent>
         </MudDataGrid>
     </MudStack>
 
@@ -42,6 +70,7 @@ else
     @inject GFSAdminStore _store;
     @inject NavigationManager _nav;
     @inject ISnackbar _snackbar;
+    [Parameter, SupplyParameterFromQuery] public string returnUrl { get; set; } = null!;
 
     private MudDataGrid<PrincipalGroupRecord> _grid = null!;
     private HashSet<PrincipalGroupRecord> _selectedItems = new();
@@ -65,7 +94,8 @@ else
 
     private async Task Load()
     {
-        _list = await _store.PrincipalGroup.Get();
+        _list = await _store.PrincipalGroup.GetAll();
+        _memberCache.Clear();
         _searchDisabled = _list.Count == 0;
         _initialized = true;
     }
@@ -82,19 +112,54 @@ else
         };
     }
 
+    private Dictionary<string, IReadOnlyList<PrincipalIdentityRecord>> _memberCache = new();
+
+    private IReadOnlyList<PrincipalIdentityRecord> GetCachedMembers(PrincipalGroupRecord group)
+    {
+        if (!_memberCache.ContainsKey(group.GroupName))
+        {
+            _memberCache[group.GroupName] = [];
+            _ = LoadMembersAsync(group.GroupName);
+        }
+        return _memberCache[group.GroupName];
+    }
+
+    private async Task LoadMembersAsync(string groupName)
+    {
+        var members = await _store.PrincipalGroup.GetGroupMembership(groupName);
+        _memberCache[groupName] = members.Select(x => x.Identity).ToArray();
+        StateHasChanged();
+    }
+
+    private async Task DeleteMember(string groupName, string nameIdentifier)
+    {
+        var result = await _store.PrincipalGroup.DeleteGroupMembership(groupName, nameIdentifier);
+        if (result.IsError())
+        {
+            _snackbar.Add($"Failed to remove '{nameIdentifier}' from '{groupName}'", Severity.Error);
+            return;
+        }
+
+        _snackbar.Add($"Removed '{nameIdentifier}' from '{groupName}'", Severity.Success);
+        _memberCache.Remove(groupName);
+        await LoadMembersAsync(groupName);
+    }
+
     private string GetRowStyle(PrincipalGroupRecord item, int index)
     {
         var result = _selectedItems.Any(x => x.GroupName == item.GroupName);
         return result ? "background-color: var(--mud-palette-action-default-hover);" : string.Empty;
     }
 
-    private void OnAdd() => _nav.GotoPrincipalEditPage("new-record", NavHelper.PrincipalAccess.BasePath);
+    private void OnAdd() => NavHelper.PrincipalGroup.NavigateTo(_nav, "new-record", _nav.Uri);
 
     private void OnEdit()
     {
         if (_selectedItems.Count != 1) return;
-        _nav.GotoPrincipalEditPage(_selectedItems.First().GroupName, NavHelper.PrincipalAccess.BasePath);
+        NavHelper.PrincipalGroup.NavigateTo(_nav, _selectedItems.First().GroupName, _nav.Uri);
     }
+
+    private void OnAddMembership(string groupId) => NavHelper.PrincipalAccessMembership.NavigateTo(_nav, groupId, _nav.Uri);
 
     private void OnSearch(string? searchString)
     {
@@ -102,7 +167,21 @@ else
         if (_searchString == searchString) return;
 
         _searchString = searchString;
-        _ = InvokeAsync(StateHasChanged);
+    }
+
+    public void OnAccess()
+    {
+        if (_selectedItems.Count != 1) return;
+        NavHelper.PrincipalAccessMembership.NavigateTo(_nav, _selectedItems.First().GroupName, _nav.Uri);
+        // _nav.GotoPrincipalGroupAccessPage(_selectedItems.First().GroupName, _nav.Uri);
+    }
+
+    private bool QuickFilter(PrincipalGroupRecord item)
+    {
+        if (_searchString is null) return true;
+
+        return item.GroupName.Contains(_searchString, StringComparison.OrdinalIgnoreCase)
+            || (item.Description?.Contains(_searchString, StringComparison.OrdinalIgnoreCase) ?? false);
     }
 
     private void OnDelete()

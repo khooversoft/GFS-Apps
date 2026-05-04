@@ -9,7 +9,7 @@ namespace GFSWeb.sdk.Models;
 public record PrincipalGroupRecord
 {
     public string GroupName { get; init; } = null!;
-    public string Description { get; init; } = null!;
+    public string Description { get; set; } = null!;
 
     public static IValidator<PrincipalGroupRecord> Validator { get; } = new Validator<PrincipalGroupRecord>()
         .RuleFor(x => x.GroupName).NotEmpty()

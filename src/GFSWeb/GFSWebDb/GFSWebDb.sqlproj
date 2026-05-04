@@ -114,6 +114,8 @@
     <Build Include="App\Stored Procedures\PrincipalIdentity\PrincipalIdentityView.sql" />
     <Build Include="App\Stored Procedures\Group\GetGroupMembership.sql" />
     <Build Include="App\Stored Procedures\Group\PrincipalGroupView.sql" />
+    <Build Include="App\Stored Procedures\Group\GetPrincipalGroup.sql" />
+    <Build Include="App\Stored Procedures\Group\UpdatePrincipalGroup.sql" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Publish\GFSWebDb.publish.xml" />
