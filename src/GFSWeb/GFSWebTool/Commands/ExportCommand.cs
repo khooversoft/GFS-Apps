@@ -12,13 +12,19 @@ using Toolbox.Tools;
 
 namespace GFSWebTool.Commands;
 
-internal class ExportElimConfigCommand : ICommand
+internal class ExportCommand : ICommand
 {
     private readonly IServiceProvider _serviceProvider;
-    private readonly ILogger<ExportElimConfigCommand> _logger;
-    private static readonly FrozenSet<string> _requiredTableIds = new[] { "UserList", "UserCoAccess", "UserAccess", "UserRoles" }.ToFrozenSet(StringComparer.OrdinalIgnoreCase);
+    private readonly ILogger<ExportCommand> _logger;
+    private static readonly FrozenSet<string> _requiredTableIds = new[]
+    {
+        "UserList",
+        "UserCoAccess",
+        "UserAccess",
+        "UserRoles"
+    }.ToFrozenSet(StringComparer.OrdinalIgnoreCase);
 
-    public ExportElimConfigCommand(IServiceProvider serviceProvider, ILogger<ExportElimConfigCommand> logger)
+    public ExportCommand(IServiceProvider serviceProvider, ILogger<ExportCommand> logger)
     {
         _serviceProvider = serviceProvider.NotNull();
         _logger = logger.NotNull();

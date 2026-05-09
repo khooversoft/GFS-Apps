@@ -1,5 +1,6 @@
 ﻿using System.CommandLine;
 using GFSWeb.sdk.Models;
+using GFSWeb.sdk.SqlParser;
 using GFSWeb.sdk.Store;
 using GFSWeb.sdk.Store.V2;
 using GFSWebTool.Model;
@@ -11,12 +12,12 @@ using Toolbox.Tools;
 
 namespace GFSWebTool.Commands;
 
-internal class ImportElimConfigCommand : ICommand
+internal class ImportCommand : ICommand
 {
     private readonly IServiceProvider _serviceProvider;
-    private readonly ILogger<ImportElimConfigCommand> _logger;
+    private readonly ILogger<ImportCommand> _logger;
 
-    public ImportElimConfigCommand(IServiceProvider serviceProvider, ILogger<ImportElimConfigCommand> logger)
+    public ImportCommand(IServiceProvider serviceProvider, ILogger<ImportCommand> logger)
     {
         _serviceProvider = serviceProvider.NotNull();
         _logger = logger.NotNull();
@@ -42,12 +43,12 @@ internal class ImportElimConfigCommand : ICommand
         return command;
     }
 
-    private async Task Import(FileInfo config, DirectoryInfo outputFolder)
+    private async Task Import(FileInfo config, DirectoryInfo inputFolder)
     {
-        var reportPackages = await ReadReportPackages(outputFolder);
+        var reportPackages = await ReadReportPackages(inputFolder);
         reportPackages.Count.Assert(x => x > 0, "No report package found in input folder");
 
-        var reportDirectory = await ReadReportDirectory(outputFolder);
+        var reportDirectory = await ReadReportDirectory(inputFolder);
 
         GFSAdminStore store = CreateAdminStore(config);
 
@@ -55,6 +56,7 @@ internal class ImportElimConfigCommand : ICommand
         await WritePrincipalIdentities(store, reportDirectory);
         await WriteUserAccess(store, reportDirectory);
         await WriteReportPackages(store, reportPackages, reportDirectory);
+        await WriteCommonCommands(store, inputFolder, reportPackages);
 
         _logger.LogInformation("Running import fixup");
         await store.Package.ImportFixup();
@@ -120,6 +122,59 @@ internal class ImportElimConfigCommand : ICommand
 
             (await store.Package.AddOrUpdate(reportPackageRecord)).BeOk();
             _logger.LogInformation("Imported Report package packageId={packageId}", reportPackage.PackageId);
+        }
+    }
+
+    private async Task WriteCommonCommands(GFSAdminStore store, DirectoryInfo inputFolder, IReadOnlyList<ReportPackageModel> reportPackages)
+    {
+        CommandRecordPackage? commandRecordPackage = null;
+
+        string currentCommonCommands = Path.Combine(inputFolder.FullName, @"Settings\CommonCommands.json");
+        if (File.Exists(currentCommonCommands))
+        {
+            string json = File.ReadAllText(currentCommonCommands);
+
+            commandRecordPackage = json.ToObject<CommandRecordPackage>().NotNull();
+            commandRecordPackage.Validate().BeOk("Invalid common command package");
+        }
+
+        var commonCommands = new List<string>();
+
+        foreach (MiscTablesRecord item in reportPackages.SelectMany(x => x.MiscTables))
+        {
+            if (!item.Table_ID.StartsWith("SQL-", StringComparison.OrdinalIgnoreCase)) continue;
+
+            var parserResult = SqlParserTool.FormatLine(item.Descr);
+            if (parserResult.Errors.Count > 0)
+            {
+                _logger.LogError("SQL parse errors for command '{Command}'", item.Descr);
+                continue;
+            }
+
+            commonCommands.Add(parserResult.formattedSql.ToLowerInvariant());
+        }
+
+        // Get top repeating commands
+        var topCommands = commonCommands
+            .GroupBy(x => x)
+            .Where(x => x.Count() > 10)
+            .Select(x => SqlParserTool.GenerateCommand(x.First()))
+            .OfType<CommandRecord>() 
+            .ToArray();
+
+        var dict = topCommands.ToDictionary(x => x.CommandId, x => x);
+        commandRecordPackage?.Commands.ForEach(x => dict[x.CommandId] = x);
+
+        foreach (var commandRecord in dict.Values)
+        {
+            var result = await store.Command.Upsert(commandRecord);
+            if (result.StatusCode != Toolbox.Types.StatusCode.OK)
+            {
+                _logger.LogError("Failed to upsert common command CommandId={commandId}, error={error}", commandRecord.CommandId, result.Error);
+                continue;
+            }
+
+            _logger.LogInformation("Import command CommandId={commandId}", commandRecord.CommandId);
         }
     }
 

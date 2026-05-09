@@ -70,6 +70,7 @@
     <Folder Include="App\Stored Procedures\UserAccess" />
     <Folder Include="App\Stored Procedures\Group" />
     <Folder Include="App\Stored Procedures\Operations" />
+    <Folder Include="App\Stored Procedures\Command" />
   </ItemGroup>
   <ItemGroup>
     <Build Include="AppDbo\Tables\PrincipalIdentity.sql" />
@@ -116,6 +117,11 @@
     <Build Include="App\Stored Procedures\Group\PrincipalGroupView.sql" />
     <Build Include="App\Stored Procedures\Group\GetPrincipalGroup.sql" />
     <Build Include="App\Stored Procedures\Group\UpdatePrincipalGroup.sql" />
+    <Build Include="AppDbo\Tables\Command.sql" />
+    <Build Include="App\Stored Procedures\Command\UpsertCommand.sql" />
+    <Build Include="App\Stored Procedures\Command\GetCommand.sql" />
+    <Build Include="App\Stored Procedures\Command\DeleteCommand.sql" />
+    <Build Include="App\Stored Procedures\Command\CommandView.sql" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Publish\GFSWebDb.publish.xml" />

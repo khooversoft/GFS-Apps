@@ -18,8 +18,8 @@ IHost host = Host.CreateDefaultBuilder(args)
     })
     .ConfigureServices(services =>
     {
-        services.AddSingleton<ICommand, ExportElimConfigCommand>();
-        services.AddSingleton<ICommand, ImportElimConfigCommand>();
+        services.AddSingleton<ICommand, ExportCommand>();
+        services.AddSingleton<ICommand, ImportCommand>();
         services.AddSingleton<IAuthAccess, FakeAuthAccess>();
     })
     .Build();

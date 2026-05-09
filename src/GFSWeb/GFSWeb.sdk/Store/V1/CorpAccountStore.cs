@@ -1,7 +1,9 @@
 ﻿using System.Data;
 using GFSWeb.sdk.Models;
+using GFSWeb.sdk.SqlParser;
 using Microsoft.Extensions.Logging;
 using Toolbox.Data;
+using Toolbox.Extensions;
 using Toolbox.Tools;
 
 namespace GFSWeb.sdk.Store.V1;
@@ -86,4 +88,48 @@ public class CorpAccountStore
         var updated = result.Select(x => x.ParseDetails()).ToArray();
         return updated;
     }
+
+    //public async Task<IReadOnlyList<CommandRecord>> GetCommonCommands()
+    //{
+    //    var cmd = """
+    //        SELECT  x.descr, Cnt=count(*)
+    //        FROM    [Misc_Tables] x
+    //        WHERE   x.Table_Id like 'SQL-%'
+    //        GROUP BY x.Descr HAVING count(*) >= 10
+    //        ORDER BY COUNT(*) DESC
+    //        """;
+
+    //    var result = await _client.Query()
+    //        .SetCommand(cmd, CommandType.Text)
+    //        .Execute<ReadGroupRecord>();
+
+    //    var list = new List<CommandRecord>();
+    //    foreach(var item in result)
+    //    {
+    //        var parseResult = SqlParserTool.FormatLine(item.Descr);
+    //        if (parseResult.Errors.Count > 0)
+    //        {
+    //            _logger.LogError("SQL parse errors for command '{Command}': {Errors}", item.Descr, parseResult.Errors);
+    //            continue;
+    //        }
+
+    //        string formattedSql = parseResult.formattedSql;
+    //        string hash = formattedSql.ToHashHex();
+
+    //        var commandRecord = new CommandRecord
+    //        {
+    //            CommandId = hash,
+    //            Description = "xxx",
+    //            Data = formattedSql,
+    //            Disabled = false
+    //        };
+    //    }
+
+    //    return list;
+    //}
+
+    //private record ReadGroupRecord
+    //{
+    //    public string Descr { get; set; } = null!;
+    //}
 }

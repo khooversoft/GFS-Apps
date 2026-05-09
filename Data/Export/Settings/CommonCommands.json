@@ -1,0 +1,112 @@
+{
+  "Commands": [
+    {
+      "CommandId": "011E1D1BDB963ACDD8F6F8882249472E",
+      "Description": "Set tpname from tps lookup",
+      "Data": "update transx set tpname = p.name from transx as t inner join tps as p on t.tp = p.tp where keyid = '[batchid]';",
+      "Disabled": false
+    },
+    {
+      "CommandId": "016381221FAB4449E49458AB41B83243",
+      "Description": "Delete rows where amt1 and amt2 are zero",
+      "Data": "delete transx where keyid = '[batchid]' and amt1 = 0 and amt2 = 0;",
+      "Disabled": false
+    },
+    {
+      "CommandId": "07D620BF8CA15ED99C4227CDDD63056A",
+      "Description": "Switch to lockdown connection string",
+      "Data": "execute [replaceconnstring] [lockdownconnstring];",
+      "Disabled": false
+    },
+    {
+      "CommandId": "1CBD30F16ED010522F83608EBD65F511",
+      "Description": "Set gldesc from COA (batch prefix match)",
+      "Data": "update transx set gldesc = c.descr from transx as t inner join coa as c on t.gl = c.gl where keyid like '[batchid]%';",
+      "Disabled": false
+    },
+    {
+      "CommandId": "29A9925F079A91AF9DD197B99138226C",
+      "Description": "Delete rows where amt1-amt4 all zero",
+      "Data": "delete transx where keyid = '[batchid]' and amt1 = 0 and amt2 = 0 and amt3 = 0 and amt4 = 0;",
+      "Disabled": false
+    },
+    {
+      "CommandId": "2E25F347EC3DA7CF382E34A57790AC0C",
+      "Description": "Delete rows where flex1 is null",
+      "Data": "delete transx where keyid = '[batchid]' and flex1 is null;",
+      "Disabled": false
+    },
+    {
+      "CommandId": "2FAA04AC45E477917794E03F5D9D0121",
+      "Description": "Delete rows where amt1, amt2, amt3 zero",
+      "Data": "delete transx where keyid = '[batchid]' and amt1 = 0 and amt2 = 0 and amt3 = 0;",
+      "Disabled": false
+    },
+    {
+      "CommandId": "3A966124A8012AAF439CD36607774E24",
+      "Description": "Delete rows where amt1 is zero",
+      "Data": "delete transx where keyid = '[batchid]' and amt1 = 0;",
+      "Disabled": false
+    },
+    {
+      "CommandId": "55373142A7399B045CFEE69DAE4F1D49",
+      "Description": "Delete rows where any of amt1/2/3 is zero",
+      "Data": "delete transx where keyid = '[batchid]' and (amt1 = 0 or amt2 = 0 or amt3 = 0);",
+      "Disabled": false
+    },
+    {
+      "CommandId": "6F1A574D32A9AEBC1B4428EAB24CC7FB",
+      "Description": "Set gldesc from COA lookup",
+      "Data": "update transx set gldesc = c.descr from transx as t inner join coa as c on t.gl = c.gl where keyid = '[batchid]';",
+      "Disabled": false
+    },
+    {
+      "CommandId": "81073E4C6E0E7CBF9DC89B974B5EA4BF",
+      "Description": "Clear buscat where value is 'xx'",
+      "Data": "update transx set buscat = '' from transx where keyid = '[batchid]' and buscat = 'xx';",
+      "Disabled": false
+    },
+    {
+      "CommandId": "8F4C1CD18830D4A55C68CDFB685EB479",
+      "Description": "Normalize buscat starting with '3' to '30'",
+      "Data": "update transx set buscat = '30' where keyid = '[batchid]' and buscat like '3%';",
+      "Disabled": false
+    },
+    {
+      "CommandId": "BF3A0904E203F145C8337ED2D0E7A6BD",
+      "Description": "Set gldesc from COA (alias, prefix match)",
+      "Data": "update x set x.gldesc = y.descr from transx as x inner join coa as y on x.gl = y.gl where keyid like '[batchid]%';",
+      "Disabled": false
+    },
+    {
+      "CommandId": "D2283F6BCDB1DE567F35365B81EF2894",
+      "Description": "Delete all transx rows for batch",
+      "Data": "delete transx where keyid = '[batchid]';",
+      "Disabled": false
+    },
+    {
+      "CommandId": "D36CA5CBBF77E6EE257274AB6818EC6A",
+      "Description": "Clear buscat where value is 'xx'",
+      "Data": "update transx set buscat = '' where keyid = '[batchid]' and buscat = 'xx';",
+      "Disabled": false
+    },
+    {
+      "CommandId": "D66C45FAD55E6B8C50B4FD5189F3A032",
+      "Description": "Restore original connection string",
+      "Data": "execute [replaceconnstring] [originalconnstring];",
+      "Disabled": false
+    },
+    {
+      "CommandId": "D744C4A7B589E9B4B22AEA0CD776C608",
+      "Description": "Delete rows where amt2 is zero",
+      "Data": "delete transx where keyid = '[batchid]' and amt2 = 0;",
+      "Disabled": false
+    },
+    {
+      "CommandId": "E43DD4A5ABB4C0F92BD19BB0094F80F1",
+      "Description": "Delete rows where pk is null",
+      "Data": "delete transx where keyid = '[batchid]' and pk is null;",
+      "Disabled": false
+    }
+  ]
+  }
