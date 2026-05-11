@@ -22,4 +22,6 @@ public record ReportFileDetail
     public string FileName { get; }
     public DateTime CreatedDate { get; }
     public long ContentLength { get; }
+
+    public string SizeK => $"{(int)(ContentLength / 1024)}K";
 }

@@ -8,37 +8,34 @@ else
 {
     <MudStack Spacing="2">
         <ReturnUrlButton ReturnUrl=@returnUrl />
-        <BlockHeader Title="Principal Group Membership" />
-        <MudStack Spacing="2">
-            <MudText Typo="Typo.h6">@_group.GroupName</MudText>
+        <BlockHeader Title="Principal Group Membership" SubTitle="@_group.GroupName" />
 
-            <BlockToolBar OnAdd=OnAdd
-                          OnDelete=OnDelete
-                          OnSearch=OnSearch
-                          DisableDelete="@_deleteDisabled"
-                          DisableSearch="@_searchDisabled">
-            </BlockToolBar>
+        <BlockToolBar OnAdd=OnAdd
+                      OnDelete=OnDelete
+                      OnSearch=OnSearch
+                      DisableDelete="@_deleteDisabled"
+                      DisableSearch="@_searchDisabled">
+        </BlockToolBar>
 
-            <MudDataGrid T="PrincipalGroupMembershipRecord"
-                         Items="@_list"
-                         Dense="true"
-                         Hover="true"
-                         Elevation="0"
-                         SelectedItemsChanged="@SelectedItemsChanged"
-                         RowStyleFunc="GetRowStyle"
-                         SortMode="SortMode.Multiple"
-                         ColumnResizeMode="ResizeMode.Column"
-                         MultiSelection=true
-                         QuickFilter="QuickFilter"
-                         @ref=_grid>
+        <MudDataGrid T="PrincipalGroupMembershipRecord"
+                     Items="@_list"
+                     Dense="true"
+                     Hover="true"
+                     Elevation="0"
+                     SelectedItemsChanged="@SelectedItemsChanged"
+                     RowStyleFunc="GetRowStyle"
+                     SortMode="SortMode.Multiple"
+                     ColumnResizeMode="ResizeMode.Column"
+                     MultiSelection=true
+                     QuickFilter="QuickFilter"
+                     @ref=_grid>
 
-                <Columns>
-                    <SelectColumn T="PrincipalGroupMembershipRecord" />
-                    <PropertyColumn Property="x => x.Identity.NameIdentifier" Title="Name Identifier" Sortable="true" />
-                    <PropertyColumn Property="x => x.Identity.UserName" Title="User Name" Sortable="true" />
-                </Columns>
-            </MudDataGrid>
-        </MudStack>
+            <Columns>
+                <SelectColumn T="PrincipalGroupMembershipRecord" />
+                <PropertyColumn Property="x => x.Identity.NameIdentifier" Title="Name Identifier" Sortable="true" />
+                <PropertyColumn Property="x => x.Identity.UserName" Title="User Name" Sortable="true" />
+            </Columns>
+        </MudDataGrid>
 
         <Question Show=_deleteAsk Title="Delete Group" Descriptions=@_deleteDescriptions OnYes=DeleteOnYes OnNo=DeleteCancel OnClose=DeleteCancel />
         <AddGroupMembershipDrawer Show="@_addDrawerShow" GroupId="@GroupId" OnClose="OnMembershipClose" OnUpdate="OnMembershipUpdate" />

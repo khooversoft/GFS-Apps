@@ -14,12 +14,14 @@ public class ReportPackageEntity
     private readonly ISqlClient _client;
     private readonly ILogger _logger;
     private readonly IAuthAccess _authAccess;
+    private readonly IStoreNotify? _storeNotify;
 
-    public ReportPackageEntity(ISqlClient client, IAuthAccess authAccess, ILogger logger)
+    public ReportPackageEntity(ISqlClient client, IAuthAccess authAccess, IStoreNotify? storeNotify, ILogger logger)
     {
         _client = client.NotNull();
         _logger = logger.NotNull();
         _authAccess = authAccess.NotNull();
+        _storeNotify = storeNotify;
     }
 
     public async Task<Option<ReportPackageRecord>> Get(string packageId)
@@ -78,6 +80,7 @@ public class ReportPackageEntity
             .AddParameter("@Disabled", record.Disabled)
             .ExecuteNonQuery();
 
+        _storeNotify?.Notify(result, $"Added report package {record.PackageId}", $"Failed to add report package {record.PackageId}");
         return result;
     }
 
@@ -90,6 +93,7 @@ public class ReportPackageEntity
             .AddParameter("@PackageId", packageId)
             .ExecuteNonQuery();
 
+        _storeNotify?.Notify(result, $"Deleted report package {packageId}", $"Failed to delete report package {packageId}");
         return result;
     }
 
@@ -115,6 +119,7 @@ public class ReportPackageEntity
             .AddParameter("@Disabled", record.Disabled)
             .ExecuteNonQuery();
 
+        _storeNotify?.Notify(result, $"Updated report package {record.PackageId}", $"Failed to update report package {record.PackageId}");
         return result;
     }
 
@@ -129,6 +134,7 @@ public class ReportPackageEntity
             .AddParameter("@Data", data)
             .ExecuteNonQuery();
 
+        _storeNotify?.Notify(result, $"Updated report package {packageId}", $"Failed to update report package {packageId}");
         return result;
     }
 }

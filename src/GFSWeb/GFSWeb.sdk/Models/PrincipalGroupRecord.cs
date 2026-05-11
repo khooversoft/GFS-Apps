@@ -1,14 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using Toolbox.Tools;
+﻿using Toolbox.Tools;
 using Toolbox.Types;
 
 namespace GFSWeb.sdk.Models;
 
 public record PrincipalGroupRecord
 {
-    public string GroupName { get; init; } = null!;
+    public string GroupName { get; set; } = null!;
     public string Description { get; set; } = null!;
 
     public static IValidator<PrincipalGroupRecord> Validator { get; } = new Validator<PrincipalGroupRecord>()

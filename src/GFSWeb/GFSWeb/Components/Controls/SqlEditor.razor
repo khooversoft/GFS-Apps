@@ -1,0 +1,125 @@
+﻿<MudField Label="SQL Command" Variant="Variant.Outlined">
+    <MudStack Spacing="2">
+        <div>
+            <MudToolBar Dense="true">
+                <MudSpacer />
+                <MudTooltip Text="Clear">
+                    <MudIconButton Icon="@Icons.Material.Outlined.Clear" OnClick="OnClear" Disabled="@_clearDisabled" Style="padding: 0px 12px" />
+                </MudTooltip>
+                <MudTooltip Text="Format">
+                    <MudIconButton Icon="@Icons.Material.Outlined.FormatLineSpacing" OnClick="OnFormat" Disabled="@_formatDisabled" Style="padding: 0px 12px" />
+                </MudTooltip>
+                <MudTooltip Text="Format">
+                    <MudIconButton Icon="@Icons.Material.Outlined.LinearScale" OnClick="OnFormatSingle" Disabled=@_formatDisabled" Style="padding: 0px 12px" />
+                </MudTooltip>
+                <MudTooltip Text="Undo">
+                    <MudIconButton Icon="@Icons.Material.Outlined.Undo" OnClick="OnUndo" Disabled="@_undoDisabled" />
+                </MudTooltip>
+            </MudToolBar>
+            <MudTextField Variant="Variant.Outlined"
+                          Sizing="InputSizing.Auto"
+                          Lines="3"
+                          Immediate="true"
+                          @bind-Value="@SqlCommand"
+                          @bind-Value:after="@OnChangeInternal" />
+        </div>
+
+        @if (_syntaxErrors.Count > 0)
+        {
+            <MudAlert Severity="Severity.Error" Dense="true" Class="my-2">
+                <MudText Typo="Typo.body2"><strong>Syntax Errors:</strong></MudText>
+                <ul style="margin: 0; padding-left: 20px;">
+                    @foreach (var error in _syntaxErrors)
+                    {
+                        <li>Line @error.Line, Column @error.Column: @error.Message</li>
+                    }
+                </ul>
+            </MudAlert>
+        }
+
+        <MudText Style="margin-top:10px" Typo="Typo.body2">Generated Script</MudText>
+        <MudPaper Elevation="4" Style="padding:10px">
+            <pre style="margin:0; font-family: 'Consolas', 'Courier New', monospace; white-space: pre-wrap; word-wrap: break-word;">@_formattedSql</pre>
+        </MudPaper>
+    </MudStack>
+</MudField>
+
+@code {
+    [Parameter] public string SqlCommand { get; set; } = null!;
+    [Parameter] public EventCallback<string> OnChange { get; set; }
+
+    private string _iconFormat = "padding: 0px 12px";
+    private string _formattedSql = "";
+    private string _saveSqlCommand = "";
+    private string _lastKnownValue = "";
+    private IList<SqlParseError> _syntaxErrors = [];
+    private bool _clearDisabled => SqlCommand.IsEmpty();
+    private bool _formatDisabled => SqlCommand.IsEmpty() && _syntaxErrors.Count > 0;
+    private bool _undoDisabled => _saveSqlCommand == SqlCommand;
+
+    protected override void OnParametersSet()
+    {
+        if (SqlCommand.IsEmpty()) SqlCommand = "";
+
+        // Only reset the save point when the value changed externally (not from our own edits)
+        if (SqlCommand != _lastKnownValue)
+        {
+            _saveSqlCommand = new string(SqlCommand.AsSpan());
+            _lastKnownValue = SqlCommand;
+            (_formattedSql, _syntaxErrors) = SqlParserTool.Format(SqlCommand);
+        }
+    }
+
+    private async Task OnChangeInternal()
+    {
+        if (SqlCommand is null) return;
+
+        // Mark as internal so OnParametersSet does not reset the save point
+        _lastKnownValue = SqlCommand;
+
+        (_formattedSql, _syntaxErrors) = SqlParserTool.Format(SqlCommand);
+        await OnChange.InvokeAsync(SqlCommand);
+    }
+
+    private async Task OnClear()
+    {
+        _lastKnownValue = "";
+        SqlCommand = "";
+        _formattedSql = "";
+        _syntaxErrors = [];
+        await OnChange.InvokeAsync(SqlCommand);
+    }
+
+    private async Task OnFormat()
+    {
+        if (_syntaxErrors.Count == 0 && _formattedSql.IsNotEmpty())
+        {
+            _lastKnownValue = _formattedSql;
+            SqlCommand = _formattedSql;
+            await OnChange.InvokeAsync(SqlCommand);
+        }
+    }
+
+    private async Task OnFormatSingle()
+    {
+        var result = SqlParserTool.FormatLine(SqlCommand);
+
+        if (result.Errors.Count == 0 && result.FormattedSql.IsNotEmpty())
+        {
+            _lastKnownValue = result.FormattedSql;
+            SqlCommand = result.FormattedSql;
+
+            (_formattedSql, _syntaxErrors) = SqlParserTool.Format(SqlCommand);
+            await OnChange.InvokeAsync(SqlCommand);
+        }
+    }
+
+    private async Task OnUndo()
+    {
+        _lastKnownValue = _saveSqlCommand;
+        SqlCommand = _saveSqlCommand;
+
+        (_formattedSql, _syntaxErrors) = SqlParserTool.Format(SqlCommand);
+        await OnChange.InvokeAsync(SqlCommand);
+    }
+}

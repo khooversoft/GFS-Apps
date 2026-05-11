@@ -1,35 +1,30 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using GFSWeb.sdk.Models;
+﻿using GFSWeb.sdk.Models;
 using Microsoft.SqlServer.TransactSql.ScriptDom;
-using Toolbox.Extensions;
 using Toolbox.Tools;
 
 namespace GFSWeb.sdk.SqlParser;
 
 public static class SqlParserTool
 {
-    public static CommandRecord? GenerateCommand(string sql)
+    public static CommandRecord? GenerateCommand(string commandId, string description, string sql)
     {
+        commandId.NotEmpty();
+        description.NotEmpty();
+
         var result = FormatLine(sql);
         if (result.Errors.Count > 0) return null;
 
-        string formattedSql = result.formattedSql.ToLowerInvariant();
-        string hash = formattedSql.ToHashHex(useMD5: true);
-
-        var commandRecord = new CommandRecord
-        {
-            CommandId = hash,
-            Description = $"<dummy>",
-            Data = formattedSql,
-            Disabled = false
-        };
+        var commandRecord = new CommandRecordBuilder()
+            .SetCommandId(commandId)
+            .SetDescription(description)
+            .SetType("sql-cmd")
+            .SetData(result.FormattedSql)
+            .Build();
 
         return commandRecord;
     }
 
-    public static (string formattedSql, IList<SqlParseError> Errors) FormatLine(string sql)
+    public static (string FormattedSql, IList<SqlParseError> Errors) FormatLine(string sql)
     {
         var parser = new TSql150Parser(false);
         var fragment = parser.Parse(new StringReader(sql), out var errors);

@@ -4,6 +4,7 @@ using Azure.Monitor.OpenTelemetry.AspNetCore;
 using GFSWeb.Application;
 using GFSWeb.Components;
 using GFSWeb.sdk;
+using GFSWeb.sdk.Store;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using MudBlazor;
@@ -112,6 +113,7 @@ builder.Services.AddAuthentication(options =>
 var gfsSapOption = builder.Configuration.GetSection("AdminDatabase").Get<GfsSapOption>().NotNull("AdminDatabase not in appsettings.json");
 builder.Services.AddGFSWeb(appRegOption, gfsSapOption);
 builder.Services.AddTransient<IAuthAccess, AuthenticationAccess>();
+builder.Services.AddTransient<IStoreNotify, StoreNofityAgent>();
 
 var app = builder.Build();
 

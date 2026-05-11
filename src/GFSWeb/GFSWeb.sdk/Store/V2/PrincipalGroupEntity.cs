@@ -12,11 +12,13 @@ public class PrincipalGroupEntity
 {
     private readonly ISqlClient _client;
     private readonly ILogger _logger;
+    private readonly IStoreNotify? _storeNotify;
 
-    public PrincipalGroupEntity(ISqlClient client, ILogger logger)
+    public PrincipalGroupEntity(ISqlClient client, IStoreNotify? storeNotify, ILogger logger)
     {
         _client = client.NotNull();
         _logger = logger.NotNull();
+        _storeNotify = storeNotify;
     }
 
     public async Task<Option<int>> Add(PrincipalGroupRecord subject)
@@ -29,6 +31,7 @@ public class PrincipalGroupEntity
             .AddParameter("@Description", subject.Description)
             .ExecuteNonQuery();
 
+        _storeNotify?.Notify(result, $"Added principal group {subject.GroupName}", $"Failed to add principal group {subject.GroupName}");
         return result;
     }
 
@@ -66,6 +69,7 @@ public class PrincipalGroupEntity
             .AddParameter("@GroupName", groupName)
             .ExecuteNonQuery();
 
+        _storeNotify?.Notify(result, $"Deleted principal group {groupName}", $"Failed to delete principal group {groupName}");
         return result;
     }
 
@@ -80,6 +84,7 @@ public class PrincipalGroupEntity
             .AddParameter("@Description", description)
             .ExecuteNonQuery();
 
+        _storeNotify?.Notify(result, $"Updated principal group {groupName}", $"Failed to update principal group {groupName}");
         return result;
     }
 
@@ -119,6 +124,12 @@ public class PrincipalGroupEntity
             .AddParameter("@NameIdentifier", nameIdentifier)
             .ExecuteNonQuery();
 
+        _storeNotify?.Notify(
+            result,
+            $"Deleted principal group membership {nameIdentifier} from {groupName}",
+            $"Failed to delete principal group membership {nameIdentifier} from {groupName}"
+            );
+
         return result;
     }
 
@@ -132,6 +143,12 @@ public class PrincipalGroupEntity
             .AddParameter("@GroupName", groupName)
             .AddParameter("@NameIdentifier", nameIdentifier)
             .ExecuteNonQuery();
+
+        _storeNotify?.Notify(
+            result,
+            $"Updated principal group membership {nameIdentifier} in {groupName}",
+            $"Failed to update principal group membership {nameIdentifier} in {groupName}"
+            );
 
         return result;
     }

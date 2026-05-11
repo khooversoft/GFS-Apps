@@ -12,11 +12,13 @@ public class PrincipalIdentityEntity
 {
     private readonly ISqlClient _client;
     private readonly ILogger _logger;
+    private readonly IStoreNotify? _storeNotify;
 
-    public PrincipalIdentityEntity(ISqlClient client, ILogger logger)
+    public PrincipalIdentityEntity(ISqlClient client, IStoreNotify? storeNotify, ILogger logger)
     {
         _client = client.NotNull();
         _logger = logger.NotNull();
+        _storeNotify = storeNotify;
     }
 
     public async Task<Option<PrincipalIdentityRecord>> Get(string nameIdentifier)
@@ -85,6 +87,11 @@ public class PrincipalIdentityEntity
             .AddParameter("@PostEmail2", record.PostEmail2)
             .ExecuteNonQuery();
 
+        _storeNotify?.Notify(
+            result,
+            $"Updated principal identity {record.NameIdentifier}",
+            $"Failed to update principal identity {record.NameIdentifier}"
+            );
         return result;
     }
 
@@ -97,6 +104,7 @@ public class PrincipalIdentityEntity
             .AddParameter("@NameIdentifier", nameIdentifier)
             .ExecuteNonQuery();
 
+        _storeNotify?.Notify(result, $"Deleted principal identity {nameIdentifier}", $"Failed to delete principal identity {nameIdentifier}");
         return result;
     }
 }

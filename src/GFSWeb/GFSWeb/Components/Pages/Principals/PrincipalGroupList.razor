@@ -207,17 +207,7 @@ else
         foreach (var item in _selectedItems)
         {
             var deleteOption = await _store.PrincipalGroup.Delete(item.GroupName);
-            if (deleteOption.IsError())
-            {
-                _snackbar.Add($"Failed to delete Principal Group '{item.GroupName}', statusCode={deleteOption.StatusCode}, error={deleteOption.Error}", Severity.Error, config =>
-                {
-                    config.RequireInteraction = true;
-                });
-
-                return;
-            }
-
-            _snackbar.Add($"Principal Group '{item.GroupName}' deleted", Severity.Success);
+            if (deleteOption.IsError()) return;
         }
 
         await Load();

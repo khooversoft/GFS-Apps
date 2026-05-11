@@ -1,0 +1,32 @@
+﻿@page "/help"
+
+<AuthorizeView>
+    <NotAuthorized>
+        <div class="intro-bg">
+            <MudText Typo="Typo.h6">Please log on.</MudText>
+        </div>
+    </NotAuthorized>
+
+    <Authorized>
+        <ReturnUrlButton ReturnUrl=@returnUrl />
+        <BlockHeader Title="User Help" />
+
+        <MudPaper Class="m-4" Elevation="0" Style="max-width: 600px">
+            <MudList T="string" Dense="true">
+                <MudListItem Icon="@Icons.Material.Outlined.Feedback" Href="/underConstruction" ">
+                    <MudText>Provide feedback.</MudText>
+                </MudListItem>
+                <MudListItem Icon="@Icons.Material.Outlined.Toc" Href="/underConstruction">
+                    <MudText>Documentation</MudText>
+                </MudListItem>
+                <MudListItem Icon="@Icons.Material.Outlined.Password" Href="/underConstruction">
+                    <MudText>Request SAP Password Reset</MudText>
+                </MudListItem>
+            </MudList>
+        </MudPaper>
+    </Authorized>
+</AuthorizeView>
+
+@code {
+    [Parameter, SupplyParameterFromQuery] public string returnUrl { get; set; } = null!;
+}

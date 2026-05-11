@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace GFSWeb.sdk.Models;
+﻿namespace GFSWeb.sdk.Models;
 
 public record GroupPackageAccessRecord
 {

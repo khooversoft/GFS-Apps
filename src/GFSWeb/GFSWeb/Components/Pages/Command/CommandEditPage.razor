@@ -1,0 +1,165 @@
+﻿@page "/command/{CommandId}"
+
+@if (!_initialized)
+{
+    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Rounded="true" Size="Size.Medium" Value="100" Style="margin:20px" />
+}
+else
+{
+    <MudStack Spacing="2">
+        <ReturnUrlButton ReturnUrl=@returnUrl />
+        <BlockHeader Title="Command" SubTitle="@_subHeading" />
+
+        <BlockToolBar OnSave=OnSave
+                      OnDelete=OnDelete
+                      OnUndo=OnUndo
+                      DisableSave="@_saveDisabled"
+                      DisableUndo="@_undoDisabled"
+                      DisableDelete="@_deleteDisbled" />
+
+        <MudGrid Spacing="2" Style="margin:0; width:100%; box-sizing:border-box; padding:0px;">
+
+            <MudItem xs="12" Style="padding-left: 0px">
+                <MudTextField T="string"
+                              Label="Command ID"
+                              Variant="Variant.Outlined"
+                              Immediate="true"
+                              Disabled="!_newRecord"
+                              @bind-Value="_commandRecord.CommandId"
+                              @bind-Value:after="OnChange" />
+            </MudItem>
+
+            <MudItem xs="9" Style="padding-left: 0px; padding-right: 8px">
+                <MudTextField T="string"
+                              Label="Description"
+                              Variant="Variant.Outlined"
+                              Immediate="true"
+                              @bind-Value="_commandRecord.Description"
+                              @bind-Value:after="OnChange" />
+            </MudItem>
+
+            <MudItem xs="3" Style="padding-left: 0px">
+                <MudSelect T="string"
+                           Label="Type"
+                           Variant="Variant.Outlined"
+                           @bind-Value="_commandRecord.Type"
+                           @bind-Value:after="OnChange">
+                    @foreach (var t in _validTypes)
+                    {
+                        <MudSelectItem Value="@t">@t</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+
+            <MudItem xs="12" Style="padding-left: 0px">
+                <SqlEditor SqlCommand="@_commandRecord.Data" OnChange="OnEditChange" />
+            </MudItem>
+
+        </MudGrid>
+
+    </MudStack>
+
+    <Question Show=_deleteAsk Title="Delete Command" Descriptions=@_deleteDescriptions OnYes=DeleteOnYes OnNo=DeleteCancel OnClose=DeleteCancel />
+}
+
+@code {
+    @inject GFSAdminStore _store;
+    @inject NavigationManager _nav;
+    @inject ISnackbar _snackbar;
+    [Parameter] public string CommandId { get; set; } = null!;
+    [Parameter, SupplyParameterFromQuery] public string returnUrl { get; set; } = null!;
+
+    private CommandRecord _commandRecord = null!;
+    private CommandRecord _saveRecord = null!;
+    private bool _initialized = false;
+    private bool _hasRequiredFields => _commandRecord.CommandId.IsNotEmpty()
+                                        && _commandRecord.Description.IsNotEmpty()
+                                        && _commandRecord.Type.IsNotEmpty()
+                                        && _commandRecord.Data.IsNotEmpty();
+    private bool _saveDisabled => !_hasRequiredFields || (!_newRecord && _saveRecord == _commandRecord);
+    private bool _deleteDisbled => _newRecord;
+    private bool _deleteAsk = false;
+    private bool _newRecord = false;
+    private bool _undoDisabled => _newRecord || _saveRecord == _commandRecord;
+    private IReadOnlyList<string> _deleteDescriptions = [];
+    private IReadOnlyList<string> _validTypes = ["sql-cmd"];
+    private string _subHeading => _newRecord ? "New Record" : "Editing";
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            if (CommandId == "new-record")
+            {
+                _newRecord = true;
+                _commandRecord = new CommandRecord
+                {
+                    Type = "sql-cmd",
+                };
+
+                _initialized = true;
+                StateHasChanged();
+                return;
+            }
+
+            await Load();
+            StateHasChanged();
+        }
+    }
+
+    private async Task Load()
+    {
+        var option = await _store.Command.Get(CommandId);
+        if (option.IsError())
+        {
+            _snackbar.Add("Failed to load command", Severity.Error);
+            return;
+        }
+
+        _commandRecord = option.Return();
+        _saveRecord = _commandRecord with { };
+        _initialized = true;
+    }
+
+    private void OnChange() => StateHasChanged();
+
+    private void OnEditChange(string newDataValue)
+    {
+        _commandRecord.Data = newDataValue;
+    }
+
+    private void OnUndo() => _commandRecord = _saveRecord with { };
+
+    private async Task OnSave()
+    {
+        if (_commandRecord is null) return;
+
+        var newCommandRecord = new CommandRecordBuilder(_commandRecord).Build();
+
+        if (newCommandRecord.Validate().IsError())
+        {
+            _snackbar.Add("Invalid data", Severity.Warning);
+            return;
+        }
+
+        await _store.Command.Upsert(newCommandRecord);
+        _nav.NavigateTo(returnUrl);
+    }
+
+    private async Task OnDelete()
+    {
+        _deleteAsk = true;
+        _deleteDescriptions = [$"Delete command {_commandRecord.CommandId}"];
+    }
+
+    private async Task DeleteOnYes()
+    {
+        _deleteAsk = false;
+        if (_commandRecord == null) return;
+
+        await _store.Command.Delete(_commandRecord.CommandId, _commandRecord.Description);
+        _nav.NavigateTo(returnUrl);
+    }
+
+    public void DeleteCancel() => _deleteAsk = false;
+}

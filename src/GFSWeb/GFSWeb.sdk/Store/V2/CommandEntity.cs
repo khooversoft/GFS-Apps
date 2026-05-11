@@ -1,11 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Text;
+﻿using System.Data;
 using GFSWeb.sdk.Models;
 using Microsoft.Extensions.Logging;
 using Toolbox.Data;
-using Toolbox.Extensions;
 using Toolbox.Tools;
 using Toolbox.Types;
 
@@ -15,11 +11,13 @@ public class CommandEntity
 {
     private readonly ISqlClient _client;
     private readonly ILogger _logger;
+    private readonly IStoreNotify? _storeNotify;
 
-    public CommandEntity(ISqlClient client, ILogger logger)
+    public CommandEntity(ISqlClient client, IStoreNotify? storeNotify, ILogger logger)
     {
         _client = client.NotNull();
         _logger = logger.NotNull();
+        _storeNotify = storeNotify;
     }
 
     public async Task<Option<CommandRecord>> Get(string commandId)
@@ -54,22 +52,27 @@ public class CommandEntity
             .SetCommand("[App].[UpsertCommand]", CommandType.StoredProcedure)
             .AddParameter("@CommandId", record.CommandId)
             .AddParameter("@Description", record.Description)
+            .AddParameter("@Type", record.Type)
             .AddParameter("@Data", record.Data)
+            .AddParameter("@Hash", record.Hash)
             .AddParameter("@Disabled", record.Disabled)
             .ExecuteNonQuery();
 
+        _storeNotify?.Notify(result, $"Updated command {record.Description}", $"Failed to update command {record.Description}");
         return result;
     }
 
-    public async Task<Option<int>> Delete(string commandId)
+    public async Task<Option<int>> Delete(string commandId, string description)
     {
         commandId.NotEmpty();
+        description.NotEmpty();
 
         var result = await _client.Query()
             .SetCommand("[App].[DeleteCommand]", CommandType.StoredProcedure)
             .AddParameter("@CommandId", commandId)
             .ExecuteNonQuery();
 
+        _storeNotify?.Notify(result, $"Deleted command {description}", $"Failed to delete command {description}, CommandId={commandId}");
         return result;
     }
 }

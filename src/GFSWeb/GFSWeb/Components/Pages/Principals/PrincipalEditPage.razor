@@ -5,7 +5,7 @@
 
 <MudStack Spacing="2">
     <ReturnUrlButton ReturnUrl=@returnUrl />
-    <BlockHeader Title="Registered Principals" />
+    <BlockHeader Title="Registered Principals" SubTitle="@_subHeading" />
     <BlockToolBar OnSave=OnSave OnDelete=OnDelete OnCancel=OnCancel DisableSave="@_saveDisabled" DisableDelete="@_deleteDisabled" />
 
     <div class="form-content">
@@ -80,7 +80,7 @@
     private bool _showDeleteAsk = false;
     private bool _newRecord;
     private IReadOnlyList<string> _deleteDescriptions = Array.Empty<string>();
-
+    private string _subHeading => _newRecord ? "New Record" : "Editing";
     private PrincipalIdentityRecord _record = new();
     private PrincipalIdentityRecord _originalRecord = new();
 

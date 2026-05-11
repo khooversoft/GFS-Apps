@@ -1,14 +1,19 @@
 ﻿<MudNavMenu>
     <MudNavLink Icon="@Icons.Material.Outlined.Home" Href="/" Match="NavLinkMatch.All">Home</MudNavLink>
     <MudNavLink Icon="@Icons.Material.Outlined.QueryStats" Href="@NavHelper.ElimPackages.BasePath" Match="NavLinkMatch.Prefix">Elim</MudNavLink>
-    <MudNavLink Icon="@Icons.Material.Outlined.PostAdd" Href="/underConstruction" Match="NavLinkMatch.Prefix">Parker</MudNavLink>
-    <MudNavLink Icon="@Icons.Material.Outlined.Schedule" Href="/underConstruction" Match="NavLinkMatch.Prefix">Schedules</MudNavLink>
+    <MudNavLink Icon="@Icons.Material.Outlined.PostAdd" Href="/underConstruction" Match="NavLinkMatch.Prefix" Disabled=true>Parker</MudNavLink>
+    <MudNavLink Icon="@Icons.Material.Outlined.Schedule" Href="/underConstruction" Match="NavLinkMatch.Prefix" Disabled=true>Schedules</MudNavLink>
 
-    <MudNavGroup Title="Settings" Icon="@Icons.Material.Outlined.Settings" Expanded="true">
+    <MudNavGroup Title="Settings" Icon="@Icons.Material.Outlined.Settings">
         <MudNavLink Icon="@Icons.Material.Outlined.People" Href=@NavHelper.Principals.BasePath Match="NavLinkMatch.Prefix">Principals</MudNavLink>
         <MudNavLink Icon="@Icons.Material.Outlined.Groups" Href=@NavHelper.PrincipalGroups.BasePath Match="NavLinkMatch.Prefix">Groups</MudNavLink>
     </MudNavGroup>
 
-    <MudNavLink Icon="@Icons.Material.Outlined.HelpCenter" Href="/underConstruction" Match="NavLinkMatch.Prefix">Help</MudNavLink>
+    <MudNavGroup Title="Development" Icon="@Icons.Material.Outlined.Code">
+        <MudNavLink Icon="@Icons.Material.Outlined.TableChart" Href="/underConstruction" Match="NavLinkMatch.Prefix">Reports</MudNavLink>
+        <MudNavLink Icon="@Icons.Material.Outlined.KeyboardCommandKey" Href="@NavHelper.Commands.BasePath" Match="NavLinkMatch.Prefix">Commands</MudNavLink>
+    </MudNavGroup>
+
+    <MudNavLink Icon="@Icons.Material.Outlined.HelpOutline" Href=@NavHelper.Help.BasePath Match="NavLinkMatch.Prefix">Help</MudNavLink>
 
 </MudNavMenu>

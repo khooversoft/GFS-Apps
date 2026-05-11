@@ -39,4 +39,7 @@ public static class NavHelper
     public static readonly NavRoute ElimPackages = new("/elimPackages");
     public static readonly NavRoute ElimPackage = new("/elimPackage");
     public static readonly NavRoute EditElimPackage = new("/editElimPackage");
+    public static readonly NavRoute Help = new("/help");
+    public static readonly NavRoute Commands = new("/commands");
+    public static readonly NavRoute Command = new("/command");
 }

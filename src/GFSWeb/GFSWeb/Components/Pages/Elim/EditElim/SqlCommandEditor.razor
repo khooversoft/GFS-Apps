@@ -68,7 +68,7 @@
             _sqlCommands = SqlCommand;
             _undoStack.Clear();
             _undoStack.Push(_sqlCommands);
-            (_formattedSql, _syntaxErrors) = Format(_sqlCommands);
+            (_formattedSql, _syntaxErrors) = SqlParserTool.Format(_sqlCommands);
         }
     }
 
@@ -99,7 +99,7 @@
         {
             _undoStack.Push(_sqlCommands);
         }
-        (_formattedSql, _syntaxErrors) = Format(_sqlCommands);
+        (_formattedSql, _syntaxErrors) = SqlParserTool.Format(_sqlCommands);
     }
 
     private void OnClear()
@@ -127,43 +127,7 @@
         if (_undoStack.Count > 0)
         {
             _sqlCommands = _undoStack.Pop();
-            (_formattedSql, _syntaxErrors) = Format(_sqlCommands);
+            (_formattedSql, _syntaxErrors) = SqlParserTool.Format(_sqlCommands);
         }
-    }
-
-    private static (string FormattedSql, IList<SqlParseError> Errors) Format(string sql)
-    {
-        return SqlParserTool.Format(sql);
-        // var parser = new TSql150Parser(false);
-        // var fragment = parser.Parse(new StringReader(sql), out var errors);
-
-        // if (errors.Count > 0)
-        // {
-        //     return (sql, errors);
-        // }
-
-        // var generator = new Sql150ScriptGenerator(
-        //     new SqlScriptGeneratorOptions
-        //     {
-        //         KeywordCasing = KeywordCasing.Uppercase,
-        //         IndentationSize = 4,
-        //         IndentSetClause = true,
-        //         IndentViewBody = true,
-        //         AlignClauseBodies = true,
-        //         MultilineInsertSourcesList = true,
-        //         MultilineInsertTargetsList = true,
-        //         MultilineSelectElementsList = true,
-        //         MultilineSetClauseItems = true,
-        //         MultilineViewColumnsList = true,
-        //         MultilineWherePredicatesList = true,
-        //         IncludeSemicolons = true,
-        //         NewLineBeforeFromClause = true,
-        //         NewLineBeforeWhereClause = true,
-        //         NewLineBeforeGroupByClause = true,
-        //         NewLineBeforeOrderByClause = true,
-        //     });
-
-        // generator.GenerateScript(fragment, out var formattedSql);
-        // return (formattedSql, []);
     }
 }

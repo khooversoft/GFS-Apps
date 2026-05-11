@@ -12,11 +12,13 @@ public class UserAccessEntity
 {
     private readonly ISqlClient _client;
     private readonly ILogger _logger;
+    private readonly IStoreNotify? _storeNotify;
 
-    public UserAccessEntity(ISqlClient client, ILogger logger)
+    public UserAccessEntity(ISqlClient client, IStoreNotify? storeNotify, ILogger logger)
     {
         _client = client.NotNull();
         _logger = logger.NotNull();
+        _storeNotify = storeNotify;
     }
 
     public async Task<Option<int>> AddOrUpdate(UserAccessRecord record)
@@ -36,6 +38,12 @@ public class UserAccessEntity
             .AddParameter("@Field5", record.Field5)
             .AddParameter("@Field6", record.Field6)
             .ExecuteNonQuery();
+
+        _storeNotify?.Notify(
+            result,
+            $"Added user's access for principal {record.PrincipalNameIdentity}",
+            $"Failed to add user's access for principal {record.PrincipalNameIdentity}"
+            );
 
         return result;
     }
@@ -62,6 +70,7 @@ public class UserAccessEntity
             .AddParameter("@UserID", userId)
             .ExecuteNonQuery();
 
+        _storeNotify?.Notify(result, $"Delete user's access for userId {userId}", $"Failed to delete user's access for userId {userId}");
         return result;
     }
 }

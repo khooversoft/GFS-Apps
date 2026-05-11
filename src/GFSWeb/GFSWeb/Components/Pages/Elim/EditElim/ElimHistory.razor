@@ -12,18 +12,15 @@
                  Bordered="true">
         <Columns>
             <SelectColumn T="ReportFileDetail" />
-            <TemplateColumn CellStyle="width: 1%; white-space: nowrap; text-align: left;" HeaderStyle="width: 1%; white-space: nowrap;">
+            <TemplateColumn Title="File Name">
                 <CellTemplate>
-                    <MudStack Row Spacing="0">
-                        <MudIconButton Color="Color.Success" Size="@Size.Small" Icon="@Icons.Material.Filled.FileDownload" OnClick="@(() => ViewItem(context.Item))" />
-                        <MudIconButton Color="Color.Error" Size="@Size.Small" Icon="@Icons.Material.Outlined.Delete" OnClick="@(() => AskDelete(context.Item))" />
-                    </MudStack>
+                    <MudLink Color="Color.Info"
+                             OnClick="@(() => ViewItem(context.Item))"
+                             Style="cursor: pointer;">@context.Item.FileName</MudLink>
                 </CellTemplate>
             </TemplateColumn>
-            <PropertyColumn Property="x => x.PackageId" Title="Package Id" CellStyle="width: 1%; white-space: nowrap;" HeaderStyle="width: 1%; white-space: nowrap;" />
-            <PropertyColumn Property="x => x.FileName" Title="File Name" />
             <PropertyColumn Property="x => x.CreatedDate" Title="Created Date" CellStyle="width: 1%; white-space: nowrap;" HeaderStyle="width: 1%; white-space: nowrap;" />
-            <PropertyColumn Property="x => x.ContentLength" Title="Content Length" CellStyle="width: 1%; white-space: nowrap;" HeaderStyle="width: 1%; white-space: nowrap;" />
+            <PropertyColumn Property="x => x.SizeK" Title="Size" CellStyle="width: 1%; white-space: nowrap;" HeaderStyle="width: 1%; white-space: nowrap;" />
         </Columns>
     </MudDataGrid>
 
@@ -102,7 +99,7 @@
 
         if (list.Count == 0) return;
 
-        foreach(var item in list)
+        foreach (var item in list)
         {
             var fileResult = await _userDatalakeStore.Delete(item);
             if (fileResult.IsError())

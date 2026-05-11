@@ -14,11 +14,13 @@ public class ReportMenuEntity
     private readonly ISqlClient _client;
     private readonly ILogger _logger;
     private readonly IAuthAccess _authAccess;
+    private readonly IStoreNotify? _storeNotify;
 
-    public ReportMenuEntity(ISqlClient client, IAuthAccess authAccess, ILogger logger)
+    public ReportMenuEntity(ISqlClient client, IAuthAccess authAccess, IStoreNotify? storeNotify, ILogger logger)
     {
         _client = client.NotNull();
         _authAccess = authAccess.NotNull();
+        _storeNotify = storeNotify;
         _logger = logger.NotNull();
     }
 
@@ -32,6 +34,7 @@ public class ReportMenuEntity
             .AddParameter("@Description", subject.Description)
             .ExecuteNonQuery();
 
+        _storeNotify?.Notify(result, $"Added menu {subject.MenuId}", $"Failed to add menu {subject.MenuId}");
         return result;
     }
 
@@ -44,6 +47,7 @@ public class ReportMenuEntity
             .AddParameter("@MenuId", menuId)
             .ExecuteNonQuery();
 
+        _storeNotify?.Notify(result, $"Deleted menu {menuId}", $"Failed to delete menu {menuId}");
         return result;
     }
 
@@ -71,6 +75,7 @@ public class ReportMenuEntity
             .AddParameter("@Description", subject.Description)
             .ExecuteNonQuery();
 
+        _storeNotify?.Notify(result, $"Added menu {subject.MenuId}", $"Failed to add menu {subject.MenuId}");
         return result;
     }
 

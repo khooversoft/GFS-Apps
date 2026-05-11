@@ -2,7 +2,6 @@
 using GFSWeb.sdk.Models;
 using GFSWeb.sdk.SqlParser;
 using GFSWeb.sdk.Store;
-using GFSWeb.sdk.Store.V2;
 using GFSWebTool.Model;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -130,6 +129,8 @@ internal class ImportCommand : ICommand
         CommandRecordPackage? commandRecordPackage = null;
 
         string currentCommonCommands = Path.Combine(inputFolder.FullName, @"Settings\CommonCommands.json");
+        string updatedCommonCommands = Path.Combine(inputFolder.FullName, @"Settings\CommonCommands-updated.json");
+
         if (File.Exists(currentCommonCommands))
         {
             string json = File.ReadAllText(currentCommonCommands);
@@ -151,19 +152,36 @@ internal class ImportCommand : ICommand
                 continue;
             }
 
-            commonCommands.Add(parserResult.formattedSql.ToLowerInvariant());
+            commonCommands.Add(parserResult.FormattedSql);
         }
 
         // Get top repeating commands
         var topCommands = commonCommands
-            .GroupBy(x => x)
+            .GroupBy(x => x.ToLowerInvariant())
             .Where(x => x.Count() > 10)
-            .Select(x => SqlParserTool.GenerateCommand(x.First()))
-            .OfType<CommandRecord>() 
+            .Select(x => SqlParserTool.GenerateCommand(Guid.NewGuid().ToString(), "<from import>", x.First()))
+            .OfType<CommandRecord>()
             .ToArray();
 
-        var dict = topCommands.ToDictionary(x => x.CommandId, x => x);
-        commandRecordPackage?.Commands.ForEach(x => dict[x.CommandId] = x);
+        var dict = topCommands.ToDictionary(x => x.Hash, x => x);
+        commandRecordPackage?.Commands.ForEach(x =>
+        {
+            if (dict.TryGetValue(x.Hash, out var current))
+            {
+                dict[x.Hash] = x with { Data = current.Data };
+                return;
+            }
+
+            dict[x.Hash] = x;
+        });
+
+        var newCommandRecordPackage = new CommandRecordPackage
+        {
+            Commands = dict.Values.OrderBy(x => x.CommandId).ToArray(),
+        };
+
+        string fmrJson = Json.Default.SerializeFormat(newCommandRecordPackage);
+        File.WriteAllText(updatedCommonCommands, fmrJson);
 
         foreach (var commandRecord in dict.Values)
         {

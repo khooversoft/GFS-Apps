@@ -8,11 +8,27 @@ else
 {
     <MudStack Spacing="2">
         <ReturnUrlButton ReturnUrl=@returnUrl />
-        <BlockHeader Title="Principal Group" />
-        <MudText Typo="Typo.h6">@_group.GroupName</MudText>
+        <BlockHeader Title="Principal Group" SubTitle="@_subHeading" />
 
-        <BlockToolBar OnSave=OnSave OnUndo=OnUndo DisableSave="@_saveDisabled" DisableUndo="@_saveDisabled" OnAccess="OnAccess" />
-        <MudTextField Label="Description" Variant="Variant.Outlined" @bind-Value=_group.Description @bind-Value:after="OnChange" Immediate="true" />
+        <BlockToolBar OnSave=OnSave
+                      OnUndo=OnUndo
+                      OnAccess="OnAccess"
+                      DisableSave="@_saveDisabled"
+                      DisableUndo="@_undoDisabled"
+                      DisableAccess="@_accessDisabled" />
+
+        <MudTextField Label="Group Name"
+                      Variant="Variant.Outlined"
+                      @bind-Value=_group.GroupName
+                      @bind-Value:after="OnChange"
+                      Disabled=@(!_newRecord)
+                      Immediate="true" />
+
+        <MudTextField Label="Description"
+                      Variant="Variant.Outlined"
+                      @bind-Value=_group.Description
+                      @bind-Value:after="OnChange"
+                      Immediate="true" />
     </MudStack>
 }
 
@@ -23,40 +39,49 @@ else
     [Parameter, SupplyParameterFromQuery] public string returnUrl { get; set; } = null!;
 
     private bool _initialized = false;
-    private bool _saveDisabled = true;
-    private string _previousDescription = null!;
+    private bool _hasRequiredFields => _group.GroupName.IsNotEmpty() && _group.Description.IsNotEmpty();
+    private bool _saveDisabled => !_hasRequiredFields || (!_newRecord && _saveGroup == _group);
+    private bool _undoDisabled => _saveDisabled || _newRecord;
+    private bool _newRecord = false;
+    private bool _accessDisabled => _newRecord;
+    private string _subHeading => _newRecord ? "New Record" : "Editing";
     private PrincipalGroupRecord _group = null!;
+    private PrincipalGroupRecord _saveGroup = null!;
 
-    protected override async Task OnParametersSetAsync()
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        _initialized = false;
-        await Load();
+        if (firstRender)
+        {
+            if (GroupId == "new-record")
+            {
+                _group = new PrincipalGroupRecord();
+                _initialized = true;
+                _newRecord = true;
+                StateHasChanged();
+                return;
+            }
+
+            await Load();
+            StateHasChanged();
+        }
     }
 
     private async Task Load()
     {
         _group = (await _store.PrincipalGroup.Get(GroupId)).ThrowOnError().Return();
-        _previousDescription = _group.Description;
         _initialized = true;
-        _saveDisabled = true;
+        _saveGroup = _group with { };
     }
 
     private void OnSave()
     {
-        var success = _store.PrincipalGroup.Update(GroupId, _group.Description).ThrowOnError().Return();
+        var success = _store.PrincipalGroup.Update(_group.GroupName, _group.Description).ThrowOnError().Return();
         _nav.NavigateTo(returnUrl);
     }
 
-    private void OnAccess() => NavHelper.PrincipalAccessMembership.NavigateTo(_nav, GroupId, NavHelper.PrincipalGroups.Href());
+    private void OnAccess() => NavHelper.PrincipalAccessMembership.NavigateTo(_nav, GroupId, _nav.Uri);
 
-    private void OnUndo()
-    {
-        _group.Description = _previousDescription;
-        _saveDisabled = true;
-    }
+    private void OnUndo() => _group = _saveGroup with { };
 
-    private void OnChange()
-    {
-        _saveDisabled = _group.Description == _previousDescription;
-    }
+    private void OnChange() { }
 }

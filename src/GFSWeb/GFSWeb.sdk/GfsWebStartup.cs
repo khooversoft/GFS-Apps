@@ -1,5 +1,4 @@
 ﻿using GFSWeb.sdk.Store;
-using GFSWeb.sdk.Store.V2;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Toolbox;
