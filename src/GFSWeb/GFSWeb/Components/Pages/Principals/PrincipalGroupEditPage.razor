@@ -13,6 +13,7 @@ else
         <BlockToolBar OnSave=OnSave
                       OnUndo=OnUndo
                       OnAccess="OnAccess"
+                      OnDelete="OnDelete"
                       DisableSave="@_saveDisabled"
                       DisableUndo="@_undoDisabled"
                       DisableAccess="@_accessDisabled" />
@@ -30,6 +31,8 @@ else
                       @bind-Value:after="OnChange"
                       Immediate="true" />
     </MudStack>
+
+    <Question Show=_deleteAsk Title="Delete Group" Descriptions=@_deleteDescriptions OnYes=DeleteOnYes OnNo=DeleteCancel OnClose=DeleteCancel />
 }
 
 @code {
@@ -45,6 +48,8 @@ else
     private bool _newRecord = false;
     private bool _accessDisabled => _newRecord;
     private string _subHeading => _newRecord ? "New Record" : "Editing";
+    private bool _deleteAsk = false;
+    private IReadOnlyList<string> _deleteDescriptions = Array.Empty<string>();
     private PrincipalGroupRecord _group = null!;
     private PrincipalGroupRecord _saveGroup = null!;
 
@@ -75,7 +80,7 @@ else
 
     private void OnSave()
     {
-        var success = _store.PrincipalGroup.Update(_group.GroupName, _group.Description).ThrowOnError().Return();
+        var success = _store.PrincipalGroup.Upsert(_group.GroupName, _group.Description).ThrowOnError().Return();
         _nav.NavigateTo(returnUrl);
     }
 
@@ -84,4 +89,22 @@ else
     private void OnUndo() => _group = _saveGroup with { };
 
     private void OnChange() { }
+
+    private async Task OnDelete()
+    {
+        _deleteDescriptions = ["Do you want to delete group?", GroupId];
+        _deleteAsk = true;
+    }
+
+    private async Task DeleteOnYes()
+    {
+        _deleteAsk = false;
+
+        var deleteOption = await _store.PrincipalGroup.Delete(GroupId);
+        if (deleteOption.IsError()) return;
+
+        _nav.NavigateTo(returnUrl);
+    }
+
+    public void DeleteCancel() => _deleteAsk = false;
 }

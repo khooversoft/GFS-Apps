@@ -100,7 +100,6 @@
     <Build Include="App\Stored Procedures\UserAccess\AddOrUpdateUserAccess.sql" />
     <Build Include="AppDbo\Tables\PrincipalGroup.sql" />
     <Build Include="AppDbo\Tables\GroupMembership.sql" />
-    <Build Include="App\Stored Procedures\Group\AddPrincipalGroup.sql" />
     <Build Include="App\Stored Procedures\Group\DeletePrincipalGroup.sql" />
     <Build Include="App\Stored Procedures\Group\UpsertGroupMembership.sql" />
     <Build Include="App\Stored Procedures\Group\DeleteGroupMembership.sql" />

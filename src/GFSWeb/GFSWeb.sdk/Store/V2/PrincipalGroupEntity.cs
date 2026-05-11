@@ -21,20 +21,6 @@ public class PrincipalGroupEntity
         _storeNotify = storeNotify;
     }
 
-    public async Task<Option<int>> Add(PrincipalGroupRecord subject)
-    {
-        subject.NotNull().Validate().ThrowOnError();
-
-        var result = await _client.Query()
-            .SetCommand("[App].[AddPrincipalGroup]", CommandType.StoredProcedure)
-            .AddParameter("@GroupName", subject.GroupName)
-            .AddParameter("@Description", subject.Description)
-            .ExecuteNonQuery();
-
-        _storeNotify?.Notify(result, $"Added principal group {subject.GroupName}", $"Failed to add principal group {subject.GroupName}");
-        return result;
-    }
-
     public async Task<Option<PrincipalGroupRecord>> Get(string groupName)
     {
         groupName.NotEmpty();
@@ -73,13 +59,13 @@ public class PrincipalGroupEntity
         return result;
     }
 
-    public async Task<Option<int>> Update(string groupName, string description)
+    public async Task<Option<int>> Upsert(string groupName, string description)
     {
         groupName.NotEmpty();
         description.NotEmpty();
 
         var result = await _client.Query()
-            .SetCommand("[App].[UpdatePrincipalGroup]", CommandType.StoredProcedure)
+            .SetCommand("[App].[UpsertPrincipalGroup]", CommandType.StoredProcedure)
             .AddParameter("@GroupName", groupName)
             .AddParameter("@Description", description)
             .ExecuteNonQuery();
