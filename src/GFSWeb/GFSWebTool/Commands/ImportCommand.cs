@@ -119,7 +119,7 @@ internal class ImportCommand : ICommand
                 Data = reportPackage.ToJson(),
             };
 
-            (await store.Package.AddOrUpdate(reportPackageRecord)).BeOk();
+            (await store.Package.Upsert(reportPackageRecord)).BeOk();
             _logger.LogInformation("Imported Report package packageId={packageId}", reportPackage.PackageId);
         }
     }

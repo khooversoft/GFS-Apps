@@ -42,4 +42,6 @@ public static class NavHelper
     public static readonly NavRoute Help = new("/help");
     public static readonly NavRoute Commands = new("/commands");
     public static readonly NavRoute Command = new("/command");
+    public static readonly NavRoute Packages = new("/packages");
+    public static readonly NavRoute Package = new("/package");
 }

@@ -1,0 +1,151 @@
+﻿@page "/packages"
+
+@if (!_initialized)
+{
+    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Rounded="true" Size="Size.Medium" Value="100" Style="margin:20px" />
+}
+else
+{
+    <MudStack Spacing="2">
+        <ReturnUrlButton ReturnUrl=@returnUrl />
+        <BlockHeader Title="Packages" />
+
+        <BlockToolBar OnAdd=OnAdd
+                      OnEdit=OnEdit
+                      OnDelete=OnDelete
+                      OnSearch=OnSearch
+                      DisableEdit="@_editDisabled"
+                      DisableDelete="@_deleteDisabled">
+        </BlockToolBar>
+
+        <MudDataGrid T="CommandRecord"
+                     Items="@_list"
+                     Dense="true"
+                     Hover="true"
+                     Elevation="0"
+                     SelectedItemsChanged="@SelectedItemsChanged"
+                     RowStyleFunc="GetRowStyle"
+                     SortMode="SortMode.Multiple"
+                     ColumnResizeMode="ResizeMode.Column"
+                     MultiSelection=true
+                     QuickFilter="QuickFilter">
+
+            <Columns>
+                <SelectColumn T="CommandRecord" />
+                <TemplateColumn Title="Command" Resizable="true" Sortable="true" SortBy="x => x.Description">
+                    <CellTemplate>
+                        <MudLink Color="Color.Info"
+                                 Href="@(NavHelper.Command.Href(@context.Item.CommandId, _nav.Uri))">@context.Item.Description</MudLink>
+                    </CellTemplate>
+                </TemplateColumn>
+                <PropertyColumn Property="x => x.Type" Title="Type" Sortable="true" Resizable="true" />
+                <PropertyColumn Property="x => x.Data" Title="Data" Sortable="true" Resizable="true" />
+            </Columns>
+        </MudDataGrid>
+    </MudStack>
+
+    <Question Show=_deleteAsk Title="Delete Group" Descriptions=@_deleteDescriptions OnYes=DeleteOnYes OnNo=DeleteCancel OnClose=DeleteCancel />
+}
+
+@code {
+    @inject GFSAdminStore _store;
+    @inject NavigationManager _nav;
+    @inject ISnackbar _snackbar;
+    [Parameter, SupplyParameterFromQuery] public string returnUrl { get; set; } = null!;
+
+    private HashSet<CommandRecord> _selectedItems = new();
+    private IReadOnlyList<CommandRecord> _list = null!;
+    private bool _initialized = false;
+    private bool _searchDisabled = true;
+    private bool _editDisabled = true;
+    private bool _deleteDisabled = true;
+    private string? _searchString;
+    private bool _deleteAsk = false;
+    private IReadOnlyList<string> _deleteDescriptions = Array.Empty<string>();
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await Load();
+            StateHasChanged();
+        }
+    }
+
+    private async Task Load()
+    {
+        _list = await _store.Command.GetAll();
+        _searchDisabled = _list.Count == 0;
+        _initialized = true;
+    }
+
+    private async Task SelectedItemsChanged(HashSet<CommandRecord> items)
+    {
+        _selectedItems = items;
+
+        (_editDisabled, _deleteDisabled) = items.Count switch
+        {
+            0 => (true, true),
+            1 => (false, false),
+            _ => (true, false)
+        };
+    }
+
+    private string GetRowStyle(CommandRecord item, int index)
+    {
+        var result = _selectedItems.Any(x => x.CommandId == item.CommandId);
+        return result ? "background-color: var(--mud-palette-action-default-hover);" : string.Empty;
+    }
+
+    private void OnAdd() => NavHelper.Command.NavigateTo(_nav, "new-record", _nav.Uri);
+
+    private void OnEdit()
+    {
+        if (_selectedItems.Count != 1) return;
+        NavHelper.Command.NavigateTo(_nav, _selectedItems.First().CommandId, _nav.Uri);
+    }
+
+    private void OnSearch(string? searchString)
+    {
+        searchString = searchString.ToNullIfEmpty();
+        if (_searchString == searchString) return;
+
+        _searchString = searchString;
+    }
+
+    private bool QuickFilter(CommandRecord item)
+    {
+        if (_searchString is null) return true;
+
+        return item.CommandId.Contains(_searchString, StringComparison.OrdinalIgnoreCase)
+            || (item.Description?.Contains(_searchString, StringComparison.OrdinalIgnoreCase) ?? false);
+    }
+
+    private void OnDelete()
+    {
+        if (_selectedItems.Count == 0) return;
+
+        _deleteDescriptions = _selectedItems
+            .Select((x, i) => $"{i}) {x.Description}")
+            .Prepend("Are you sure you want to delete command?")
+            .ToArray();
+
+        _deleteAsk = true;
+    }
+
+    private async Task DeleteOnYes()
+    {
+        _deleteAsk = false;
+        if (_selectedItems.Count == 0) return;
+
+        foreach (var item in _selectedItems)
+        {
+            var deleteOption = await _store.Command.Delete(item.CommandId, item.Description);
+            if (deleteOption.IsError()) return;
+        }
+
+        await Load();
+    }
+
+    public void DeleteCancel() => _deleteAsk = false;
+}

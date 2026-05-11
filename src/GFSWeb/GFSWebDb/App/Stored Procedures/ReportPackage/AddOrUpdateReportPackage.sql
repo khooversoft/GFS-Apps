@@ -1,4 +1,4 @@
-﻿CREATE PROCEDURE [App].[AddOrUpdateReportPackage]
+﻿CREATE PROCEDURE [App].[UpsertReportPackage]
     @PackageId nvarchar(50),
     @Description nvarchar(100),
     @MenuId nvarchar(50),

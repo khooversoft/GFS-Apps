@@ -67,12 +67,12 @@ public class ReportPackageEntity
         return result;
     }
 
-    public async Task<Option<int>> AddOrUpdate(ReportPackageRecord record)
+    public async Task<Option<int>> Upsert(ReportPackageRecord record)
     {
         record.NotNull().Validate().ThrowOnError();
 
         var result = await _client.Query()
-            .SetCommand("[App].[AddOrUpdateReportPackage]", CommandType.StoredProcedure)
+            .SetCommand("[App].[UpsertReportPackage]", CommandType.StoredProcedure)
             .AddParameter("@PackageId", record.PackageId)
             .AddParameter("@Description", record.Description)
             .AddParameter("@MenuId", record.MenuId)
