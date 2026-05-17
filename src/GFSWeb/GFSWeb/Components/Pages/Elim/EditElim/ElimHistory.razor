@@ -37,7 +37,6 @@
     @inject ISnackbar _snackbar;
     [Parameter] public string PackageId { get; set; } = null!;
 
-    private bool _initialized = false;
     private bool _disableDelete = false;
     private IReadOnlyList<ReportFileDetail> _elements = [];
     private ReportFileDetail? _currentFileDetail;
@@ -56,7 +55,6 @@
     public async Task Load()
     {
         _elements = await _userDatalakeStore.ListReportFiles(PackageId);
-        _initialized = true;
         StateHasChanged();
     }
 

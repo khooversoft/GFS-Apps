@@ -1,4 +1,4 @@
-﻿using GFSWeb.Components.Pages.Elim.EditElim;
+﻿using GFSWeb.Components.Pages.Package.Edit;
 using GFSWeb.sdk.Models;
 using Toolbox.Tools;
 

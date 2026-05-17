@@ -1,5 +1,5 @@
 ﻿<MudPaper Elevation="0" Square="true" Style="border-bottom-color:gray;border-bottom-style:solid;border-bottom-width:1px">
-    <MudToolBar Dense=true Gutters=false>
+    <MudToolBar Dense=true Gutters=false Style="@ToolBarStyle">
         @if (Title is not null)
         {
             <MudText Typo="Typo.h6" Style="margin-left:10px">@Title</MudText>
@@ -13,8 +13,8 @@
                        Color="@action.Color"
                        OnClick="@action.OnClick"
                        Disabled="@action.Disabled"
-                       Style="@_buttonStyle">
-                @action.Text
+                       Style="@ButtonStyle">
+                <span style="@TextStyle">@action.Text</span>
             </MudButton>
         }
 
@@ -71,12 +71,16 @@
     [Parameter] public bool DisableAccess { get; set; }
     [Parameter] public bool DisableUndo { get; set; }
     [Parameter] public bool DisableClose { get; set; }
+    [Parameter] public bool Dense { get; set; }
     [Parameter] public string? Title { get; set; }
     [Parameter] public string? Width { get; set; }
 
     private const string _buttonStyle = "margin: 0px 5px;";
     private const string _panelStyle = "margin-top:20px;border-bottom-width:1px;border-bottom-color: lightgray";
+    private string ToolBarStyle => Dense ? "min-height:18px;height:18px;" : string.Empty;
     private string _searchString = string.Empty;
+    public string ButtonStyle => Dense ? "margin: 0px 5px;min-height:18px;height:18px;" : "margin: 0px 5px;";
+    public string TextStyle => Dense ? "font-size:0.6rem;" : string.Empty;
 
     private async Task OnSearchTextChanged() => await OnSearch.InvokeAsync(_searchString);
 
@@ -96,7 +100,7 @@
         public EventCallback OnClick { get; set; }
         public bool Disabled { get; set; }
         public string Text { get; set; }
-     
+
         public bool Show => OnClick.HasDelegate;
     }
 

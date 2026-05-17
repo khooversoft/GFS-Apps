@@ -9,14 +9,14 @@ using Toolbox.Types;
 
 namespace GFSWeb.sdk.Store.V2;
 
-public class ReportPackageEntity
+public class PackageEntity
 {
     private readonly ISqlClient _client;
     private readonly ILogger _logger;
     private readonly IAuthAccess _authAccess;
     private readonly IStoreNotify? _storeNotify;
 
-    public ReportPackageEntity(ISqlClient client, IAuthAccess authAccess, IStoreNotify? storeNotify, ILogger logger)
+    public PackageEntity(ISqlClient client, IAuthAccess authAccess, IStoreNotify? storeNotify, ILogger logger)
     {
         _client = client.NotNull();
         _logger = logger.NotNull();
@@ -45,13 +45,12 @@ public class ReportPackageEntity
 
     public async Task<IReadOnlyList<ReportPackageRecord>> GetAll()
     {
-        var cmd = """
-            SELECT  x.*
-            FROM    [App].[ReportPackage] x
-            """;
+        var nameIdentifier = await _authAccess.GetEmail();
+        if (nameIdentifier.IsEmpty()) return Array.Empty<ReportPackageRecord>();
 
         var result = await _client.Query()
-            .SetCommand(cmd, CommandType.Text)
+            .SetCommand("[App].[GetReportPackage]", CommandType.StoredProcedure)
+            .AddParameter("@NameIdentifier", nameIdentifier)
             .Execute<ReportPackageRecord>();
 
         return result;
@@ -103,23 +102,6 @@ public class ReportPackageEntity
             .SetCommand("[App].[ImportFixup]", CommandType.StoredProcedure)
             .ExecuteNonQuery();
 
-        return result;
-    }
-
-    public async Task<Option<int>> Update(ReportPackageRecord record)
-    {
-        record.NotNull().Validate().ThrowOnError();
-
-        var result = await _client.Query()
-            .SetCommand("[App].[UpdateReportPackage]", CommandType.StoredProcedure)
-            .AddParameter("@PackageId", record.PackageId)
-            .AddParameter("@Description", record.Description)
-            .AddParameter("@ParentPackageId", record.MenuId)
-            .AddParameter("@Data", record.Data)
-            .AddParameter("@Disabled", record.Disabled)
-            .ExecuteNonQuery();
-
-        _storeNotify?.Notify(result, $"Updated report package {record.PackageId}", $"Failed to update report package {record.PackageId}");
         return result;
     }
 

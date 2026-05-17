@@ -11,7 +11,7 @@ BEGIN
     USING (SELECT @PackageId AS [PackageId], @GroupName AS [GroupName], @Access AS [Access]) AS source
         ON target.[PackageId] = source.[PackageId] AND target.[GroupName] = source.[GroupName]
     WHEN NOT MATCHED THEN
-        INSERT ([PackageId], [GroupName], [Access]) VALUES (source.[PackageId], source.[GroupName], source.[Access])
+        INSERT ([PackageId], [GroupName], [Role]) VALUES (source.[PackageId], source.[GroupName], source.[Access])
     WHEN MATCHED THEN
-        UPDATE SET [Access] = source.[Access];
+        UPDATE SET [Role] = source.[Access];
 END

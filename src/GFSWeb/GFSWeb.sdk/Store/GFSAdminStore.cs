@@ -44,6 +44,6 @@ public class GFSAdminStore
     public PrincipalIdentityEntity Identity { get; }
     public UserAccessEntity UserAccess { get; }
     public PrincipalGroupEntity PrincipalGroup { get; }
-    public ReportPackageEntity Package { get; }
+    public PackageEntity Package { get; }
     public CommandEntity Command { get; }
 }

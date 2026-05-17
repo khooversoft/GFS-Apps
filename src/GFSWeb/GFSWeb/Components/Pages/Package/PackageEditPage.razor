@@ -1,4 +1,4 @@
-﻿@page "/editElimPackage/{packageId}"
+﻿@page "/package/{packageId}"
 
 <MudStack Spacing="2">
     <ReturnUrlButton ReturnUrl=@returnUrl />
@@ -78,8 +78,8 @@
 
     private List<MiscTablesRecord> GetSection(SectionId sectionId)
     {
-        if (_reportPackageModel is null) return new List<MiscTablesRecord>();
-        return _reportPackageModel.MiscTables.Where(x => x.GetSectionId() == sectionId).ToList();
+        if (_editPackageContext is null) return new List<MiscTablesRecord>();
+        return _editPackageContext.GetSection(sectionId);
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -97,16 +97,7 @@
         _reportPackageModel = _currentRecord.Unpack();
         _disabled = _currentRecord.Disabled;
 
-        _editPackageContext = new EditPackageContext
-        {
-            PackageId = _reportPackageModel.PackageId,
-            Description = _reportPackageModel.Description,
-            PackageType = _reportPackageModel.PackageType,
-            Elimination = _reportPackageModel.Elimination,
-            ElimSelects = _reportPackageModel.ElimSelects.ToDictionary(_ => Guid.NewGuid().ToString(), x => x with { }),
-            MiscTables = _reportPackageModel.MiscTables.ToDictionary(_ => Guid.NewGuid().ToString(), x => x with { }),
-        };
-
+        _editPackageContext = _reportPackageModel.ConvertTo();
         _initialized = true;
     }
 

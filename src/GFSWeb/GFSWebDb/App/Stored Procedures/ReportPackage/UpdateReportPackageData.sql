@@ -9,4 +9,10 @@ BEGIN
     UPDATE  [AppDbo].[ReportPackage]
     SET     [Data] = @Data
     WHERE   [PackageId] = @PackageId;
+
+    IF @@ROWCOUNT = 0
+    BEGIN
+        RAISERROR('ReportPackage with PackageId %s does not exist.', 16, 1, @PackageId);
+        RETURN;
+    END
 END

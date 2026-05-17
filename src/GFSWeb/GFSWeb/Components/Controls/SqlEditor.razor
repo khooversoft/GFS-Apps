@@ -1,19 +1,19 @@
-﻿<MudField Label="SQL Command" Variant="Variant.Outlined">
+﻿<MudField Label="SQL Command" Variant="@Variant.Outlined">
     <MudStack Spacing="2">
         <div>
             <MudToolBar Dense="true">
                 <MudSpacer />
                 <MudTooltip Text="Clear">
-                    <MudIconButton Icon="@Icons.Material.Outlined.Clear" OnClick="OnClear" Disabled="@_clearDisabled" Style="padding: 0px 12px" />
+                    <MudIconButton Icon="@Icons.Material.Outlined.Clear" OnClick="@OnClear" Disabled="@_clearDisabled" Style="padding: 0px 12px" />
                 </MudTooltip>
                 <MudTooltip Text="Format">
-                    <MudIconButton Icon="@Icons.Material.Outlined.FormatLineSpacing" OnClick="OnFormat" Disabled="@_formatDisabled" Style="padding: 0px 12px" />
+                    <MudIconButton Icon="@Icons.Material.Outlined.FormatLineSpacing" OnClick="@OnFormat" Disabled="@_formatDisabled" Style="padding: 0px 12px" />
                 </MudTooltip>
                 <MudTooltip Text="Format">
-                    <MudIconButton Icon="@Icons.Material.Outlined.LinearScale" OnClick="OnFormatSingle" Disabled=@_formatDisabled" Style="padding: 0px 12px" />
+                    <MudIconButton Icon="@Icons.Material.Outlined.LinearScale" OnClick="@OnFormatSingle" Disabled="@_formatDisabled" Style="padding: 0px 12px" />
                 </MudTooltip>
                 <MudTooltip Text="Undo">
-                    <MudIconButton Icon="@Icons.Material.Outlined.Undo" OnClick="OnUndo" Disabled="@_undoDisabled" />
+                    <MudIconButton Icon="@Icons.Material.Outlined.Undo" OnClick="@OnUndo" Disabled="@_undoDisabled" />
                 </MudTooltip>
             </MudToolBar>
             <MudTextField Variant="Variant.Outlined"
@@ -48,7 +48,6 @@
     [Parameter] public string SqlCommand { get; set; } = null!;
     [Parameter] public EventCallback<string> OnChange { get; set; }
 
-    private string _iconFormat = "padding: 0px 12px";
     private string _formattedSql = "";
     private string _saveSqlCommand = "";
     private string _lastKnownValue = "";

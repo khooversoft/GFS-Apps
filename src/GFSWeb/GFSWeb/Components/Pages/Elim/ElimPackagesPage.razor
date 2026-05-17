@@ -14,8 +14,6 @@
     @inject NavigationManager _nav;
     [Parameter, SupplyParameterFromQuery] public string returnUrl { get; set; } = null!;
 
-    private bool _initialized = false;
-
     private void OnRowSelected(MenuItem item)
     {
         NavHelper.ElimPackage.NavigateTo(_nav, item.Key, _nav.Uri);

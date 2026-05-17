@@ -17,7 +17,7 @@
                     </CellTemplate>
                 </TemplateColumn>
                 <PropertyColumn Property="x => x.GroupName" Title="GroupName" />
-                <PropertyColumn Property="x => x.Access" Title="Access" />
+                <PropertyColumn Property="x => x.Role" Title="Access" />
             </Columns>
         </MudDataGrid>
     </MudStack>
@@ -28,7 +28,6 @@
     [Parameter] public string PackageId { get; set; } = null!;
     [Parameter] public EventCallback OnUpdate { get; set; }
 
-    private bool _initialized = false;
     private IReadOnlyList<GroupPackageAccessRecord> _elements = [];
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -43,7 +42,6 @@
     private async Task Load()
     {
         _elements = await _store.Package.GetGroupAccess(PackageId);
-        _initialized = true;
     }
 
     private void OnAdd() { }

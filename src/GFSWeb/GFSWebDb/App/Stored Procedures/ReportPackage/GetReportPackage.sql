@@ -1,5 +1,5 @@
 ﻿CREATE PROCEDURE [App].[GetReportPackage]
-    @PackageId NVARCHAR(50),
+    @PackageId NVARCHAR(50) NULL = NULL,
     @NameIdentifier NVARCHAR(50)
 AS
 BEGIN
@@ -15,25 +15,31 @@ BEGIN
         RETURN;
     END
 
-    SELECT DISTINCT
-            x.[PackageId]
-            ,x.[Description]
-            ,x.[MenuId]
-            ,x.[Data]
-            ,x.[Disabled]
-    FROM    [AppDbo].[ReportPackage] x
-    WHERE   x.[PackageId] = @PackageId
-    AND     (
-                @role IN ('contributor', 'owner')
-                OR (
-                    x.[Disabled] = 0
-                    AND EXISTS (
-                        SELECT 1
-                        FROM   [AppDbo].[GroupPackageAccess] a
-                               INNER JOIN [AppDbo].[GroupMembership] gm ON a.[GroupName] = gm.[GroupName]
-                        WHERE  a.[PackageId] = x.[PackageId]
-                        AND    gm.[NameIdentifier] = @NameIdentifier
-                    )
-                )
-            );
+    IF @role IN ('contributor', 'owner')
+    BEGIN
+        IF @PackageId IS NULL
+        BEGIN
+            SELECT  x.*
+            FROM    [App].[ReportPackageView] x;
+            RETURN;
+        END
+
+        SELECT  x.*
+        FROM    [App].[ReportPackageView] x
+        WHERE   x.[PackageId] = @PackageId;
+        RETURN;
+    END
+
+    IF @PackageId IS NULL
+    BEGIN
+        SELECT  DISTINCT x.*
+        FROM    [App].[PackageRoleView] x
+        WHERE   x.[EffectiveRole] in ('contributor', 'owner');
+        RETURN;
+    END
+
+    SELECT  DISTINCT x.*
+    FROM    [App].[PackageRoleView] x
+    WHERE   x.[EffectiveRole] in ('contributor', 'owner')
+    AND     x.[PackageId] = @PackageId;
 END

@@ -15,10 +15,12 @@ else
                       OnDelete=OnDelete
                       OnSearch=OnSearch
                       DisableEdit="@_editDisabled"
-                      DisableDelete="@_deleteDisabled">
+                      DisableDelete="@_deleteDisabled"
+                      Dense="true"
+        >
         </BlockToolBar>
 
-        <MudDataGrid T="CommandRecord"
+        <MudDataGrid T="ReportPackageRecord"
                      Items="@_list"
                      Dense="true"
                      Hover="true"
@@ -31,15 +33,14 @@ else
                      QuickFilter="QuickFilter">
 
             <Columns>
-                <SelectColumn T="CommandRecord" />
-                <TemplateColumn Title="Command" Resizable="true" Sortable="true" SortBy="x => x.Description">
+                <SelectColumn T="ReportPackageRecord" />
+                <TemplateColumn Title="Package ID" Resizable="true" Sortable="true" SortBy="x => x.Description">
                     <CellTemplate>
                         <MudLink Color="Color.Info"
-                                 Href="@(NavHelper.Command.Href(@context.Item.CommandId, _nav.Uri))">@context.Item.Description</MudLink>
+                                 Href="@(NavHelper.Package.Href(@context.Item.PackageId, _nav.Uri))">@context.Item.PackageId</MudLink>
                     </CellTemplate>
                 </TemplateColumn>
-                <PropertyColumn Property="x => x.Type" Title="Type" Sortable="true" Resizable="true" />
-                <PropertyColumn Property="x => x.Data" Title="Data" Sortable="true" Resizable="true" />
+                <PropertyColumn Property="x => x.Description" Title="Description" Sortable="true" Resizable="true" />
             </Columns>
         </MudDataGrid>
     </MudStack>
@@ -53,8 +54,8 @@ else
     @inject ISnackbar _snackbar;
     [Parameter, SupplyParameterFromQuery] public string returnUrl { get; set; } = null!;
 
-    private HashSet<CommandRecord> _selectedItems = new();
-    private IReadOnlyList<CommandRecord> _list = null!;
+    private HashSet<ReportPackageRecord> _selectedItems = new();
+    private IReadOnlyList<ReportPackageRecord> _list = null!;
     private bool _initialized = false;
     private bool _searchDisabled = true;
     private bool _editDisabled = true;
@@ -74,12 +75,12 @@ else
 
     private async Task Load()
     {
-        _list = await _store.Command.GetAll();
+        _list = await _store.Package.GetAll();
         _searchDisabled = _list.Count == 0;
         _initialized = true;
     }
 
-    private async Task SelectedItemsChanged(HashSet<CommandRecord> items)
+    private async Task SelectedItemsChanged(HashSet<ReportPackageRecord> items)
     {
         _selectedItems = items;
 
@@ -91,9 +92,9 @@ else
         };
     }
 
-    private string GetRowStyle(CommandRecord item, int index)
+    private string GetRowStyle(ReportPackageRecord item, int index)
     {
-        var result = _selectedItems.Any(x => x.CommandId == item.CommandId);
+        var result = _selectedItems.Any(x => x.PackageId == item.PackageId);
         return result ? "background-color: var(--mud-palette-action-default-hover);" : string.Empty;
     }
 
@@ -102,7 +103,7 @@ else
     private void OnEdit()
     {
         if (_selectedItems.Count != 1) return;
-        NavHelper.Command.NavigateTo(_nav, _selectedItems.First().CommandId, _nav.Uri);
+        NavHelper.Command.NavigateTo(_nav, _selectedItems.First().PackageId, _nav.Uri);
     }
 
     private void OnSearch(string? searchString)
@@ -113,11 +114,11 @@ else
         _searchString = searchString;
     }
 
-    private bool QuickFilter(CommandRecord item)
+    private bool QuickFilter(ReportPackageRecord item)
     {
         if (_searchString is null) return true;
 
-        return item.CommandId.Contains(_searchString, StringComparison.OrdinalIgnoreCase)
+        return item.PackageId.Contains(_searchString, StringComparison.OrdinalIgnoreCase)
             || (item.Description?.Contains(_searchString, StringComparison.OrdinalIgnoreCase) ?? false);
     }
 
@@ -140,7 +141,7 @@ else
 
         foreach (var item in _selectedItems)
         {
-            var deleteOption = await _store.Command.Delete(item.CommandId, item.Description);
+            var deleteOption = await _store.Command.Delete(item.PackageId, item.Description);
             if (deleteOption.IsError()) return;
         }
 

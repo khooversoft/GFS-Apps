@@ -1,0 +1,48 @@
+﻿
+<MudStack Spacing="2">
+    <MudDataGrid T="SapQueryMapping"
+                 Items="@EditContext.SapQueryMappings.Values"
+                 Dense="true"
+                 Hover="true"
+                 Elevation="0"
+                 SelectedItemsChanged="@SelectedItemsChanged"
+                 SortMode="SortMode.Multiple"
+                 ColumnResizeMode="ResizeMode.Column">
+
+        <Columns>
+            <PropertyColumn Property="x => x.FieldIndex" Title="Field Index" />
+            <PropertyColumn Property="x => x.RfcColumn" Title="RFC Column" />
+            <PropertyColumn Property="x => x.OutColumn" Title="Out Column" />
+        </Columns>
+    </MudDataGrid>
+
+    @foreach (var item in _passContexts)
+    {
+        <div>
+            <MudText Typo="Typo.body2" Style="padding-top: 15px">@item.Title</MudText>
+            <WhereEdit EditContext="@item.Context" OnUpdate="@OnUpdate" />
+        </div>
+    }
+</MudStack>
+
+@code {
+    [CascadingParameter] public EditPackageContext EditContext { get; set; } = null!;
+    [Parameter] public EventCallback OnUpdate { get; set; }
+
+    private record PassContext(string Title, WhereEditContext Context);
+    private IReadOnlyList<PassContext> _passContexts = [];
+    private HashSet<SapQueryMapping> _selectedItems = new();
+
+    protected override void OnParametersSet()
+    {
+        _passContexts = EditContext.SapQueries.Values
+            .OrderBy(x => x.Pass)
+            .Select(x => new PassContext($"Pass: {x.Pass}", x))
+            .ToList();
+    }
+
+    private async Task SelectedItemsChanged(HashSet<SapQueryMapping> items)
+    {
+        _selectedItems = items;
+    }
+}

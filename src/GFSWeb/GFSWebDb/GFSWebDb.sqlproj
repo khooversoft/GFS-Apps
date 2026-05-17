@@ -84,9 +84,8 @@
     <Build Include="App\Stored Procedures\PrincipalIdentity\UpsertPrincipalIdentity.sql" />
     <Build Include="App\Views\ReportPackage.sql" />
     <Build Include="App\Stored Procedures\ReportPackage\DeleteReportPackage.sql" />
-    <Build Include="App\Stored Procedures\ReportPackage\AddOrUpdateReportPackage.sql" />
+    <Build Include="App\Stored Procedures\ReportPackage\UpsertReportPackage.sql" />
     <Build Include="App\Stored Procedures\ReportPackage\UpdateReportPackageData.sql" />
-    <Build Include="App\Stored Procedures\ReportPackage\UpdateReportPackage.sql" />
     <Build Include="AppDbo\Tables\Menu.sql" />
     <Build Include="App\Views\Menu.sql" />
     <Build Include="App\Stored Procedures\Menu\AddOrUpdateMenu.sql" />
@@ -121,6 +120,9 @@
     <Build Include="App\Stored Procedures\Command\GetCommand.sql" />
     <Build Include="App\Stored Procedures\Command\DeleteCommand.sql" />
     <Build Include="App\Stored Procedures\Command\CommandView.sql" />
+    <Build Include="App\Stored Procedures\ReportPackage\ReportPackageView.sql" />
+    <Build Include="PackageGroupAccess.sql" />
+    <Build Include="App\Stored Procedures\ReportPackage\PackageRoleView.sql" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Publish\GFSWebDb.publish.xml" />

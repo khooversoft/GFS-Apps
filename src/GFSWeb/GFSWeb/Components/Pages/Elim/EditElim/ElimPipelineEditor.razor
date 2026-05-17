@@ -42,7 +42,6 @@
     [Parameter] public string PackageId { get; set; } = null!;
     [Parameter, SupplyParameterFromQuery] public string returnUrl { get; set; } = null!;
 
-    private bool _initialized = false;
     private MudTabs _tabs = null!;
     private ReportPackageRecord? _currentRecord;
     private ReportPackageModel? _reportPackageModel;
@@ -62,8 +61,6 @@
     {
         _currentRecord = (await _store.Package.Get(PackageId)).BeOk().Return();
         _reportPackageModel = _currentRecord.Unpack();
-
-        _initialized = true;
     }
 
     private int GetProgressValue() => _progressStack.Count == 0 ? 0 : ((4 / _progressStack.Count) + 1) * 20;

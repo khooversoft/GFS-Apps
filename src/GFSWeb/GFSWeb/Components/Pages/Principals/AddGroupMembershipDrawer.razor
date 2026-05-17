@@ -50,7 +50,6 @@
     [Parameter] public EventCallback OnUpdate { get; set; }
 
     private MudDataGrid<PrincipalIdentityRecord> _grid = null!;
-    private bool _initialized = false;
     private bool _disableAdd = false;
     private string? _searchText;
     private IReadOnlyList<PrincipalIdentityRecord> _list = [];
@@ -75,7 +74,6 @@
     private async Task Load()
     {
         _list = await _store.Identity.GetAll();
-        _initialized = true;
     }
 
     private void Close() => OnClose.InvokeAsync();
