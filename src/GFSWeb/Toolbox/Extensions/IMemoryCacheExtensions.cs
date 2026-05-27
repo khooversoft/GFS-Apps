@@ -12,7 +12,7 @@ public static class IMemoryCacheExtensions
 
     public static void Remove(this IMemoryCache memoryCache, string path) => memoryCache.NotNull().Remove(path);
 
-    public static void Set(this IMemoryCache memoryCache, string path, DataETag data, ILogger logger)
+    public static void Upsert(this IMemoryCache memoryCache, string path, DataETag data, ILogger logger)
     {
         memoryCache.NotNull();
         path.NotEmpty();
@@ -22,7 +22,7 @@ public static class IMemoryCacheExtensions
         logger.LogDebug("Set data to cache, path={path}", path);
     }
 
-    public static void Set<T>(this IMemoryCache memoryCache, string path, T subject, ILogger logger)
+    public static void Upsert<T>(this IMemoryCache memoryCache, string path, T subject, ILogger logger)
     {
         memoryCache.NotNull();
         path.NotEmpty();

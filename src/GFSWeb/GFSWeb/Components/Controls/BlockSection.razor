@@ -1,0 +1,58 @@
+﻿<MudPaper Style="margin-top:15px;border-color:var(--mud-palette-primary);" Outlined="true" Square="false" Class="pa-4 rounded-lg">
+    <BlockToolbar2 Items="@_toolbarItems" NoLine="@_toolbarDense" Dense="@true" />
+
+    <MudCollapse Expanded="_expanded">
+        @ChildContent
+    </MudCollapse>
+</MudPaper>
+
+@code {
+    [Parameter] public RenderFragment ChildContent { get; set; } = null!;
+    [Parameter] public string? Title { get; set; }
+    [Parameter] public string? SubTitle { get; set; }
+    [Parameter] public bool ExpandState { get; set; }
+    [Parameter] public EventCallback<bool> OnExpand { get; set; }
+    [Parameter] public IReadOnlyList<IToolbarElement> ToolbarElements { get; set; } = [];
+
+    private bool _expanded;
+    private bool _toolbarDense => !_expanded;
+    private bool? _lastExpandState = null;
+    private IToolbarElement[] _toolbarItems = [];
+
+    protected override void OnParametersSet()
+    {
+        if (_lastExpandState != ExpandState)
+        {
+            _lastExpandState = ExpandState;
+            _expanded = ExpandState;
+        }
+
+        SetupToolbar();
+    }
+
+    private void SetupToolbar()
+    {
+        IToolbarElement[] text = Title.IsEmpty() switch
+        {
+            true => [],
+            false => [
+                new ToolbarText { Text = Title, SubText = SubTitle },
+                new ToolbarSpacer(),
+            ]
+        };
+
+        _toolbarItems = [
+            .. text,
+            .. ToolbarElements,
+            ToolbarButtonTool.Expand(this, () => InternalOnExpand(true), show: !_expanded),
+            ToolbarButtonTool.Collapse(this, () => InternalOnExpand(false), show: _expanded)
+        ];
+    }
+
+    private async Task InternalOnExpand(bool state)
+    {
+        _expanded = state;
+        _lastExpandState = null;
+        SetupToolbar();
+    }
+}

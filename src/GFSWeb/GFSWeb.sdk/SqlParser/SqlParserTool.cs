@@ -1,5 +1,6 @@
 ﻿using GFSWeb.sdk.Models;
 using Microsoft.SqlServer.TransactSql.ScriptDom;
+using Toolbox.Extensions;
 using Toolbox.Tools;
 
 namespace GFSWeb.sdk.SqlParser;
@@ -23,6 +24,8 @@ public static class SqlParserTool
 
         return commandRecord;
     }
+
+    public static string GetSqlCommandHash(string sql) => FormatLine(sql).FormattedSql.ToLowerInvariant().ToHashHex(true);
 
     public static (string FormattedSql, IList<SqlParseError> Errors) FormatLine(string sql)
     {

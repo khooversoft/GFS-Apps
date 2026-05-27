@@ -4,7 +4,7 @@ using Toolbox.Types;
 
 namespace GFSWeb.sdk.Models;
 
-public record ReportPackageRecord
+public record ReportPackageRow
 {
     public string PackageId { get; set; } = null!;
     public string Description { get; set; } = null!;
@@ -14,7 +14,7 @@ public record ReportPackageRecord
     public DateTime DateTimeStamp { get; set; }
     public string UserStamp { get; set; } = null!;
 
-    public static IValidator<ReportPackageRecord> Validator { get; } = new Validator<ReportPackageRecord>()
+    public static IValidator<ReportPackageRow> Validator { get; } = new Validator<ReportPackageRow>()
         .RuleFor(x => x.PackageId).NotEmpty()
         .RuleFor(x => x.Description).NotEmpty()
         .RuleFor(x => x.MenuId).NotEmpty()
@@ -24,11 +24,11 @@ public record ReportPackageRecord
 
 public static class ElimOperationRecordExtensions
 {
-    public static Option Validate(this ReportPackageRecord record) => ReportPackageRecord.Validator.Validate(record).ToOptionStatus();
+    public static Option Validate(this ReportPackageRow record) => ReportPackageRow.Validator.Validate(record).ToOptionStatus();
 
-    public static ReportPackageModel Unpack(this ReportPackageRecord record)
+    public static PipelinePackageRecord Unpack(this ReportPackageRow record)
     {
         record.Validate().ThrowOnError();
-        return record.Data.ToObject<ReportPackageModel>();
+        return record.Data.ToObject<PipelinePackageRecord>();
     }
 }

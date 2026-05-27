@@ -1,5 +1,6 @@
 ﻿using System.Collections.Frozen;
 using System.CommandLine;
+using GFSWeb.sdk.Application;
 using GFSWeb.sdk.Models;
 using GFSWeb.sdk.Store;
 using GFSWeb.sdk.Store.V1;
@@ -74,7 +75,6 @@ internal class ExportCommand : ICommand
                 .Where(x => _requiredTableIds.Contains(x.Table_ID))
                 .Select(x => x.ConvertTo())
                 .ToArray(),
-
         };
 
         var dirJson = data.ToJson();
@@ -110,22 +110,25 @@ internal class ExportCommand : ICommand
             File.Delete(file);
         }
     }
+
     private async Task<Context> BuildReportPackages(Context context)
     {
         _logger.LogInformation("Building report packages from elim tree records");
 
         var list = context.ElimTreeList
             .Where(x => x.Parent != "top")
-            .Select(x => new ReportPackageModel
+            .Select(x => new PipelinePackageBuilder
             {
                 PackageId = x.Id.NotEmpty(),
+                SortKey = x.SortKey.NotEmpty(),
                 Description = x.Descr.NotEmpty(),
                 MenuId = x.Parent,
-                PackageType = ReportPackageModelTool.GetPackageType(x.PackageType),
+                PackageType = ElimTool.GetPackageType(x.PackageType),
                 Elimination = lookupElimination(x.ShortName, x.Def),
                 ElimSelects = lookupElimSelect(x.ElimId),
                 MiscTables = getRequiredTables(x.Id),
-            }).ToArray();
+            }.Build()
+            ).ToArray();
 
         context = context with { ReportPackages = list };
         return context;
@@ -136,17 +139,17 @@ internal class ExportCommand : ICommand
             _ => null,
         };
 
-        IReadOnlyList<ElimSelectRecord> lookupElimSelect(int? elimId) => elimId switch
+        List<ElimSelectRecord> lookupElimSelect(int? elimId) => elimId switch
         {
-            int id => id.ToString().Func(x => context.ElimSelectList.Where(y => y.ElimID == x).ToArray()),
-            _ => Array.Empty<ElimSelectRecord>(),
+            int id => id.ToString().Func(x => context.ElimSelectList.Where(y => y.ElimID == x).ToList()),
+            _ => new(),
         };
 
-        IReadOnlyList<MiscTablesRecord> getRequiredTables(string id) => context.MiscTableList
+        List<MiscTablesRecord> getRequiredTables(string id) => context.MiscTableList
             .Where(x => TableIdMap.IsRequiredTableId(id, x))
             .OrderBy(x => x.Table_ID)
             .ThenBy(x => x.ID)
-            .ToArray();
+            .ToList();
     }
 
     private CorpAccountStore CreateCorpAccountStore(FileInfo connector)
@@ -236,6 +239,6 @@ internal class ExportCommand : ICommand
         public IReadOnlyList<MiscTablesRecord> MiscTableList { get; init; } = null!;
         public IReadOnlyList<ElimTreeRecord> ElimTreeList { get; init; } = null!;
         public IReadOnlyList<UserRecord> UserList { get; init; } = null!;
-        public IReadOnlyList<ReportPackageModel> ReportPackages { get; init; } = null!;
+        public IReadOnlyList<PipelinePackageRecord> ReportPackages { get; init; } = null!;
     }
 }

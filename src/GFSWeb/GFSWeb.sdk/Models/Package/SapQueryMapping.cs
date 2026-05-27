@@ -1,6 +1,6 @@
 ﻿using Toolbox.Tools;
 
-namespace GFSWeb.Components.Pages.Package.Edit;
+namespace GFSWeb.sdk.Models;
 
 public record SapQueryMapping
 {

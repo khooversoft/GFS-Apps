@@ -1,0 +1,30 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace Toolbox.Types;
+
+public readonly struct KeyValue<TValue>
+{
+    public KeyValue(string key, TValue value)
+    {
+        this.Key = key;
+        this.Value = value;
+    }
+
+    public string Key { get; }
+
+    public TValue Value { get; }
+
+    public override string ToString() => $"{Key}:{Value}";
+
+    public void Deconstruct(out string key, out TValue value)
+    {
+        key = Key;
+        value = Value;
+    }
+
+    public static implicit operator KeyValue<TValue>((string key, TValue value) source) => new(source.key, source.value);
+
+    public static implicit operator (string key, TValue value)(KeyValue<TValue> source) => (source.Key, source.Value);
+}

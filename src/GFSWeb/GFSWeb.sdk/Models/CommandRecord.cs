@@ -33,9 +33,10 @@ public record CommandRecord
         .Build();
 }
 
-public static class CommandRecordExtensions
+public static class CommandRecordTool
 {
     public static Option Validate(this CommandRecordPackage record) => CommandRecordPackage.Validator.Validate(record).ToOptionStatus();
+
     public static Option Validate(this CommandRecord record) => CommandRecord.Validator.Validate(record).ToOptionStatus();
 }
 

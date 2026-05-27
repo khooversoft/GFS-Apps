@@ -1,0 +1,30 @@
+﻿<MudDrawer @bind-Open="@Open" Anchor="Anchor.End" Elevation="1" Variant="@DrawerVariant.Temporary" OverlayAutoClose=true Width="50%">
+    <MudDrawerHeader>
+        <MudText Typo="Typo.h6">Linked Common Command</MudText>
+    </MudDrawerHeader>
+    <MudDrawerContainer>
+        <div style="margin:10px">
+            <BlockToolBar OnClose="@OnClose" />
+            <MudSimpleTable Style="overflow-x: auto;" Elevation="0">
+                <tbody>
+                    <tr>
+                        <td style="width: 1%; white-space: nowrap;"><strong>Command ID:</strong></td>
+                        <td>@CommandId</td>
+                    </tr>
+                    <tr>
+                        <td style="width: 1%; white-space: nowrap;"><strong>Description:</strong></td>
+                        <td>@Description</td>
+                    </tr>
+                </tbody>
+            </MudSimpleTable>
+        </div>
+    </MudDrawerContainer>
+    <MudDivider />
+</MudDrawer>
+
+@code {
+    [Parameter] public bool Open { get; set; }
+    [Parameter] public string CommandId { get; set; } = null!;
+    [Parameter] public string Description { get; set; } = null!;
+    [Parameter] public EventCallback OnClose { get; set; }
+}

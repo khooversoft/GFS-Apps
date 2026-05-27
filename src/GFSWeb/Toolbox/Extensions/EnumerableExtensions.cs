@@ -63,6 +63,29 @@ public static class EnumerableExtensions
     }
 
     /// <summary>
+    /// Returns the zero-based index of the first element that matches the predicate.
+    /// </summary>
+    /// <typeparam name="T">The sequence item type.</typeparam>
+    /// <param name="subjects">The sequence to search.</param>
+    /// <param name="predicate">The match condition.</param>
+    /// <returns>The zero-based index of the first matching element; otherwise <c>-1</c>.</returns>
+    [DebuggerStepThrough]
+    public static int IndexOf<T>(this IEnumerable<T> subjects, Func<T, bool> predicate)
+    {
+        subjects.NotNull();
+        predicate.NotNull();
+
+        int index = 0;
+        foreach (var item in subjects)
+        {
+            if (predicate(item)) return index;
+            index++;
+        }
+
+        return -1;
+    }
+
+    /// <summary>
     /// Covert enumerable to stack, null will return empty stack
     /// </summary>
     /// <typeparam name="T"></typeparam>
@@ -87,6 +110,12 @@ public static class EnumerableExtensions
         return list;
     }
 
+    /// <summary>
+    /// Returns the original sequence or an empty sequence when the source is <c>null</c>.
+    /// </summary>
+    /// <typeparam name="T">The sequence item type.</typeparam>
+    /// <param name="list">The source sequence.</param>
+    /// <returns><paramref name="list"/> when not <c>null</c>; otherwise an empty sequence.</returns>
     [DebuggerStepThrough]
     public static IEnumerable<T> ToSafe<T>(this IEnumerable<T>? list) => (list ?? Array.Empty<T>());
 

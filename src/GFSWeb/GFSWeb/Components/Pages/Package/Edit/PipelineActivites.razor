@@ -1,0 +1,93 @@
+﻿<MudStack Spacing="2">
+    <BlockToolbar2 Items="@_toolbarItems" />
+
+    @foreach (var activity in EditContext.Activities)
+    {
+        var currentMove = _moveDict.GetOrAdd(activity.Id, x => new CurrentMove(x));
+
+        switch (activity)
+        {
+            case SapQueryActivity sapQuery:
+                <SapQueryBlock Activity="@sapQuery"
+                               OnUpdate="OnUpdate"
+                               ExpandState="@_expanded"
+                               OnMove="@(x => Move(x, sapQuery.Id))"
+                               PossibleMove="@(CanMove(sapQuery.Id))"
+                               MoveValue="@currentMove.MoveValue" />
+                break;
+
+            case SqlCommandActivity sqlCommand:
+                <SqlCommandBlock Activity="@sqlCommand"
+                                 OnUpdate="OnUpdate"
+                                 ExpandState="@_expanded"
+                                 OnMove="@(x => Move(x, sqlCommand.Id))"
+                                 PossibleMove="@(CanMove(sqlCommand.Id))"
+                                 MoveValue="@currentMove.MoveValue" />
+                break;
+        }
+    }
+</MudStack>
+
+    @code {
+    [Parameter] public EventCallback OnUpdate { get; set; }
+    [CascadingParameter] public EditPackageContext EditContext { get; set; } = null!;
+
+    private record CurrentMove(String Id, string? MoveValue = null);
+    private ConcurrentDictionary<string, CurrentMove> _moveDict = new(StringComparer.OrdinalIgnoreCase);
+    private IToolbarElement[] _toolbarItems = [];
+    private bool _expanded = false;
+
+    protected override void OnParametersSet() => SetupToolbar();
+
+    private void SetupToolbar()
+    {
+        _toolbarItems = [
+            ToolbarButtonTool.Add(this, OnAdd),
+
+            new ToolbarSpacer(),
+            ToolbarButtonTool.ExpandAll(this, () => InternalOnExpand(true)),
+            ToolbarButtonTool.CollapseAll(this, () => InternalOnExpand(false))
+        ];
+    }
+
+    private void OnAdd() { }
+    private void InternalOnExpand(bool state) { _expanded = state; }
+
+    private void Move(string cmd, string id)
+    {
+        var index = EditContext.Activities.FindIndex(a => a.Id == id);
+        if (index == -1) return;
+
+        _moveDict.AddOrUpdate(id, x => new CurrentMove(id, cmd), (x, v) => v with { MoveValue = cmd });
+
+        switch (cmd)
+        {
+            case ToolbarDropdownMove.Top:
+                if (index == 0) return;
+                EditContext.SwapActivites(0, index);
+                break;
+
+            case ToolbarDropdownMove.Bottom:
+                if (index == EditContext.Activities.Count - 1) return;
+                EditContext.SwapActivites(EditContext.Activities.Count - 1, index);
+                break;
+
+            case ToolbarDropdownMove.Up:
+                if (index == 0) return;
+                EditContext.SwapActivites(index, index - 1);
+                break;
+
+            case ToolbarDropdownMove.Down:
+                if (index == EditContext.Activities.Count - 1) return;
+                EditContext.SwapActivites(index, index + 1);
+                break;
+        }
+        ;
+    }
+
+    private PossibleMove CanMove(string id)
+    {
+        var index = EditContext.Activities.FindIndex(a => a.Id == id);
+        return ToolbarDropdownMove.CanMove(index, EditContext.Activities.Count);
+    }
+}

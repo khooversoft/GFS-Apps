@@ -101,9 +101,9 @@ internal class ImportCommand : ICommand
         }
     }
 
-    private async Task WriteReportPackages(GFSAdminStore store, IReadOnlyList<ReportPackageModel> reportPackages, ReportDirectoryModel reportDirectory)
+    private async Task WriteReportPackages(GFSAdminStore store, IReadOnlyList<PipelinePackageRecord> reportPackages, ReportDirectoryModel reportDirectory)
     {
-        foreach (ReportPackageModel reportPackage in reportPackages)
+        foreach (PipelinePackageRecord reportPackage in reportPackages)
         {
             if (!reportDirectory.Items.Any(x => x.MenuId == reportPackage.MenuId))
             {
@@ -111,7 +111,7 @@ internal class ImportCommand : ICommand
                 continue;
             }
 
-            var reportPackageRecord = new ReportPackageRecord
+            var reportPackageRecord = new ReportPackageRow
             {
                 PackageId = reportPackage.PackageId,
                 Description = reportPackage.Description,
@@ -124,7 +124,7 @@ internal class ImportCommand : ICommand
         }
     }
 
-    private async Task WriteCommonCommands(GFSAdminStore store, DirectoryInfo inputFolder, IReadOnlyList<ReportPackageModel> reportPackages)
+    private async Task WriteCommonCommands(GFSAdminStore store, DirectoryInfo inputFolder, IReadOnlyList<PipelinePackageRecord> reportPackages)
     {
         CommandRecordPackage? commandRecordPackage = null;
 
@@ -196,14 +196,14 @@ internal class ImportCommand : ICommand
         }
     }
 
-    private async Task<IReadOnlyList<ReportPackageModel>> ReadReportPackages(DirectoryInfo inputFolder)
+    private async Task<IReadOnlyList<PipelinePackageRecord>> ReadReportPackages(DirectoryInfo inputFolder)
     {
-        var reportRecords = new List<ReportPackageModel>();
+        var reportRecords = new List<PipelinePackageRecord>();
 
         foreach (var file in inputFolder.GetFiles("*.reportPackage.json"))
         {
             string json = File.ReadAllText(file.FullName);
-            var reportRecord = json.ToObject<ReportPackageModel>();
+            var reportRecord = json.ToObject<PipelinePackageRecord>();
             reportRecords.Add(reportRecord);
         }
 

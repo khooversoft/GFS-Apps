@@ -51,7 +51,7 @@
 
 
 @code {
-    [Parameter] public WhereEditContext EditContext { get; set; } = null!;
+    [Parameter] public WhereEditRecord EditContext { get; set; } = null!;
     [Parameter] public EventCallback OnUpdate { get; set; }
 
     private List<WhereClause> _whereItems = null!;

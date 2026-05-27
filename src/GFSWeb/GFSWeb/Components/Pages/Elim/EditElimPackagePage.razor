@@ -22,7 +22,7 @@
                                           Variant="Variant.Outlined"
                                           Required="true"
                                           Immediate="true"
-                                          @bind-Value="@_reportPackageModel!.Description"
+                                          @bind-Value="@_description"
                                           @bind-Value:after="OnEditorChanged" />
 
                             <MudCheckBox @bind-Value="@_disabled">Disabled</MudCheckBox>
@@ -36,7 +36,7 @@
                     }
                 </MudTabPanel>
                 <MudTabPanel Text="SAP Query">
-                    <SapQuery OnUpdate="OnUpdate" />
+                    <SapQueryBlock OnUpdate="OnUpdate" />
                 </MudTabPanel>
                 <MudTabPanel Text="Mapping">
                     <EditProperties Title="@SectionId.FieldSelect.GetTitle()" Elements="GetSection(SectionId.FieldSelect)" OnUpdate="OnUpdate" />
@@ -62,9 +62,10 @@
 
     private bool _initialized = false;
     private EditPackageContext _editPackageContext = null!;
-    private ReportPackageRecord? _currentRecord;
-    private ReportPackageModel? _reportPackageModel;
+    private ReportPackageRow? _currentRecord;
+    private PipelinePackageRecord? _pipelinePackageRecord;
     private bool _disabled;
+    private string? _description;
 
     private record EditProperty(SectionId SectionId, string Title, bool DisableTableId);
 
@@ -78,8 +79,8 @@
 
     private List<MiscTablesRecord> GetSection(SectionId sectionId)
     {
-        if (_reportPackageModel is null) return new List<MiscTablesRecord>();
-        return _reportPackageModel.MiscTables.Where(x => x.GetSectionId() == sectionId).ToList();
+        if (_pipelinePackageRecord is null) return new List<MiscTablesRecord>();
+        return _pipelinePackageRecord.MiscTables.Where(x => x.GetSectionId() == sectionId).ToList();
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -94,18 +95,18 @@
     private async Task LoadPackage()
     {
         _currentRecord = (await _store.Package.Get(PackageId)).BeOk().Return();
-        _reportPackageModel = _currentRecord.Unpack();
-        _disabled = _currentRecord.Disabled;
+        // _reportPackageModel = _currentRecord.Unpack();
+        // _disabled = _currentRecord.Disabled;
 
-        _editPackageContext = new EditPackageContext
-        {
-            PackageId = _reportPackageModel.PackageId,
-            Description = _reportPackageModel.Description,
-            PackageType = _reportPackageModel.PackageType,
-            Elimination = _reportPackageModel.Elimination,
-            ElimSelects = _reportPackageModel.ElimSelects.ToDictionary(_ => Guid.NewGuid().ToString(), x => x with { }),
-            MiscTables = _reportPackageModel.MiscTables.ToDictionary(_ => Guid.NewGuid().ToString(), x => x with { }),
-        };
+        // _editPackageContext = new EditPackageContext
+        // {
+        //     PackageId = _reportPackageModel.PackageId,
+        //     Description = _reportPackageModel.Description,
+        //     PackageType = _reportPackageModel.PackageType,
+        //     Elimination = _reportPackageModel.Elimination,
+        //     ElimSelects = _reportPackageModel.ElimSelects.ToDictionary(_ => Guid.NewGuid().ToString(), x => x with { }),
+        //     MiscTables = _reportPackageModel.MiscTables.ToDictionary(_ => Guid.NewGuid().ToString(), x => x with { }),
+        // };
 
         _initialized = true;
     }

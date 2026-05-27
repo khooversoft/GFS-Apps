@@ -11,10 +11,10 @@ namespace GFSWeb.sdk.Store.V2;
 public class PrincipalGroupEntity
 {
     private readonly ISqlClient _client;
-    private readonly ILogger _logger;
+    private readonly ILogger<PrincipalGroupEntity> _logger;
     private readonly IStoreNotify? _storeNotify;
 
-    public PrincipalGroupEntity(ISqlClient client, IStoreNotify? storeNotify, ILogger logger)
+    public PrincipalGroupEntity(ISqlClient client, ILogger<PrincipalGroupEntity> logger, IStoreNotify? storeNotify = null)
     {
         _client = client.NotNull();
         _logger = logger.NotNull();

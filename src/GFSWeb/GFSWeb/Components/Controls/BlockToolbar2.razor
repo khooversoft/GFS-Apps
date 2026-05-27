@@ -1,0 +1,101 @@
+﻿<MudPaper Elevation="0" Square="true" Style="@PaperStyle">
+    <MudToolBar Dense=true Gutters=false Style="@ToolBarStyle">
+        @foreach (var element in VisibleItems)
+        {
+            switch (element)
+            {
+                case ToolbarSpacer:
+                    <MudSpacer />
+                    break;
+
+                case ToolbarText text:
+                    <MudText Typo="Typo.body1" Style="margin-left:10px;display:flex;flex-direction:column;line-height:1.1;">
+                        <MudStack Row="true" Spacing="2">
+                            <span style="@TextStyle">@text.Text</span>
+
+                            @if (text.SubText.IsNotEmpty())
+                            {
+                                <MudText Typo="Typo.caption">@($"({@text.SubText})")</MudText>
+                            }
+                        </MudStack>
+                    </MudText>
+                    break;
+
+                case ToolbarButton buttonOnly when buttonOnly.Text.IsEmpty():
+                    <MudIconButton Icon="@buttonOnly.Icon"
+                                   Variant="Variant.Text"
+                                   Color="@buttonOnly.Color"
+                                   Size="Size.Medium"
+                                   OnClick="@buttonOnly.OnClick"
+                                   Disabled="@buttonOnly.Disabled" />
+                    break;
+
+                case ToolbarButton button:
+                    <MudButton StartIcon="@button.Icon"
+                               Variant="Variant.Text"
+                               Color="@button.Color"
+                               OnClick="@button.OnClick"
+                               Disabled="@button.Disabled"
+                               Style="@ButtonStyle">
+                        <span style="@TextStyle">@button.Text</span>
+                    </MudButton>
+                    break;
+
+                case ToolbarDropdownButton dropdown:
+                    <DropdownButton Color="@dropdown.Color"
+                                    Options="@dropdown.Options"
+                                    CurrentValue="@dropdown.CurrentValue"
+                                    OnClick="@(x => dropdown.OnClick.InvokeAsync(x))"
+                                    Dense="@Dense" />
+
+                    @*                     <MudButtonGroup Variant="Variant.Text" Color="@dropdown.Color" Style="@ButtonStyle">
+                        <MudButton Color="@dropdown.Color"
+                                   Disabled="@(dropdown.Disabled || !HasSelectedOption(dropdown))"
+                                   OnClick="@(() => OnDropdownClick(dropdown))">
+                            <span style="@TextStyle">@GetDropdownText(dropdown)</span>
+                        </MudButton>
+
+                        <MudMenu Color="@dropdown.Color" Disabled="@dropdown.Disabled" Icon="@Icons.Material.Filled.ArrowDropDown">
+                            @foreach (var option in dropdown.Options)
+                            {
+                                <MudMenuItem OnClick="@(() => OnDropdownChanged(dropdown, option.Key))">@option.Value</MudMenuItem>
+                            }
+                        </MudMenu>
+                    </MudButtonGroup> *@
+                    break;
+
+                case ToolbarSearch search:
+                    <div style="flex: 0 0 auto; width: 250px; max-width: 100%; margin-right: 5px; margin-left: 5px;">
+                        <MudTextField @bind-Value="@_searchString"
+                                      @bind-Value:after="@(() => search.OnSearch.InvokeAsync(_searchString ?? string.Empty))"
+                                      Placeholder="search"
+                                      Adornment="Adornment.Start"
+                                      AdornmentIcon="@Icons.Material.Filled.Search"
+                                      IconSize="Size.Medium"
+                                      Immediate=true
+                                      Clearable=true
+                                      Disabled="@search.Disabled"
+                                      FullWidth=true
+                                      Class="toolbar-search-field" />
+                    </div>
+                    break;
+            }
+        }
+    </MudToolBar>
+
+</MudPaper>
+
+
+@code {
+    [Parameter] public IReadOnlyList<IToolbarElement> Items { get; set; } = Array.Empty<IToolbarElement>();
+    [Parameter] public bool Dense { get; set; }
+    [Parameter] public bool NoLine { get; set; }
+
+    private IEnumerable<IToolbarElement> VisibleItems => Items.Where(x => x.Show);
+
+    private string PaperStyle => NoLine ? string.Empty : "padding-bottom:10px;border-bottom-color:gray;border-bottom-style:solid;border-bottom-width:1px";
+    private string ToolBarStyle => "min-height:24px;height:24px;"; // : "min-height:32px;height:32px;";
+    private string ButtonStyle => Dense ? "margin: 0px 5px;min-height:20px;height:20px;" : "margin: 0px 5px;";
+    private string TextStyle => string.Empty; // Dense? "font-size:0.9rem;" : string.Empty;
+    private string? _searchString;
+}

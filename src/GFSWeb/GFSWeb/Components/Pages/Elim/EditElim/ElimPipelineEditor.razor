@@ -43,8 +43,8 @@
     [Parameter, SupplyParameterFromQuery] public string returnUrl { get; set; } = null!;
 
     private MudTabs _tabs = null!;
-    private ReportPackageRecord? _currentRecord;
-    private ReportPackageModel? _reportPackageModel;
+    private ReportPackageRow? _currentRecord;
+    private PipelinePackageRecord? _pipelinePackageRecord;
     private List<string> _history = [];
     private Stack<string> _progressStack = new Stack<string>();
 
@@ -60,12 +60,12 @@
     private async Task LoadPackage()
     {
         _currentRecord = (await _store.Package.Get(PackageId)).BeOk().Return();
-        _reportPackageModel = _currentRecord.Unpack();
+        // _reportPackageModel = _currentRecord.Unpack();
     }
 
     private int GetProgressValue() => _progressStack.Count == 0 ? 0 : ((4 / _progressStack.Count) + 1) * 20;
 
-    private string GetPackageDesecription() => _reportPackageModel is not null ? _reportPackageModel.Description : "Not loaded";
+    private string GetPackageDesecription() => _pipelinePackageRecord is not null ? _pipelinePackageRecord.Description : "Not loaded";
 
     private async Task OnEdit()
     {
@@ -88,7 +88,7 @@
         _progressStack = new Stack<string>(list.Reverse());
 
         DataETag testReport = TestExcelFileGenerator.Generate();
-        (await _userDatalakeStore.Add(testReport, _reportPackageModel.NotNull().PackageId, _reportPackageModel.Description, ".xlsx")).BeOk();
+        (await _userDatalakeStore.Add(testReport, _pipelinePackageRecord.NotNull().PackageId, _pipelinePackageRecord.Description, ".xlsx")).BeOk();
         await SimulateProgressAsync();
     }
 

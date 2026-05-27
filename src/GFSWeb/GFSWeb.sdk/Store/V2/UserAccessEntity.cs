@@ -11,10 +11,10 @@ namespace GFSWeb.sdk.Store.V2;
 public class UserAccessEntity
 {
     private readonly ISqlClient _client;
-    private readonly ILogger _logger;
+    private readonly ILogger<UserAccessEntity> _logger;
     private readonly IStoreNotify? _storeNotify;
 
-    public UserAccessEntity(ISqlClient client, IStoreNotify? storeNotify, ILogger logger)
+    public UserAccessEntity(ISqlClient client, ILogger<UserAccessEntity> logger, IStoreNotify? storeNotify = null)
     {
         _client = client.NotNull();
         _logger = logger.NotNull();

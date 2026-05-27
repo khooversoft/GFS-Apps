@@ -13,42 +13,37 @@
         <BlockToolBar OnSave="@OnSave" OnCancel="@OnCancel" />
 
         <CascadingValue Value="_editPackageContext">
-            <MudTabs>
-                <MudTabPanel Text="Properties">
-                    <MudGrid Spacing="2" Style="margin:0; width:100%; box-sizing:border-box; padding:10px 12px 8px 8px;">
-                        <MudItem xs="6" Class="pr-2">
-                            <MudTextField T="string"
-                                          Label="Description"
-                                          Variant="Variant.Outlined"
-                                          Required="true"
-                                          Immediate="true"
-                                          @bind-Value="@_reportPackageModel!.Description"
-                                          @bind-Value:after="OnEditorChanged" />
+            <MudPaper Elevation="0" Outlined="true" Square="true" Style="padding:10px">
+                <MudTabs>
+                    <MudTabPanel Text="Properties">
+                        <MudGrid Spacing="2" Style="margin:0; width:100%; box-sizing:border-box; padding:10px 12px 8px 8px;">
+                            <MudItem xs="6" Class="pr-2">
+                                <MudTextField T="string"
+                                              Label="Description"
+                                              Variant="Variant.Outlined"
+                                              Required="true"
+                                              Immediate="true"
+                                              @bind-Value="@_description"
+                                              @bind-Value:after="OnEditorChanged" />
 
-                            <MudCheckBox @bind-Value="@_disabled">Disabled</MudCheckBox>
-                        </MudItem>
-                    </MudGrid>
-                </MudTabPanel>
-                <MudTabPanel Text="Parameters">
-                    @foreach (var item in _sections)
-                    {
-                        <EditProperties Title="@item.Title" Elements="GetSection(item.SectionId)" DisableTableId="item.DisableTableId" OnUpdate="OnUpdate" />
-                    }
-                </MudTabPanel>
-                <MudTabPanel Text="SAP Query">
-                    <SapQuery OnUpdate="OnUpdate" />
-                </MudTabPanel>
-                <MudTabPanel Text="Mapping">
-                    <EditProperties Title="@SectionId.FieldSelect.GetTitle()" Elements="GetSection(SectionId.FieldSelect)" OnUpdate="OnUpdate" />
-                    <EditProperties Title="@SectionId.OutSelect.GetTitle()" Elements="GetSection(SectionId.OutSelect)" OnUpdate="OnUpdate" />
-                </MudTabPanel>
-                <MudTabPanel Text="SQL Commands">
-                    <EditSqlCommands Title="@SectionId.Sql.GetTitle()" Elements="GetSection(SectionId.Sql)" OnUpdate="OnUpdate" />
-                </MudTabPanel>
-                <MudTabPanel Text="Access">
-                    <PackageAccess PackageId="@PackageId" />
-                </MudTabPanel>
-            </MudTabs>
+                                <MudCheckBox @bind-Value="@_disabled">Disabled</MudCheckBox>
+                            </MudItem>
+                        </MudGrid>
+                    </MudTabPanel>
+                    <MudTabPanel Text="Parameters">
+                        @foreach (var item in _sections)
+                        {
+                            <EditProperties Title="@item.Title" Elements="GetSection(item.SectionId)" DisableTableId="item.DisableTableId" OnUpdate="OnUpdate" />
+                        }
+                    </MudTabPanel>
+                    <MudTabPanel Text="Pipeline">
+                        <PipelineActivites />
+                    </MudTabPanel>
+                    <MudTabPanel Text="Access">
+                        <PackageAccess PackageId="@PackageId" />
+                    </MudTabPanel>
+                </MudTabs>
+            </MudPaper>
         </CascadingValue>
 
     }
@@ -62,11 +57,12 @@
 
     private bool _initialized = false;
     private EditPackageContext _editPackageContext = null!;
-    private ReportPackageRecord? _currentRecord;
-    private ReportPackageModel? _reportPackageModel;
+    private ReportPackageRow? _currentRecord;
+    private PipelinePackageRecord? _pipelinePackageRecord;
     private bool _disabled;
 
     private record EditProperty(SectionId SectionId, string Title, bool DisableTableId);
+    private string? _description;
 
     private EditProperty[] _sections = [
         new EditProperty(SectionId.Parameters, SectionId.Parameters.GetTitle(), false),
@@ -78,8 +74,8 @@
 
     private List<MiscTablesRecord> GetSection(SectionId sectionId)
     {
-        if (_editPackageContext is null) return new List<MiscTablesRecord>();
-        return _editPackageContext.GetSection(sectionId);
+        if (_pipelinePackageRecord is null) return new List<MiscTablesRecord>();
+        return _pipelinePackageRecord.GetSection(sectionId);
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -91,13 +87,16 @@
         }
     }
 
+    private void OnExapendAll() { }
+    private void OnCollapseAll() { }
+
     private async Task LoadPackage()
     {
         _currentRecord = (await _store.Package.Get(PackageId)).BeOk().Return();
-        _reportPackageModel = _currentRecord.Unpack();
+        _pipelinePackageRecord = _currentRecord.Unpack();
         _disabled = _currentRecord.Disabled;
 
-        _editPackageContext = _reportPackageModel.ConvertTo();
+        _editPackageContext = _pipelinePackageRecord.ConvertTo();
         _initialized = true;
     }
 

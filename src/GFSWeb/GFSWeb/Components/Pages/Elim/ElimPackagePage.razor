@@ -38,8 +38,8 @@ else
     private bool _runInProgress = false;
     private MudTabs _tabs = null!;
     private ElimHistory _elimHistory = null!;
-    private ReportPackageRecord? _currentRecord;
-    private ReportPackageModel? _reportPackageModel;
+    private ReportPackageRow? _currentRecord;
+    private PipelinePackageRecord? _pipelinePackageRecord;
     private List<string> _history = [];
     private Stack<string> _progressStack = new Stack<string>();
 
@@ -56,14 +56,14 @@ else
     private async Task LoadPackage()
     {
         _currentRecord = (await _store.Package.Get(PackageId)).BeOk().Return();
-        _reportPackageModel = _currentRecord.Unpack();
+        // _reportPackageModel = _currentRecord.Unpack();
 
         _initialized = true;
     }
 
     private int GetProgressValue() => _progressStack.Count == 0 ? 0 : ((4 / _progressStack.Count) + 1) * 20;
 
-    private string GetPackageDesecription() => _reportPackageModel is not null ? _reportPackageModel.Description : "Not loaded";
+    private string GetPackageDesecription() => _pipelinePackageRecord is not null ? _pipelinePackageRecord.Description : "Not loaded";
 
     private async Task OnEdit() => NavHelper.EditElimPackage.NavigateTo(_nav, PackageId, _nav.Uri);
 

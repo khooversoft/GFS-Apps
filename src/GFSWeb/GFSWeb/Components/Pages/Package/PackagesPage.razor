@@ -15,12 +15,9 @@ else
                       OnDelete=OnDelete
                       OnSearch=OnSearch
                       DisableEdit="@_editDisabled"
-                      DisableDelete="@_deleteDisabled"
-                      Dense="true"
-        >
-        </BlockToolBar>
+                      DisableDelete="@_deleteDisabled" />
 
-        <MudDataGrid T="ReportPackageRecord"
+        <MudDataGrid T="ReportPackageRow"
                      Items="@_list"
                      Dense="true"
                      Hover="true"
@@ -33,7 +30,7 @@ else
                      QuickFilter="QuickFilter">
 
             <Columns>
-                <SelectColumn T="ReportPackageRecord" />
+                <SelectColumn T="ReportPackageRow" />
                 <TemplateColumn Title="Package ID" Resizable="true" Sortable="true" SortBy="x => x.Description">
                     <CellTemplate>
                         <MudLink Color="Color.Info"
@@ -54,8 +51,8 @@ else
     @inject ISnackbar _snackbar;
     [Parameter, SupplyParameterFromQuery] public string returnUrl { get; set; } = null!;
 
-    private HashSet<ReportPackageRecord> _selectedItems = new();
-    private IReadOnlyList<ReportPackageRecord> _list = null!;
+    private HashSet<ReportPackageRow> _selectedItems = new();
+    private IReadOnlyList<ReportPackageRow> _list = null!;
     private bool _initialized = false;
     private bool _searchDisabled = true;
     private bool _editDisabled = true;
@@ -80,7 +77,7 @@ else
         _initialized = true;
     }
 
-    private async Task SelectedItemsChanged(HashSet<ReportPackageRecord> items)
+    private async Task SelectedItemsChanged(HashSet<ReportPackageRow> items)
     {
         _selectedItems = items;
 
@@ -92,7 +89,7 @@ else
         };
     }
 
-    private string GetRowStyle(ReportPackageRecord item, int index)
+    private string GetRowStyle(ReportPackageRow item, int index)
     {
         var result = _selectedItems.Any(x => x.PackageId == item.PackageId);
         return result ? "background-color: var(--mud-palette-action-default-hover);" : string.Empty;
@@ -114,7 +111,7 @@ else
         _searchString = searchString;
     }
 
-    private bool QuickFilter(ReportPackageRecord item)
+    private bool QuickFilter(ReportPackageRow item)
     {
         if (_searchString is null) return true;
 

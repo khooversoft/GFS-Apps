@@ -12,19 +12,19 @@ namespace GFSWeb.sdk.Store.V2;
 public class PackageEntity
 {
     private readonly ISqlClient _client;
-    private readonly ILogger _logger;
+    private readonly ILogger<PackageEntity> _logger;
     private readonly IAuthAccess _authAccess;
     private readonly IStoreNotify? _storeNotify;
 
-    public PackageEntity(ISqlClient client, IAuthAccess authAccess, IStoreNotify? storeNotify, ILogger logger)
+    public PackageEntity(ISqlClient client, IAuthAccess authAccess, ILogger<PackageEntity> logger, IStoreNotify? storeNotify = null)
     {
         _client = client.NotNull();
-        _logger = logger.NotNull();
         _authAccess = authAccess.NotNull();
+        _logger = logger.NotNull();
         _storeNotify = storeNotify;
     }
 
-    public async Task<Option<ReportPackageRecord>> Get(string packageId)
+    public async Task<Option<ReportPackageRow>> Get(string packageId)
     {
         var nameIdentifier = await _authAccess.GetEmail();
         if (nameIdentifier.IsEmpty()) return StatusCode.Unauthorized;
@@ -33,7 +33,7 @@ public class PackageEntity
             .SetCommand("[App].[GetReportPackage]", CommandType.StoredProcedure)
             .AddParameter("@PackageId", packageId)
             .AddParameter("@NameIdentifier", nameIdentifier)
-            .Execute<ReportPackageRecord>();
+            .Execute<ReportPackageRow>();
 
         return result.Count switch
         {
@@ -43,30 +43,30 @@ public class PackageEntity
         };
     }
 
-    public async Task<IReadOnlyList<ReportPackageRecord>> GetAll()
+    public async Task<IReadOnlyList<ReportPackageRow>> GetAll()
     {
         var nameIdentifier = await _authAccess.GetEmail();
-        if (nameIdentifier.IsEmpty()) return Array.Empty<ReportPackageRecord>();
+        if (nameIdentifier.IsEmpty()) return Array.Empty<ReportPackageRow>();
 
         var result = await _client.Query()
             .SetCommand("[App].[GetReportPackage]", CommandType.StoredProcedure)
             .AddParameter("@NameIdentifier", nameIdentifier)
-            .Execute<ReportPackageRecord>();
+            .Execute<ReportPackageRow>();
 
         return result;
     }
 
-    public async Task<IReadOnlyList<GroupPackageAccessRecord>> GetGroupAccess(string packageId)
+    public async Task<IReadOnlyList<GroupPackageAccessRow>> GetGroupAccess(string packageId)
     {
         var result = await _client.Query()
             .SetCommand("[App].[GetPackageAccess]", CommandType.StoredProcedure)
             .AddParameter("@PackageId", packageId)
-            .Execute<GroupPackageAccessRecord>();
+            .Execute<GroupPackageAccessRow>();
 
         return result;
     }
 
-    public async Task<Option<int>> Upsert(ReportPackageRecord record)
+    public async Task<Option<int>> Upsert(ReportPackageRow record)
     {
         record.NotNull().Validate().ThrowOnError();
 

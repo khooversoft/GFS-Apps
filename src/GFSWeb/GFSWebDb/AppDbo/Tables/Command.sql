@@ -4,7 +4,10 @@
     [Description]       NVARCHAR (100) NOT NULL,
     [Type]              NVARCHAR (50) NOT NULL,
     [Data]              NVARCHAR (MAX) NOT NULL,
-    [Hash]              NVARCHAR (50) NOT NULL,  -- HASH of Data
+    [Hash]              NVARCHAR (50) NOT NULL,  -- HASH of Data (unique index)
     [Disabled]          BIT CONSTRAINT [Command_Disabled] DEFAULT ((0))
 )
+GO
+
+CREATE UNIQUE INDEX [IX_Command_Hash] ON [AppDbo].[Command] ([Hash])
 GO

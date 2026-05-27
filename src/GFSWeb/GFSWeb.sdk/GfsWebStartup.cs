@@ -1,4 +1,5 @@
-﻿using GFSWeb.sdk.Store;
+﻿using GFSWeb.sdk.Models;
+using GFSWeb.sdk.Store;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Toolbox;
@@ -14,6 +15,8 @@ public static class GfsWebStartup
         webOption.NotNull();
         sapOption.NotNull();
 
+        services.AddMemoryCache();
+
         services.AddSqlClient<GFSAdminStore>(c =>
         {
             c.ConnectionString = webOption.AdminConnectionString;
@@ -22,6 +25,8 @@ public static class GfsWebStartup
         services.AddSingleton<GfsWebOption>(webOption);
         services.AddSingleton<GfsSapOption>(sapOption);
         services.AddScoped<GFSAdminStore>();
+        services.AddCacheClient(x => x.ToLowerInvariant(), TimeSpan.FromMinutes(15));
+        services.AddCacheClient<CommandRecord>(x => x.ToLowerInvariant(), TimeSpan.FromMinutes(15));
 
         services.AddTransient<UserDatalakeStore>(service =>
         {

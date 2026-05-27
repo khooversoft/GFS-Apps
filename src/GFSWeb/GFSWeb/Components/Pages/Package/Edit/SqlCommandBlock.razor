@@ -1,0 +1,87 @@
+﻿<BlockSection ExpandState="@ExpandState"
+              Title="@Activity.Description"
+              SubTitle="@Activity.Id"
+              OnExpand="OnBlockExpand"
+              ToolbarElements="@_toolbarItems">
+
+    <MudStack Spacing="2" Style="padding:10px">
+        <MudText Style="flex:1; font-family:'Consolas','Courier New',monospace; white-space:pre-wrap; word-break:break-all;">
+            @Activity.SqlCommand
+        </MudText>
+    </MudStack>
+</BlockSection>
+
+<SqlCommandEditor @bind-Open="_editorOpen"
+                  SqlCommand="@Activity.SqlCommand"
+                  OnSaved="OnCommandSaved"
+                  OnCancelled="@(() => _editorOpen = false)" />
+
+<CommandLinkDrawer Open="@_commandLinkOpen"
+                   CommandId="@_linked?.CommandId"
+                   Description="@_linked?.Description"
+                   OnClose="@(() => _commandLinkOpen = false)" />
+
+@code {
+    @inject GFSAdminStore _store;
+    [Parameter] public SqlCommandActivity Activity { get; set; } = null!;
+    [Parameter] public EventCallback OnUpdate { get; set; }
+    [Parameter] public EventCallback<string> OnMove { get; set; }
+    [Parameter] public bool ExpandState { get; set; }
+    [Parameter] public PossibleMove PossibleMove { get; set; }
+    [Parameter] public string? MoveValue { get; set; }
+
+    private bool _editorOpen = false;
+    private bool _commandLinkOpen = false;
+    private bool _expanded = true;
+    private CommandRecord? _linked;
+    private IToolbarElement[] _toolbarItems = [];
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await LoadLink();
+        SetupToolbar();
+    }
+
+    private void SetupToolbar()
+    {
+        _toolbarItems = [
+            ToolbarDropdownTool.Create("Move", ToolbarDropdownMove.GetMoveList(PossibleMove), OnMove, MoveValue),
+            ToolbarButtonTool.Edit(this, OnEdit),
+            ToolbarButtonTool.Link(this, OnLink, _linked == null),
+        ];
+    }
+
+    private async Task LoadLink()
+    {
+        _linked = null;
+
+        var commandOption = await _store.Command.GetByHash(Activity.Hash);
+        if (commandOption.IsError()) return;
+
+        _linked = commandOption.Return();
+    }
+
+    private void OnEdit() => _editorOpen = true;
+    private void OnLink() => _commandLinkOpen = true;
+
+    // private async Task OnUpdateId()
+    // {
+    //     await OnUpdate.InvokeAsync();
+    // }
+
+    private async Task OnCommandSaved(string value)
+    {
+        Activity.SqlCommand = value;
+        Activity.Hash = Activity.GetCommandHash();
+        await LoadLink();
+
+        _editorOpen = false;
+        await OnUpdate.InvokeAsync();
+    }
+
+    private void OnBlockExpand(bool expanded)
+    {
+        _expanded = expanded;
+        StateHasChanged();
+    }
+}

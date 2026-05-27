@@ -2,7 +2,7 @@
     <MudStack Spacing="2">
         <BlockToolBar OnAdd="OnAdd" />
 
-        <MudDataGrid T="GroupPackageAccessRecord"
+        <MudDataGrid T="GroupPackageAccessRow"
                      Items="@_elements"
                      ReadOnly="true"
                      Dense="true"
@@ -28,7 +28,7 @@
     [Parameter] public string PackageId { get; set; } = null!;
     [Parameter] public EventCallback OnUpdate { get; set; }
 
-    private IReadOnlyList<GroupPackageAccessRecord> _elements = [];
+    private IReadOnlyList<GroupPackageAccessRow> _elements = [];
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -46,7 +46,7 @@
 
     private void OnAdd() { }
 
-    private void DeleteItem(GroupPackageAccessRecord item)
+    private void DeleteItem(GroupPackageAccessRow item)
     {
     }
 }

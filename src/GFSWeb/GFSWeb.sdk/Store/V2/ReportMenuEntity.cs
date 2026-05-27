@@ -12,16 +12,16 @@ namespace GFSWeb.sdk.Store.V2;
 public class ReportMenuEntity
 {
     private readonly ISqlClient _client;
-    private readonly ILogger _logger;
+    private readonly ILogger<ReportMenuEntity> _logger;
     private readonly IAuthAccess _authAccess;
     private readonly IStoreNotify? _storeNotify;
 
-    public ReportMenuEntity(ISqlClient client, IAuthAccess authAccess, IStoreNotify? storeNotify, ILogger logger)
+    public ReportMenuEntity(ISqlClient client, IAuthAccess authAccess, ILogger<ReportMenuEntity> logger, IStoreNotify? storeNotify = null)
     {
         _client = client.NotNull();
         _authAccess = authAccess.NotNull();
-        _storeNotify = storeNotify;
         _logger = logger.NotNull();
+        _storeNotify = storeNotify;
     }
 
     public async Task<Option<int>> Add(MenuRecord subject)

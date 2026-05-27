@@ -1,0 +1,108 @@
+﻿<BlockSection Title="SAP Query" ExpandState="@ExpandState" ToolbarElements="@_toolbarItems">
+    <MudStack Spacing="2" Style="padding:10px">
+        <MudField Label="Mapping" Variant="Variant.Outlined">
+            <MudDataGrid @ref="_dataGrid"
+                         T="SapQueryMapping"
+                         Items="@Activity.SapQueryMappings"
+                         Dense="true"
+                         Hover="true"
+                         Elevation="0"
+                         ReadOnly="false"
+                         EditMode="@DataGridEditMode.Cell"
+                         EditTrigger="@DataGridEditTrigger.OnRowClick"
+                         SelectedItemsChanged="@SelectedItemsChanged"
+                         SortMode="SortMode.Multiple"
+                         ColumnResizeMode="ResizeMode.Column">
+
+                <Columns>
+                    <TemplateColumn CellStyle="width: 1%; white-space: nowrap;" HeaderStyle="width: 1%; white-space: nowrap;">
+                        <HeaderTemplate>
+                            <MudIconButton Color="Color.Success" Size="@Size.Small" Icon="@Icons.Material.Outlined.Add" OnClick="@AddNewItem" />
+                        </HeaderTemplate>
+                        <EditTemplate>
+                            <MudStack Row Spacing="0">
+                                <MudIconButton Color="Color.Error" Size="@Size.Small" Icon="@Icons.Material.Outlined.Delete" OnClick="@(() => DeleteItem(context.Item))" />
+                            </MudStack>
+                        </EditTemplate>
+                    </TemplateColumn>
+                    <TemplateColumn T="SapQueryMapping" Title="Field Index" SortBy="x => x.FieldIndex">
+                        <CellTemplate>
+                            @context.Item.FieldIndex
+                        </CellTemplate>
+                        <EditTemplate>
+                            <MudSelect T="string"
+                                       Value="@context.Item.FieldIndex"
+                                       ValueChanged="@(v => context.Item.FieldIndex = v)"
+                                       Dense="true"
+                                       Margin="Margin.Dense"
+                                       Variant="Variant.Outlined">
+                                @foreach (var fi in _fieldIndex)
+                                {
+                                    <MudSelectItem Value="@fi">@fi</MudSelectItem>
+                                }
+                            </MudSelect>
+                        </EditTemplate>
+                    </TemplateColumn>
+                    <PropertyColumn Property="x => x.RfcColumn" Title="RFC Column" />
+                    <PropertyColumn Property="x => x.OutColumn" Title="Out Column" />
+                </Columns>
+            </MudDataGrid>
+        </MudField>
+
+        @foreach (var item in Activity.SapQueries)
+        {
+            <div>
+                <MudField Label="@($"Pass: {item.PassNumber}")" Variant="Variant.Outlined">
+                    <WhereEdit EditContext="@item" OnUpdate="@OnUpdate" />
+                </MudField>
+            </div>
+        }
+    </MudStack>
+</BlockSection>
+
+@code {
+    [Parameter] public SapQueryActivity Activity { get; set; } = null!;
+    [Parameter] public EventCallback OnUpdate { get; set; }
+    [Parameter] public EventCallback<string> OnMove { get; set; }
+    [Parameter] public bool ExpandState { get; set; }
+    [Parameter] public PossibleMove PossibleMove { get; set; }
+    [Parameter] public string? MoveValue { get; set; }
+
+    private MudDataGrid<SapQueryMapping>? _dataGrid;
+    private HashSet<SapQueryMapping> _selectedItems = new();
+    private List<string> _fieldIndex = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"];
+    private IToolbarElement[] _toolbarItems = [];
+
+    protected override void OnParametersSet() => SetupToolbar();
+
+    private void SetupToolbar()
+    {
+        _toolbarItems = [
+            ToolbarDropdownTool.Create("Move", ToolbarDropdownMove.GetMoveList(PossibleMove), OnMove, MoveValue),
+        ];
+    }
+
+    private async Task SelectedItemsChanged(HashSet<SapQueryMapping> items)
+    {
+        _selectedItems = items;
+    }
+
+    private async Task AddNewItem()
+    {
+        // var newFieldIndex = _fieldIndex
+        //     .Except(EditContext.SapQueryMappings.Values.Select(x => x.FieldIndex), StringComparer.OrdinalIgnoreCase)
+        //     .First();
+
+        // var newRecord = new SapQueryMapping
+        // {
+        //     FieldIndex = newFieldIndex,
+        // };
+
+        // EditContext.SapQueryMappings.Add(newRecord.FieldIndex, newRecord);
+    }
+
+    private void DeleteItem(SapQueryMapping item)
+    {
+        // EditContext.SapQueryMappings.Remove(item.FieldIndex);
+    }
+}
