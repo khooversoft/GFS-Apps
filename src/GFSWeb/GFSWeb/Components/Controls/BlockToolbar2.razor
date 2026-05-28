@@ -47,21 +47,6 @@
                                     CurrentValue="@dropdown.CurrentValue"
                                     OnClick="@(x => dropdown.OnClick.InvokeAsync(x))"
                                     Dense="@Dense" />
-
-                    @*                     <MudButtonGroup Variant="Variant.Text" Color="@dropdown.Color" Style="@ButtonStyle">
-                        <MudButton Color="@dropdown.Color"
-                                   Disabled="@(dropdown.Disabled || !HasSelectedOption(dropdown))"
-                                   OnClick="@(() => OnDropdownClick(dropdown))">
-                            <span style="@TextStyle">@GetDropdownText(dropdown)</span>
-                        </MudButton>
-
-                        <MudMenu Color="@dropdown.Color" Disabled="@dropdown.Disabled" Icon="@Icons.Material.Filled.ArrowDropDown">
-                            @foreach (var option in dropdown.Options)
-                            {
-                                <MudMenuItem OnClick="@(() => OnDropdownChanged(dropdown, option.Key))">@option.Value</MudMenuItem>
-                            }
-                        </MudMenu>
-                    </MudButtonGroup> *@
                     break;
 
                 case ToolbarSearch search:

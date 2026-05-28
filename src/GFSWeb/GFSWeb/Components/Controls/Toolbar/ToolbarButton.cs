@@ -2,6 +2,7 @@ using System;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Components;
 using MudBlazor;
+using Toolbox.Tools;
 
 namespace GFSWeb.Components.Controls;
 
@@ -17,19 +18,42 @@ public class ToolbarButton : IToolbarElement
 
 public static class ToolbarButtonTool
 {
-    private static ToolbarButton CreateButton(string icon, Color color, EventCallback onClick, string? text, bool disabled, bool show) => new()
+    public class ButtonBuilder
     {
-        Icon = icon,
-        Text = text,
-        Color = color,
-        OnClick = onClick,
-        Disabled = disabled,
-        Show = show,
-    };
+        internal ButtonBuilder(string icon, Color color, string? text)
+        {
+            Icon = icon;
+            Color = color;
+            Text = text.NotEmpty();
+        }
+        public string Icon { get; init; } = null!;
+        public Color Color { get; init; } = Color.Info;
+        public string? Text { get; set; }
 
-    private static EventCallback CreateCallback(object receiver, Action onClick) => EventCallback.Factory.Create(receiver, onClick);
-    private static EventCallback CreateCallback(object receiver, Func<Task> onClick) => EventCallback.Factory.Create(receiver, onClick);
+        public ToolbarButton Create(EventCallback onClick, bool disabled = false, bool show = true) => CreateButton(onClick, disabled, show);
 
+        public ToolbarButton Create(object receiver, Action onClick, bool disabled = false, bool show = true)
+            => CreateButton(CreateCallback(receiver, onClick), disabled, show);
+
+        public ToolbarButton Create(object receiver, Func<Task> onClick, bool disabled = false, bool show = true)
+            => CreateButton(CreateCallback(receiver, onClick), disabled, show);
+
+        private ToolbarButton CreateButton(EventCallback onClick, bool disabled, bool show) => new()
+        {
+            Icon = Icon,
+            Text = Text,
+            Color = Color,
+            OnClick = onClick,
+            Disabled = disabled,
+            Show = show,
+        };
+
+        private static EventCallback CreateCallback(object receiver, Action onClick) => EventCallback.Factory.Create(receiver, onClick);
+        private static EventCallback CreateCallback(object receiver, Func<Task> onClick) => EventCallback.Factory.Create(receiver, onClick);
+    }
+
+
+    public static ButtonBuilder ArrowBack { get; } = new ButtonBuilder(Icons.Material.Filled.ArrowBack, Color.Info, "Back");
     public static ToolbarButton ArrowBack(EventCallback onClick, bool disabled = false, bool show = true) => new()
     {
         Icon = Icons.Material.Filled.ArrowBack,

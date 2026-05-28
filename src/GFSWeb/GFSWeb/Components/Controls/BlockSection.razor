@@ -15,6 +15,7 @@
     [Parameter] public IReadOnlyList<IToolbarElement> ToolbarElements { get; set; } = [];
 
     private bool _expanded;
+    private bool _noline;
     private bool _toolbarDense => !_expanded;
     private bool? _lastExpandState = null;
     private IToolbarElement[] _toolbarItems = [];
@@ -25,6 +26,7 @@
         {
             _lastExpandState = ExpandState;
             _expanded = ExpandState;
+            if (_expanded) Task.Run(() => _noline = true);
         }
 
         SetupToolbar();

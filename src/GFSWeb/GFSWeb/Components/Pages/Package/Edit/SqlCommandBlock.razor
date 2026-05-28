@@ -1,5 +1,5 @@
 ﻿<BlockSection ExpandState="@ExpandState"
-              Title="@Activity.Description"
+              Title="@GetTItle()"
               SubTitle="@Activity.Id"
               OnExpand="OnBlockExpand"
               ToolbarElements="@_toolbarItems">
@@ -60,6 +60,12 @@
 
         _linked = commandOption.Return();
     }
+
+    private string GetTItle() => _linked switch
+    {
+        null => Activity.Description,
+        var v => $"{v.Description} -> {Activity.Description}",
+    };
 
     private void OnEdit() => _editorOpen = true;
     private void OnLink() => _commandLinkOpen = true;
