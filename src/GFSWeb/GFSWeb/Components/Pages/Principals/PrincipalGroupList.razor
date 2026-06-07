@@ -31,8 +31,7 @@ else
                      SortMode="SortMode.Multiple"
                      ColumnResizeMode="ResizeMode.Column"
                      MultiSelection=true
-                     QuickFilter="QuickFilter"
-                     @ref=_grid>
+                     QuickFilter="QuickFilter">
 
             <Columns>
                 <HierarchyColumn T="PrincipalGroupRecord" />
@@ -72,7 +71,6 @@ else
     @inject ISnackbar _snackbar;
     [Parameter, SupplyParameterFromQuery] public string returnUrl { get; set; } = null!;
 
-    private MudDataGrid<PrincipalGroupRecord> _grid = null!;
     private HashSet<PrincipalGroupRecord> _selectedItems = new();
     private IReadOnlyList<PrincipalGroupRecord> _list = null!;
     private bool _initialized = false;

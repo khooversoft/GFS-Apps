@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
 
 namespace GFSWeb.sdk.Models;
 
@@ -11,4 +8,6 @@ namespace GFSWeb.sdk.Models;
 public interface IPackageActivity
 {
     public string Id { get; }
+    public string Type { get; }
+    public string Description { get; }
 }

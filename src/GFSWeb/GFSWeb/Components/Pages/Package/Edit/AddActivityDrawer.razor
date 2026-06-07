@@ -1,0 +1,138 @@
+﻿<MudDrawer Open="@Open" OpenChanged=@OnClose Anchor="Anchor.End" Elevation="1" Variant="@DrawerVariant.Temporary" OverlayAutoClose=true Width="70%">
+    <MudDrawerHeader>
+        <MudStack Spacing="2">
+            <MudText Typo="Typo.h6">Add Activities</MudText>
+            <MudText Typo="Typo.body1">Select command to link to the pipline activity.  Warning this will override any customization in the activity.</MudText>
+        </MudStack>
+    </MudDrawerHeader>
+    <MudDrawerContainer>
+        <div style="margin:10px">
+            @if (!_initialized)
+            {
+                <MudProgressLinear Color="Color.Primary" Indeterminate="true" Rounded="true" Size="Size.Medium" Value="100" Style="margin:20px" />
+            }
+            else
+            {
+                <MudStack Spacing="2">
+                    <BlockToolbar2 Items="@_toolbarItems" Dense="false" />
+
+                    <MudDataGrid T="ActivityInfoRecord"
+                                 Items="@_activities"
+                                 Dense="true"
+                                 Hover="true"
+                                 ReadOnly="true"
+                                 Bordered="true"
+                                 Elevation="0"
+                                 MultiSelection="true"
+                                 SelectOnRowClick="true"
+                                 SelectedItems="@_selectedActivities"
+                                 SelectedItemsChanged="@SelectedItemsChanged"
+                                 SortMode="SortMode.Multiple"
+                                 ColumnResizeMode="ResizeMode.Column"
+                                 QuickFilter="QuickFilter"
+                                 Filterable="true">
+                        <Columns>
+                            <SelectColumn T="ActivityInfoRecord" />
+
+                            <TemplateColumn T="ActivityInfoRecord"
+                                            CellStyle="width: 1%; white-space: nowrap;"
+                                            HeaderStyle="width: 1%; white-space: nowrap;">
+                                <CellTemplate>
+                                    <MudIcon Icon="@GetIcon(context.Item)" />
+                                </CellTemplate>
+                            </TemplateColumn>
+
+                            <PropertyColumn Property="x => x.Id"
+                                            Title="ID"
+                                            Sortable="true"
+                                            Filterable="true"
+                                            CellStyle="width: 1%; white-space: nowrap;"
+                                            HeaderStyle="width: 1%; white-space: nowrap;" />
+
+                            <PropertyColumn Property="x => x.Description"
+                                            Title="Description"
+                                            Sortable="true"
+                                            Filterable="true" />
+                        </Columns>
+                    </MudDataGrid>
+                </MudStack>
+            }
+        </div>
+    </MudDrawerContainer>
+    <MudDivider />
+</MudDrawer>
+
+@code {
+    @inject ActivitySelect _activitySelect;
+
+    [Parameter] public bool Open { get; set; }
+    [Parameter] public EventCallback<IReadOnlyList<ActivityInfoRecord>> OnSelect { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+
+    private bool _initialized = false;
+    private string? _searchString;
+    private IReadOnlyList<ActivityInfoRecord> _activities = [];
+    private HashSet<ActivityInfoRecord> _selectedActivities = [];
+    private IToolbarElement[] _toolbarItems = [];
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _activities = await _activitySelect.GetAll();
+        _selectedActivities = [];
+        SetupToolbar();
+        _initialized = true;
+    }
+
+    private void SetupToolbar()
+    {
+        _toolbarItems = [
+            ToolbarButtonTool.Add.Create(this, OnAdd, disabled: _selectedActivities.Count == 0),
+            ToolbarButtonTool.Close.Create(OnClose),
+            new ToolbarSpacer(),
+            ToolbarSearchTool.Create(this, OnSearch)
+        ];
+    }
+
+    private string GetIcon(ActivityInfoRecord item)
+    {
+        var result = item.Type switch
+        {
+            ActivitySelect.SqlType => Icons.Material.Filled.Code,
+            ActivitySelect.SapQueryType => Icons.Material.Filled.TableView,
+            ActivitySelect.ExcelSourceType => Icons.Material.Filled.TableView,
+
+            _ => throw new ArgumentException($"Unknown activity type {item.Type}"),
+        };
+
+        return result;
+    }
+
+    private async Task OnAdd()
+    {
+        _selectedActivities.Assert(x => x.Count > 0, "At least one activity must be selected");
+        await OnSelect.InvokeAsync(_selectedActivities.ToArray());
+    }
+
+    private Task SelectedItemsChanged(HashSet<ActivityInfoRecord> items)
+    {
+        _selectedActivities = items;
+        SetupToolbar();
+        return Task.CompletedTask;
+    }
+
+    private void OnSearch(string? searchString)
+    {
+        searchString = searchString.ToNullIfEmpty();
+        if (_searchString == searchString) return;
+
+        _searchString = searchString;
+    }
+
+    private bool QuickFilter(ActivityInfoRecord item)
+    {
+        if (_searchString is null) return true;
+
+        return item.Id.Contains(_searchString, StringComparison.OrdinalIgnoreCase)
+            || (item.Description?.Contains(_searchString, StringComparison.OrdinalIgnoreCase) ?? false);
+    }
+}

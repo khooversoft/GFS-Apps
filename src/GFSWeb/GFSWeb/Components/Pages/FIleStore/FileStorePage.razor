@@ -1,0 +1,186 @@
+﻿@page "/files/{storeType}/"
+@page "/files/{storeType}/{*path}"
+
+<MudStack Spacing="2">
+    <ReturnUrlButton ReturnUrl=@returnUrl />
+    <BlockHeader Title="@_title" />
+
+    <BlockToolbar2 Items="@_toolbarItems" />
+
+    <PathNavigation Items="@_pathVectors" OnClick="OnPathChanged" />
+
+    <FileExplorer Path="@_currentPath" OnSelectedItemsChanged="@OnSelectedItemsChanged" Search="@_searchString" />
+</MudStack>
+
+<Question Show="@_showDeleteQuestion"
+          Title="Delete Confirmation"
+          Descriptions="@_descriptions"
+          OnYes="@(() => DeleteItem())"
+          OnNo="@(() => _showDeleteQuestion = false)" />
+
+
+@code {
+    @inject SharedFileStore _sharedFileStore;
+    @inject GFSAdminStore _store;
+    @inject IAuthAccess _authAccess;
+    @inject ISnackbar _snackbar;
+    @inject IJSRuntime JSRuntime;
+    @inject NavigationManager _nav;
+
+    [Parameter] public string StoreType { get; set; } = null!;
+    [Parameter] public string? Path { get; set; }
+    [Parameter, SupplyParameterFromQuery] public string returnUrl { get; set; } = null!;
+
+    private string _title = string.Empty;
+    private int _selectedFileCount = 0;
+    private bool _showDeleteQuestion;
+    private IReadOnlyList<string> _descriptions = [];
+    private IToolbarElement[] _toolbarItems = [];
+    private string? _searchString;
+
+    private IReadOnlyList<StorePathDetail> _elements = [];
+    private HashSet<StorePathDetail> _selectedItems = new();
+    private readonly List<string> _paths = new();
+    private string _storeType = string.Empty;
+    private string _basePath = string.Empty;
+    private string _currentPath = string.Empty;
+    private KeyValue<string>[] _pathVectors = [];
+
+    private void OnPathChanged(string key)
+    {
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _storeType = StoreType switch
+        {
+            var v when v.EqualsIgnoreCase(SharedFileStoreTool.SharedRootPath) => SharedFileStoreTool.SharedRootPath,
+            var v when v.EqualsIgnoreCase(SharedFileStoreTool.PersonalRootPath) => SharedFileStoreTool.PersonalRootPath,
+            _ => throw new Exception($"Unknown store type {StoreType}")
+
+        };
+
+        (_basePath, _title) = _storeType switch
+        {
+            SharedFileStoreTool.SharedRootPath => (SharedFileStoreTool.SharedRootPath, "Shared Files"),
+            SharedFileStoreTool.PersonalRootPath => await setUser(),
+
+            _ => throw new Exception($"Unknown store type {StoreType}")
+        };
+
+        _paths.Clear();
+        _paths.AddRange([_basePath, .. Path?.Split('/') ?? []]);
+        _currentPath = _paths.Join('/');
+        _pathVectors = _paths.Select(x => new KeyValue<string>(StorePathTool.GetFileName(x), x)).ToArray();
+
+        SetupToolbar();
+
+        async Task<(string basePath, string title)> setUser()
+        {
+            var email = (await _authAccess.GetEmail()).NotEmpty("No email");
+            var userName = (await _authAccess.GetUserName()).NotEmpty("No user name");
+            return (email, "Personal files for " + userName);
+        }
+    }
+
+    private void SetupToolbar()
+    {
+        _toolbarItems = [
+            ToolbarButtonTool.Delete.Create(this, OnDelete, _selectedItems.Count == 0),
+            ToolbarFileUploadTool.Create(this, OnUpload, text: "Upload"),
+            ToolbarButtonTool.Download.Create(this, OnDownload, _selectedItems.Count == 0),
+            ToolbarButtonTool.Refresh.Create(this, Load),
+            new ToolbarSpacer(),
+            ToolbarSearchTool.Create(this, OnSearch)
+        ];
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender) await Load();
+    }
+
+    public async Task Load()
+    {
+        string path = _paths.Join('/') + "/**";
+        _elements = await _sharedFileStore.Search(path);
+        StateHasChanged();
+    }
+
+    private async Task OnUpload(IReadOnlyList<IBrowserFile> files)
+    {
+
+    }
+
+    private async Task OnDownload()
+    {
+    }
+
+    private void OnSearch(string? searchString)
+    {
+        searchString = searchString.ToNullIfEmpty();
+        if (_searchString == searchString) return;
+
+        _searchString = searchString;
+    }
+
+    private async Task OnSelectedItemsChanged(HashSet<StorePathDetail> items)
+    {
+        _selectedItems = items;
+        SetupToolbar();
+    }
+
+    private async Task OnDelete()
+    {
+        _showDeleteQuestion = true;
+
+        var line = _selectedItems.Select(x => x.Path);
+        _descriptions = new[] { $"Do you want to delete?" }.Concat(line).ToArray();
+    }
+
+    private async Task DeleteItem()
+    {
+        _showDeleteQuestion = false;
+        _selectedItems.NotNull();
+
+        foreach (var item in _selectedItems)
+        {
+            var fileResult = await _sharedFileStore.Delete(item.Path);
+            if (fileResult.IsError())
+            {
+                _snackbar.Add($"Can not delete {item.Path}", Severity.Error);
+                continue;
+            }
+
+            _snackbar.Add($"Deleted {item.Path}", Severity.Info);
+        }
+
+        await Load();
+        StateHasChanged();
+    }
+
+    private async Task ViewItem(StorePathDetail item)
+    {
+        item.NotNull().Path.NotEmpty();
+
+        var fileResult = await _sharedFileStore.Get(item.Path);
+
+        if (fileResult.IsError())
+        {
+            _snackbar.Add($"Can not find {item.Path}", Severity.Error);
+            return;
+        }
+
+        byte[] fileData = fileResult.Return().Data.ToArray();
+        var fileStream = new MemoryStream(fileData);
+        using var streamRef = new DotNetStreamReference(stream: fileStream);
+
+        await JSRuntime.InvokeVoidAsync("downloadFileFromStream", item.Path, streamRef);
+    }
+
+    private sealed class UploadFileData
+    {
+        public string? Name { get; set; }
+        public byte[]? Content { get; set; }
+    }
+}

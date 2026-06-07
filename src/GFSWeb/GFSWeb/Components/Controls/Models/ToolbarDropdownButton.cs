@@ -1,6 +1,4 @@
-﻿using System;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Components;
+﻿using Microsoft.AspNetCore.Components;
 using MudBlazor;
 using Toolbox.Types;
 
@@ -17,7 +15,7 @@ public class ToolbarDropdownButton : IToolbarElement
     public bool Show { get => OnClick.HasDelegate && field; set; } = true;
 }
 
-public static class ToolbarDropdownTool
+public static class ToolbarDropdownButtonTool
 {
     private static ToolbarDropdownButton CreateDropdown(
         string text,

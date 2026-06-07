@@ -24,7 +24,7 @@
     </MudDataGrid>
 </MudStack>
 
-<SqlCommandEditor @bind-Open="@_openSettings"
+<SqlCommandEditorDrawer @bind-Open="@_openSettings"
                   SqlCommand="@_editRecord?.Descr"
                   OnSaved="OnEditorSaved"
                   OnCancelled="OnEditorCancelled" />

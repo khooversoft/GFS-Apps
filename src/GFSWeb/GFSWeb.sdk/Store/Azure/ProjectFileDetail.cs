@@ -2,13 +2,13 @@
 
 namespace GFSWeb.sdk.Store.Azure;
 
-public record ReportFileDetail
+public record ProjectFileDetail
 {
-    public ReportFileDetail(string fullPath, DateTime createdDate, long contentLength)
+    public ProjectFileDetail(string fullPath, DateTime createdDate, long contentLength)
     {
         fullPath.NotEmpty();
 
-        var (userEmail, packageId, fileName) = UserDatalakeStoreTool.ParsePath(fullPath);
+        var (userEmail, packageId, fileName) = UserFileStoreTool.ParsePath(fullPath);
 
         UserEmail = userEmail;
         PackageId = packageId;

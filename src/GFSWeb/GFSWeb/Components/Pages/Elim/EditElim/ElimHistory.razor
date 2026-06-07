@@ -2,7 +2,7 @@
 <div style="margin-top:10px">
     <BlockToolBar OnRefresh="Load" OnDelete="OnDelete" DisableDelete="@_disableDelete" />
 
-    <MudDataGrid T="ReportFileDetail"
+    <MudDataGrid T="ProjectFileDetail"
                  Items="@_elements"
                  ReadOnly="true"
                  Dense="true"
@@ -11,7 +11,7 @@
                  MultiSelection="true"
                  Bordered="true">
         <Columns>
-            <SelectColumn T="ReportFileDetail" />
+            <SelectColumn T="ProjectFileDetail" />
             <TemplateColumn Title="File Name">
                 <CellTemplate>
                     <MudLink Color="Color.Info"
@@ -32,17 +32,17 @@
 </div>
 
 @code {
-    @inject UserDatalakeStore _userDatalakeStore;
+    @inject UserFileStore _userDatalakeStore;
     @inject IJSRuntime JSRuntime;
     @inject ISnackbar _snackbar;
     [Parameter] public string PackageId { get; set; } = null!;
 
     private bool _disableDelete = false;
-    private IReadOnlyList<ReportFileDetail> _elements = [];
-    private ReportFileDetail? _currentFileDetail;
+    private IReadOnlyList<ProjectFileDetail> _elements = [];
+    private ProjectFileDetail? _currentFileDetail;
     private bool _askDeleteQuestion;
     private IReadOnlyList<string> _descriptions = [];
-    private HashSet<ReportFileDetail> _selectedItems = new();
+    private HashSet<ProjectFileDetail> _selectedItems = new();
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -54,11 +54,11 @@
 
     public async Task Load()
     {
-        _elements = await _userDatalakeStore.ListReportFiles(PackageId);
+        _elements = await _userDatalakeStore.ListFiles(PackageId);
         StateHasChanged();
     }
 
-    private async Task SelectedItemsChanged(HashSet<ReportFileDetail> items)
+    private async Task SelectedItemsChanged(HashSet<ProjectFileDetail> items)
     {
         _selectedItems = items;
 
@@ -78,7 +78,7 @@
         _descriptions = new[] { $"Do you want to delete?" }.Concat(line).ToArray();
     }
 
-    private async Task AskDelete(ReportFileDetail item)
+    private async Task AskDelete(ProjectFileDetail item)
     {
         _currentFileDetail = item;
         _askDeleteQuestion = true;
@@ -115,7 +115,7 @@
         StateHasChanged();
     }
 
-    private async Task ViewItem(ReportFileDetail item)
+    private async Task ViewItem(ProjectFileDetail item)
     {
         string filePath = $"{item.UserEmail}/{item.PackageId}/{item.FileName}";
         var fileResult = await _userDatalakeStore.Get(filePath);

@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Toolbox.Types;
+﻿namespace Toolbox.Types;
 
 public readonly struct KeyValue<TValue>
 {

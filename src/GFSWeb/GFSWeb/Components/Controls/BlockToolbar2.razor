@@ -1,4 +1,4 @@
-﻿<MudPaper Elevation="0" Square="true" Style="@PaperStyle">
+﻿<MudPaper Elevation="@Elevation" Square="true" Style="@PaperStyle">
     <MudToolBar Dense=true Gutters=false Style="@ToolBarStyle">
         @foreach (var element in VisibleItems)
         {
@@ -41,12 +41,44 @@
                     </MudButton>
                     break;
 
+                case ToolbarDropdown dropdown:
+                    <MudSelect T="string"
+                               Value="@dropdown.CurrentValue"
+                               ValueChanged="@dropdown.OnClick"
+                               Disabled="@dropdown.Disabled"
+                               Dense="@Dense"
+                               Variant="Variant.Text"
+                               Margin="Margin.Dense"
+                               Label="@dropdown.Title"
+                               Style="@dropdown.GetStyle()">
+                        @foreach (var option in dropdown.Options)
+                        {
+                            <MudSelectItem Value="@option.Key">@option.Value</MudSelectItem>
+                        }
+                    </MudSelect>
+                    break;
+
                 case ToolbarDropdownButton dropdown:
                     <DropdownButton Color="@dropdown.Color"
                                     Options="@dropdown.Options"
                                     CurrentValue="@dropdown.CurrentValue"
                                     OnClick="@(x => dropdown.OnClick.InvokeAsync(x))"
                                     Dense="@Dense" />
+                    break;
+
+                case ToolbarFileUpload upload:
+                    <MudFileUpload T="IBrowserFile" FilesChanged="@(x => upload.OnClick.InvokeAsync([x]))">
+                        <CustomContent>
+                            <MudButton StartIcon="@upload.Icon"
+                                       Variant="Variant.Text"
+                                       Color="@upload.Color"
+                                       Disabled="@upload.Disabled"
+                                       OnClick="@context.OpenFilePickerAsync"
+                                       Style="@ButtonStyle">
+                                <span style="margin-top:5px">@upload.Text</span>
+                            </MudButton>
+                        </CustomContent>
+                    </MudFileUpload>
                     break;
 
                 case ToolbarSearch search:
@@ -64,6 +96,8 @@
                                       Class="toolbar-search-field" />
                     </div>
                     break;
+
+                default: throw new ArgumentException($"Unsupported toolbar element type: {element.GetType().FullName}");
             }
         }
     </MudToolBar>
@@ -75,11 +109,12 @@
     [Parameter] public IReadOnlyList<IToolbarElement> Items { get; set; } = Array.Empty<IToolbarElement>();
     [Parameter] public bool Dense { get; set; }
     [Parameter] public bool NoLine { get; set; }
+    [Parameter] public int Elevation { get; set; }
 
     private IEnumerable<IToolbarElement> VisibleItems => Items.Where(x => x.Show);
 
-    private string PaperStyle => NoLine ? string.Empty : "padding-bottom:10px;border-bottom-color:gray;border-bottom-style:solid;border-bottom-width:1px";
-    private string ToolBarStyle => "min-height:24px;height:24px;"; // : "min-height:32px;height:32px;";
+    private string PaperStyle => NoLine ? string.Empty : "border-bottom-color:gray;border-bottom-style:solid;border-bottom-width:1px";
+    private string ToolBarStyle => Dense ? "min-height:24px;height:24px;" : string.Empty; // "min-height:32px;height:32px;";
     private string ButtonStyle => Dense ? "margin: 0px 5px;min-height:20px;height:20px;" : "margin: 0px 5px;";
     private string TextStyle => string.Empty; // Dense? "font-size:0.9rem;" : string.Empty;
     private string? _searchString;

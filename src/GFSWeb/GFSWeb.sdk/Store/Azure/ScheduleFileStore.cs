@@ -5,9 +5,9 @@ using Toolbox.Types;
 
 namespace GFSWeb.sdk.Store.Azure;
 
-public class ScheduleDatalakeStore : DatalakeStore
+public class ScheduleFileStore : DatalakeStore
 {
-    public ScheduleDatalakeStore(DatalakeOption datalakeOption, ILogger<DatalakeStore> logger) : base(datalakeOption, logger)
+    public ScheduleFileStore(DatalakeOption datalakeOption, ILogger<DatalakeStore> logger) : base(datalakeOption, logger)
     {
     }
 

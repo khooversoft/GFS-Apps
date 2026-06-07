@@ -1,25 +1,24 @@
-﻿<BlockSection ExpandState="@ExpandState"
-              Title="@GetTItle()"
-              SubTitle="@Activity.Id"
-              OnExpand="OnBlockExpand"
-              ToolbarElements="@_toolbarItems">
+﻿<MudStack Spacing="2">
+    <BlockToolbar2 Items="@_toolbarItems" />
 
-    <MudStack Spacing="2" Style="padding:10px">
+    <MudField Label="SQL Command" Variant="Variant.Outlined" Style="padding:10px;">
         <MudText Style="flex:1; font-family:'Consolas','Courier New',monospace; white-space:pre-wrap; word-break:break-all;">
             @Activity.SqlCommand
         </MudText>
-    </MudStack>
-</BlockSection>
+    </MudField>
+</MudStack>
 
-<SqlCommandEditor @bind-Open="_editorOpen"
-                  SqlCommand="@Activity.SqlCommand"
-                  OnSaved="OnCommandSaved"
-                  OnCancelled="@(() => _editorOpen = false)" />
+<SqlCommandEditorDrawer @bind-Open="_editorOpen"
+                        SqlCommand="@Activity.SqlCommand"
+                        OnSaved="OnCommandSaved"
+                        OnCancelled="@(() => _editorOpen = false)" />
 
 <CommandLinkDrawer Open="@_commandLinkOpen"
                    CommandId="@_linked?.CommandId"
                    Description="@_linked?.Description"
                    OnClose="@(() => _commandLinkOpen = false)" />
+
+<LinkToCommandDrawer Open="@_linkToOpen" OnSelect="OnSelect" OnClose="@(() => _linkToOpen = false)" />
 
 @code {
     @inject GFSAdminStore _store;
@@ -32,6 +31,7 @@
 
     private bool _editorOpen = false;
     private bool _commandLinkOpen = false;
+    private bool _linkToOpen = false;
     private bool _expanded = true;
     private CommandRecord? _linked;
     private IToolbarElement[] _toolbarItems = [];
@@ -45,9 +45,10 @@
     private void SetupToolbar()
     {
         _toolbarItems = [
-            ToolbarDropdownTool.Create("Move", ToolbarDropdownMove.GetMoveList(PossibleMove), OnMove, MoveValue),
-            ToolbarButtonTool.Edit(this, OnEdit),
-            ToolbarButtonTool.Link(this, OnLink, _linked == null),
+            new ToolbarSpacer(),
+            ToolbarButtonTool.Edit.Create(this, OnEdit),
+            ToolbarButtonTool.Linked.Create(this, OnLinked, show: _linked != null),
+            ToolbarButtonTool.Link.Create(this, OnLink, show: _linked == null),
         ];
     }
 
@@ -68,12 +69,24 @@
     };
 
     private void OnEdit() => _editorOpen = true;
-    private void OnLink() => _commandLinkOpen = true;
 
-    // private async Task OnUpdateId()
-    // {
-    //     await OnUpdate.InvokeAsync();
-    // }
+    private void OnLinked() => _commandLinkOpen = true;
+    private void OnLink() => _linkToOpen = true;
+
+    private async Task OnSelect(ActivityInfoRecord command)
+    {
+        var commandOption = await _store.Command.Get(command.Id);
+        if (commandOption.IsError()) return;
+
+        _linked = commandOption.Return();
+        Activity.Description = Activity.Description.ToNullIfEmpty() ?? _linked.Description;
+        Activity.SqlCommand = _linked.Data;
+        Activity.Hash = Activity.GetCommandHash();
+
+        _linkToOpen = false;
+        await LoadLink();
+        SetupToolbar();
+    }
 
     private async Task OnCommandSaved(string value)
     {

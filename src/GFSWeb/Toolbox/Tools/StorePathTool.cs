@@ -26,6 +26,18 @@ public static class StorePathTool
         _ => path + "/**",
     };
 
+    /// <summary>
+    /// Gets the normalized root path for a store path and appends any additional path segments.
+    /// </summary>
+    /// <param name="path">
+    /// The source path. Wildcard suffixes such as <c>/*</c> and <c>/**</c> are removed before the root path is built.
+    /// </param>
+    /// <param name="additionalPaths">
+    /// Optional additional path values to append. Each value can contain one or more <c>/</c>-delimited segments.
+    /// </param>
+    /// <returns>
+    /// A lower-case path composed from the root portion of <paramref name="path"/> and the appended path segments.
+    /// </returns>
     public static string GetRootPath(string path, params string[] additionalPaths)
     {
         path.NotEmpty();
@@ -54,6 +66,27 @@ public static class StorePathTool
             .Join('/');
 
         return fullPath.ToLowerInvariant();
+    }
+
+    /// <summary>
+    /// Gets the file name from a store path, preserving the file extension.
+    /// </summary>
+    /// <param name="path">The full store path.</param>
+    /// <returns>The last path segment, including its extension when present.</returns>
+    public static string GetFileName(string path)
+    {
+        path.NotEmpty();
+
+        var span = path.AsSpan().TrimEnd('/');
+
+        if (span.IsEmpty) return string.Empty;
+
+        int lastSlash = span.LastIndexOf('/');
+        return lastSlash switch
+        {
+            -1 => span.ToString(),
+            _ => span[(lastSlash + 1)..].ToString(),
+        };
     }
 
     public static string ToSafePath(string path, string? extension = null)

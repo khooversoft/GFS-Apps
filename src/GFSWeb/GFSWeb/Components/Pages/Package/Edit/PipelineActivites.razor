@@ -1,7 +1,43 @@
 ﻿<MudStack Spacing="2">
     <BlockToolbar2 Items="@_toolbarItems" />
 
-    @foreach (var activity in EditContext.Activities)
+    <MudDataGrid T="IPackageActivity"
+                 Items="@EditContext.Activities"
+                 Dense="true"
+                 Hover="true"
+                 Elevation="0"
+                 SelectedItemsChanged="@SelectedItemsChanged"
+                 SortMode="SortMode.Multiple"
+                 ColumnResizeMode="ResizeMode.Column"
+                 MultiSelection=true
+                 QuickFilter="QuickFilter">
+
+        <Columns>
+            <HierarchyColumn T="IPackageActivity" />
+            <SelectColumn T="IPackageActivity" />
+            <PropertyColumn Property="x => x.Type" Title="Type" Sortable="true" />
+            <PropertyColumn Property="x => x.Description" Title="Description" Sortable="true" />
+        </Columns>
+        <ChildRowContent>
+            <MudButton StartIcon="@Icons.Material.Outlined.Add" Variant="Variant.Text" Color="Color.Info">Add</MudButton>
+            @switch (context.Item)
+            {
+                case SapQueryActivity sapQuery:
+                    <SapQueryBlock Activity="@sapQuery"
+                                   OnUpdate="OnUpdate"
+                                   ExpandState="@_expanded" />
+                    break;
+
+                case SqlCommandActivity sqlCommand:
+                    <SqlCommandBlock Activity="@sqlCommand"
+                                     OnUpdate="OnUpdate" />
+                    break;
+            }
+        </ChildRowContent>
+    </MudDataGrid>
+
+
+    @*     @foreach (var activity in EditContext.Activities)
     {
         var currentMove = _moveDict.GetOrAdd(activity.Id, x => new CurrentMove(x));
 
@@ -9,26 +45,30 @@
         {
             case SapQueryActivity sapQuery:
                 <SapQueryBlock Activity="@sapQuery"
-                               OnUpdate="OnUpdate"
-                               ExpandState="@_expanded"
-                               OnMove="@(x => Move(x, sapQuery.Id))"
-                               PossibleMove="@(CanMove(sapQuery.Id))"
-                               MoveValue="@currentMove.MoveValue" />
+                OnUpdate="OnUpdate"
+                ExpandState="@_expanded"
+                OnMove="@(x => Move(x, sapQuery.Id))"
+                PossibleMove="@(CanMove(sapQuery.Id))"
+                MoveValue="@currentMove.MoveValue" />
                 break;
 
             case SqlCommandActivity sqlCommand:
                 <SqlCommandBlock Activity="@sqlCommand"
-                                 OnUpdate="OnUpdate"
-                                 ExpandState="@_expanded"
-                                 OnMove="@(x => Move(x, sqlCommand.Id))"
-                                 PossibleMove="@(CanMove(sqlCommand.Id))"
-                                 MoveValue="@currentMove.MoveValue" />
+                OnUpdate="OnUpdate"
+                ExpandState="@_expanded"
+                OnMove="@(x => Move(x, sqlCommand.Id))"
+                PossibleMove="@(CanMove(sqlCommand.Id))"
+                MoveValue="@currentMove.MoveValue" />
                 break;
         }
-    }
+    } *@
 </MudStack>
 
-    @code {
+<AddActivityDrawer Open="@_addOpen" OnSelect="@OnSelect" OnClose="@(() => _addOpen = false)" />
+
+@code {
+    @inject ActivitySelect _activitySelect;
+
     [Parameter] public EventCallback OnUpdate { get; set; }
     [CascadingParameter] public EditPackageContext EditContext { get; set; } = null!;
 
@@ -36,22 +76,39 @@
     private ConcurrentDictionary<string, CurrentMove> _moveDict = new(StringComparer.OrdinalIgnoreCase);
     private IToolbarElement[] _toolbarItems = [];
     private bool _expanded = false;
+    private bool _addOpen = false;
+    private string? _searchString;
+    private HashSet<IPackageActivity> _selectedActivities = [];
 
     protected override void OnParametersSet() => SetupToolbar();
+    private void SelectedItemsChanged(HashSet<IPackageActivity> activities) => _selectedActivities = activities;
+    private void OnAdd() => _addOpen = true;
+    private void InternalOnExpand(bool state) { _expanded = state; }
+
+    private string GetTitle(IPackageActivity activity) => activity switch
+    {
+        SapQueryActivity a => a.Description,
+        SqlCommandActivity a => a.Description,
+        _ => throw new InvalidOperationException("Unknown activity type")
+    };
+
+    private bool QuickFilter(IPackageActivity item) => _searchString switch
+    {
+        null => true,
+        var s => item.Description.Contains(s, StringComparison.OrdinalIgnoreCase),
+    };
 
     private void SetupToolbar()
     {
         _toolbarItems = [
-            ToolbarButtonTool.Add(this, OnAdd),
-
+            ToolbarButtonTool.Add.Create(this, OnAdd),
             new ToolbarSpacer(),
-            ToolbarButtonTool.ExpandAll(this, () => InternalOnExpand(true)),
-            ToolbarButtonTool.CollapseAll(this, () => InternalOnExpand(false))
+            ToolbarButtonTool.ExpandAll.Create(this, () => InternalOnExpand(true)),
+            ToolbarButtonTool.CollapseAll.Create(this, () => InternalOnExpand(false))
         ];
     }
 
-    private void OnAdd() { }
-    private void InternalOnExpand(bool state) { _expanded = state; }
+
 
     private void Move(string cmd, string id)
     {
@@ -82,12 +139,26 @@
                 EditContext.SwapActivites(index, index + 1);
                 break;
         }
-        ;
+    ;
     }
 
     private PossibleMove CanMove(string id)
     {
         var index = EditContext.Activities.FindIndex(a => a.Id == id);
         return ToolbarDropdownMove.CanMove(index, EditContext.Activities.Count);
+    }
+
+    private async Task OnSelect(IReadOnlyList<ActivityInfoRecord>
+    activities)
+    {
+        _addOpen = false;
+
+        foreach (var activity in activities)
+        {
+            var packageActivity = _activitySelect.CreateActivity(activity);
+            EditContext.Activities.Add(packageActivity);
+        }
+
+        StateHasChanged();
     }
 }

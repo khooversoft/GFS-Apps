@@ -1,5 +1,4 @@
-﻿<BlockSection Title="SAP Query" ExpandState="@ExpandState" ToolbarElements="@_toolbarItems">
-    <MudStack Spacing="2" Style="padding:10px">
+﻿    <MudStack Spacing="2">
         <MudField Label="Mapping" Variant="Variant.Outlined">
             <MudDataGrid @ref="_dataGrid"
                          T="SapQueryMapping"
@@ -36,6 +35,7 @@
                                        Dense="true"
                                        Margin="Margin.Dense"
                                        Variant="Variant.Outlined">
+
                                 @foreach (var fi in _fieldIndex)
                                 {
                                     <MudSelectItem Value="@fi">@fi</MudSelectItem>
@@ -58,7 +58,6 @@
             </div>
         }
     </MudStack>
-</BlockSection>
 
 @code {
     [Parameter] public SapQueryActivity Activity { get; set; } = null!;
@@ -78,7 +77,7 @@
     private void SetupToolbar()
     {
         _toolbarItems = [
-            ToolbarDropdownTool.Create("Move", ToolbarDropdownMove.GetMoveList(PossibleMove), OnMove, MoveValue),
+            ToolbarDropdownButtonTool.Create("Move", ToolbarDropdownMove.GetMoveList(PossibleMove), OnMove, MoveValue),
         ];
     }
 

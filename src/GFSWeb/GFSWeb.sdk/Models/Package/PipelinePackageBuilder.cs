@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Text;
-using Toolbox.Extensions;
+﻿using Toolbox.Extensions;
 using Toolbox.Tools;
 
 namespace GFSWeb.sdk.Models;
@@ -34,6 +30,7 @@ public class PipelinePackageBuilder
             Activities = [
                 new SapQueryActivity
                 {
+                    Description = "Import from V1",
                     SapQueryMappings = BuildQueryMapping(),
                     SapQueries = BuildSelects(),
                 },

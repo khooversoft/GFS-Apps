@@ -12,10 +12,10 @@
         <BlockHeader Title="Package" SubTitle="@_currentRecord.NotNull().Description" />
         <BlockToolBar OnSave="@OnSave" OnCancel="@OnCancel" />
 
-        <CascadingValue Value="_editPackageContext">
-            <MudPaper Elevation="0" Outlined="true" Square="true" Style="padding:10px">
-                <MudTabs>
-                    <MudTabPanel Text="Properties">
+        <NavMenu2 Items="@_navMenuItems">
+            <CascadingValue Value="_editPackageContext">
+                <MudTabs @ref="_tabs">
+                    <MudTabPanel Text="Parameters">
                         <MudGrid Spacing="2" Style="margin:0; width:100%; box-sizing:border-box; padding:10px 12px 8px 8px;">
                             <MudItem xs="6" Class="pr-2">
                                 <MudTextField T="string"
@@ -43,8 +43,46 @@
                         <PackageAccess PackageId="@PackageId" />
                     </MudTabPanel>
                 </MudTabs>
-            </MudPaper>
-        </CascadingValue>
+            </CascadingValue>
+        </NavMenu2>
+
+        <MudGrid Spacing="2" Style="margin:0; width:100%;">
+            <MudItem xs="12" md="@(_navMenuCollapsed ? 11 : 9)" lg="@(_navMenuCollapsed ? 11 : 10)">
+                <CascadingValue Value="_editPackageContext">
+                    <MudPaper Elevation="0" Outlined="true" Square="true" Style="padding:10px">
+                        <MudTabs @ref="_tabs" Position="@Position.Top">
+                            <MudTabPanel Text="Properties">
+                                <MudGrid Spacing="2" Style="margin:0; width:100%; box-sizing:border-box; padding:10px 12px 8px 8px;">
+                                    <MudItem xs="6" Class="pr-2">
+                                        <MudTextField T="string"
+                                                      Label="Description"
+                                                      Variant="Variant.Outlined"
+                                                      Required="true"
+                                                      Immediate="true"
+                                                      @bind-Value="@_description"
+                                                      @bind-Value:after="OnEditorChanged" />
+
+                                        <MudCheckBox @bind-Value="@_disabled">Disabled</MudCheckBox>
+                                    </MudItem>
+                                </MudGrid>
+                            </MudTabPanel>
+                            <MudTabPanel Text="Parameters">
+                                @foreach (var item in _sections)
+                                {
+                                    <EditProperties Title="@item.Title" Elements="GetSection(item.SectionId)" DisableTableId="item.DisableTableId" OnUpdate="OnUpdate" />
+                                }
+                            </MudTabPanel>
+                            <MudTabPanel Text="Pipeline">
+                                <PipelineActivites />
+                            </MudTabPanel>
+                            <MudTabPanel Text="Access">
+                                <PackageAccess PackageId="@PackageId" />
+                            </MudTabPanel>
+                        </MudTabs>
+                    </MudPaper>
+                </CascadingValue>
+            </MudItem>
+        </MudGrid>
 
     }
 </MudStack>
@@ -56,25 +94,72 @@
     [Parameter, SupplyParameterFromQuery] public string returnUrl { get; set; } = null!;
 
     private bool _initialized = false;
+    private bool _navMenuCollapsed;
     private EditPackageContext _editPackageContext = null!;
+    private MudTabs _tabs = null!;
     private ReportPackageRow? _currentRecord;
     private PipelinePackageRecord? _pipelinePackageRecord;
     private bool _disabled;
+    private EditProperty[] _sections = [];
+    private NavMenuItem[] _navMenuItems = [];
 
     private record EditProperty(SectionId SectionId, string Title, bool DisableTableId);
     private string? _description;
 
-    private EditProperty[] _sections = [
-        new EditProperty(SectionId.Parameters, SectionId.Parameters.GetTitle(), false),
-        new EditProperty(SectionId.ReconExcel, SectionId.ReconExcel.GetTitle(), true),
-        new EditProperty(SectionId.Pivot, SectionId.Pivot.GetTitle(), true),
-        new EditProperty(SectionId.Je, SectionId.Je.GetTitle(), true),
-        new EditProperty(SectionId.Data2Excel, SectionId.Data2Excel.GetTitle(), true),
-    ];
-
-    private List<MiscTablesRecord> GetSection(SectionId sectionId)
+    protected override void OnInitialized()
     {
-        if (_pipelinePackageRecord is null) return new List<MiscTablesRecord>();
+        _sections = [
+            new EditProperty(SectionId.Parameters, SectionId.Parameters.GetTitle(), false),
+            new EditProperty(SectionId.ReconExcel, SectionId.ReconExcel.GetTitle(), true),
+            new EditProperty(SectionId.Pivot, SectionId.Pivot.GetTitle(), true),
+            new EditProperty(SectionId.Je, SectionId.Je.GetTitle(), true),
+            new EditProperty(SectionId.Data2Excel, SectionId.Data2Excel.GetTitle(), true),
+        ];
+
+        _navMenuItems = [
+            new NavMenuItem("Properties", this, OnProperty, Icons.Material.Outlined.GridOn),
+            new NavMenuItem("Pipeline", this, OnPipeline, Icons.Material.Outlined.FactCheck),
+            new NavMenuItem("Access", this, OnAccess, Icons.Material.Outlined.Shield),
+        ];
+    }
+
+    private void ToggleNavMenu() => _navMenuCollapsed = !_navMenuCollapsed;
+
+    private string GetNavText(string text) => _navMenuCollapsed ? string.Empty : text;
+
+    private string GetNavContainerStyle() => _navMenuCollapsed
+        ? "display:flex; flex:0 0 auto; max-width:none;"
+        : string.Empty;
+
+    private string GetNavPaperClass() => _navMenuCollapsed ? string.Empty : "pa-2";
+
+    private string GetNavPaperStyle() => _navMenuCollapsed
+        ? "width:60px"
+        : string.Empty;
+
+    private string GetNavStackClass() => _navMenuCollapsed ? "align-center" : string.Empty;
+
+    private string GetNavMenuClass() => _navMenuCollapsed ? "d-flex flex-column align-center" : string.Empty;
+
+    private string GetNavLinkClass() => _navMenuCollapsed ? "d-flex justify-center" : string.Empty;
+
+    private Task OnProperty() => ActivatePanel(0);
+    private Task OnPipeline() => ActivatePanel(2);
+    private Task OnAccess() => ActivatePanel(3);
+
+    private async Task ActivatePanel(int panelIndex)
+    {
+        if (_tabs is not null)
+        {
+            await _tabs.ActivatePanelAsync(panelIndex);
+        }
+    }
+
+    private List<MiscTablesRecord>
+    GetSection(SectionId sectionId)
+    {
+        if (_pipelinePackageRecord is null) return new List<MiscTablesRecord>
+        ();
         return _pipelinePackageRecord.GetSection(sectionId);
     }
 

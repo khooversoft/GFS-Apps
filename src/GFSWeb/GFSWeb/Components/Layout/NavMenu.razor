@@ -4,8 +4,13 @@
     <MudNavLink Icon="@Icons.Material.Outlined.PostAdd" Href="/underConstruction" Match="NavLinkMatch.Prefix" Disabled=true>Parker</MudNavLink>
     <MudNavLink Icon="@Icons.Material.Outlined.Schedule" Href="/underConstruction" Match="NavLinkMatch.Prefix" Disabled=true>Schedules</MudNavLink>
 
+    <MudNavGroup Title="Files" Icon="@Icons.Material.Outlined.Folder">
+        <MudNavLink Icon="@Icons.Material.Outlined.People" Href=@NavHelper.PersonFiles.BasePath Match="NavLinkMatch.Prefix">Personal</MudNavLink>
+        <MudNavLink Icon="@Icons.Material.Outlined.Share" Href=@NavHelper.SharedFiles.BasePath Match="NavLinkMatch.Prefix">Share</MudNavLink>
+    </MudNavGroup>
+
     <MudNavGroup Title="Settings" Icon="@Icons.Material.Outlined.Settings">
-        <MudNavLink Icon="@Icons.Material.Outlined.People" Href=@NavHelper.Principals.BasePath Match="NavLinkMatch.Prefix">Principals</MudNavLink>
+        <MudNavLink Icon="@Icons.Material.Outlined.Person" Href=@NavHelper.Principals.BasePath Match="NavLinkMatch.Prefix">Principals</MudNavLink>
         <MudNavLink Icon="@Icons.Material.Outlined.Groups" Href=@NavHelper.PrincipalGroups.BasePath Match="NavLinkMatch.Prefix">Groups</MudNavLink>
     </MudNavGroup>
 

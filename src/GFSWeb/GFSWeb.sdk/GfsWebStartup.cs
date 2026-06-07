@@ -1,5 +1,7 @@
 ﻿using GFSWeb.sdk.Models;
+using GFSWeb.sdk.Services;
 using GFSWeb.sdk.Store;
+using GFSWeb.sdk.Store.Azure;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Toolbox;
@@ -23,35 +25,27 @@ public static class GfsWebStartup
         });
 
         services.AddSingleton<GfsWebOption>(webOption);
-        services.AddSingleton<GfsSapOption>(sapOption);
+        services.AddScoped<ActivitySelect>();
         services.AddScoped<GFSAdminStore>();
         services.AddCacheClient(x => x.ToLowerInvariant(), TimeSpan.FromMinutes(15));
         services.AddCacheClient<CommandRecord>(x => x.ToLowerInvariant(), TimeSpan.FromMinutes(15));
 
-        services.AddTransient<UserDatalakeStore>(service =>
+        services.AddTransient<UserFileStore>(service =>
         {
-            var datalakeOption = new DatalakeOption
-            {
-                Account = webOption.UserStore.Account,
-                Container = webOption.UserStore.Container,
-                BasePath = webOption.UserStore.BasePath,
-                Credentials = webOption.Credentials
-            };
-
-            return ActivatorUtilities.CreateInstance<UserDatalakeStore>(service, datalakeOption);
+            var datalakeOption = webOption.ConvertTo(() => webOption.UserStore);
+            return ActivatorUtilities.CreateInstance<UserFileStore>(service, datalakeOption);
         });
 
-        services.AddTransient<ScheduleDatalakeStore>(service =>
+        services.AddTransient<ScheduleFileStore>(service =>
         {
-            var datalakeOption = new DatalakeOption
-            {
-                Account = webOption.ScheduleStore.Account,
-                Container = webOption.ScheduleStore.Container,
-                BasePath = webOption.ScheduleStore.BasePath,
-                Credentials = webOption.Credentials
-            };
+            var datalakeOption = webOption.ConvertTo(() => webOption.ScheduleStore);
+            return ActivatorUtilities.CreateInstance<ScheduleFileStore>(service, datalakeOption);
+        });
 
-            return ActivatorUtilities.CreateInstance<ScheduleDatalakeStore>(service, datalakeOption);
+        services.AddTransient<SharedFileStore>(service =>
+        {
+            var datalakeOption = webOption.ConvertTo(() => webOption.ScheduleStore);
+            return ActivatorUtilities.CreateInstance<SharedFileStore>(service, datalakeOption);
         });
 
         return services;

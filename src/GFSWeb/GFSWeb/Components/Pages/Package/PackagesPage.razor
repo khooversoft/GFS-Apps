@@ -9,13 +9,7 @@ else
     <MudStack Spacing="2">
         <ReturnUrlButton ReturnUrl=@returnUrl />
         <BlockHeader Title="Packages" />
-
-        <BlockToolBar OnAdd=OnAdd
-                      OnEdit=OnEdit
-                      OnDelete=OnDelete
-                      OnSearch=OnSearch
-                      DisableEdit="@_editDisabled"
-                      DisableDelete="@_deleteDisabled" />
+        <BlockToolbar2 Items="@_toolbarItems" />
 
         <MudDataGrid T="ReportPackageRow"
                      Items="@_list"
@@ -60,21 +54,39 @@ else
     private string? _searchString;
     private bool _deleteAsk = false;
     private IReadOnlyList<string> _deleteDescriptions = Array.Empty<string>();
+    private IToolbarElement[] _toolbarItems = [];
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+    protected override async Task OnParametersSetAsync()
     {
-        if (firstRender)
-        {
-            await Load();
-            StateHasChanged();
-        }
+        await Load();
+        SetupToolbar();
     }
+
+    // protected override async Task OnAfterRenderAsync(bool firstRender)
+    // {
+    //     if (firstRender)
+    //     {
+    //         await Load();
+    //         StateHasChanged();
+    //     }
+    // }
 
     private async Task Load()
     {
         _list = await _store.Package.GetAll();
         _searchDisabled = _list.Count == 0;
         _initialized = true;
+    }
+
+    private void SetupToolbar()
+    {
+        _toolbarItems = [
+            ToolbarButtonTool.Add.Create(this, OnAdd),
+            ToolbarButtonTool.Edit.Create(this, OnEdit, disabled: _editDisabled),
+            ToolbarButtonTool.Delete.Create(this, OnDelete, disabled: _deleteDisabled),
+            new ToolbarSpacer(),
+            ToolbarSearchTool.Create(this, OnSearch)
+        ];
     }
 
     private async Task SelectedItemsChanged(HashSet<ReportPackageRow> items)

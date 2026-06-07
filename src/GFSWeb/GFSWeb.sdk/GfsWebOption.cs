@@ -11,12 +11,14 @@ public record GfsWebOption
     public ClientSecretOption Credentials { get; init; } = null!;
     public StoreOption UserStore { get; init; } = null!;
     public StoreOption ScheduleStore { get; init; } = null!;
+    public StoreOption GeneralStore { get; init; } = null!;
 
     public static IValidator<GfsWebOption> Validator { get; } = new Validator<GfsWebOption>()
         .RuleFor(x => x.AdminConnectionString).NotEmpty()
         .RuleFor(x => x.VaultUri).NotEmpty()
         .RuleFor(x => x.UserStore).Validate(StoreOption.Validator)
         .RuleFor(x => x.ScheduleStore).Validate(StoreOption.Validator)
+        .RuleFor(x => x.GeneralStore).Validate(StoreOption.Validator)
         .Build();
 }
 
@@ -37,4 +39,18 @@ public record StoreOption
 public static class GfsWebOptionExtensions
 {
     public static Option<IValidatorResult> Validate(this GfsWebOption option) => GfsWebOption.Validator.Validate(option);
+
+    public static DatalakeOption ConvertTo(this GfsWebOption option, Func<StoreOption> action)
+    {
+        option.NotNull();
+        action.NotNull();
+
+        return new DatalakeOption
+        {
+            Account = action().Account,
+            Container = action().Container,
+            BasePath = action().BasePath,
+            Credentials = option.Credentials
+        };
+    }
 }

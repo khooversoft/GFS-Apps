@@ -1,0 +1,28 @@
+﻿<MudPaper Elevation="0" Outlined="true" Style="padding:10px">
+    <MudStack Spacing="2" Row="true">
+        @foreach (var item in getItems())
+        {
+            if (item.index != 0)
+            {
+                <span style="display:flex;align-items:center;">
+                    <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Size="Size.Small" Color="Color.Surface" />
+                </span>
+            }
+
+            <MudButton Variant="Variant.Text"
+                       Color="Color.Surface"
+                       Size="Size.Small"
+                       OnClick="@EventCallback.Factory.Create(this, () => OnClick.InvokeAsync(item.value.Key))"
+                       Style="text-transform:none;min-width:0;">
+                @item.value.Value
+            </MudButton>
+        }
+    </MudStack>
+</MudPaper>
+
+@code {
+    [Parameter] public IReadOnlyList<KeyValue<string>> Items { get; set; } = [];
+    [Parameter] public EventCallback<string> OnClick { get; set; }
+
+    private IReadOnlyList<(KeyValue<string> value, int index)> getItems() => Items.WithIndex().ToArray();
+}

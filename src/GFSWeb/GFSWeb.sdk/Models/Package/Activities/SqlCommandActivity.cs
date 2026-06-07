@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using GFSWeb.sdk.SqlParser;
+﻿using GFSWeb.sdk.SqlParser;
 using Toolbox.Tools;
 using Toolbox.Types;
 
@@ -10,6 +7,7 @@ namespace GFSWeb.sdk.Models;
 public record SqlCommandActivity : IPackageActivity
 {
     public string Id { get; set; } = null!;
+    public string Type { get; } = "SQL Command";
     public string Description { get; set; } = null!;
     public string SqlCommand { get; set; } = null!;
     public string Hash { get; set; } = null!;

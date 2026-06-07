@@ -33,6 +33,15 @@ h1:focus {
     text-decoration: underline
 }
 
+.mud-button-root {
+    text-transform: none !important;
+}
+
+.mud-tab {
+    text-transform: none !important;
+}
+
+
 .form-content {
     margin-top: 10px;
 }

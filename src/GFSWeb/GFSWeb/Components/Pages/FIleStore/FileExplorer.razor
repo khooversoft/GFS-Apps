@@ -1,0 +1,91 @@
+﻿<MudStack Spacing="2">
+    @if (!_initialized)
+    {
+        <MudProgressLinear Color="Color.Primary" Indeterminate="true" Rounded="true" Size="Size.Medium" Value="100" Style="margin:20px" />
+    }
+    else
+    {
+        <div style="margin-top:10px">
+            <MudDataGrid T="StorePathDetail"
+                         Items="@_elements"
+                         ReadOnly="true"
+                         Dense="true"
+                         EditMode="@DataGridEditMode.Cell"
+                         SelectedItemsChanged="@OnSelectedItemsChanged"
+                         MultiSelection="true"
+                         Bordered="true"
+                         QuickFilter="QuickFilter"
+                         Filterable="true">
+                <Columns>
+                    <SelectColumn T="StorePathDetail" />
+                    <TemplateColumn Title="File Name">
+                        <CellTemplate>
+                            <MudLink Color="Color.Info"
+                                     OnClick="@(() => ViewItem(context.Item))"
+                                     Style="cursor: pointer;">@context.Item.Path</MudLink>
+                        </CellTemplate>
+                    </TemplateColumn>
+                    <PropertyColumn Property="x => x.LastModified" Title="Last Modified" CellStyle="width: 1%; white-space: nowrap;" HeaderStyle="width: 1%; white-space: nowrap;" />
+                    <PropertyColumn Property="x => x.SizeK" Title="Size" CellStyle="width: 1%; white-space: nowrap;" HeaderStyle="width: 1%; white-space: nowrap;" />
+                </Columns>
+            </MudDataGrid>
+
+        </div>
+    }
+</MudStack>
+
+@code {
+    @inject SharedFileStore _sharedFileStore;
+    @inject ISnackbar _snackbar;
+    @inject IJSRuntime JSRuntime;
+
+    [Parameter] public string Path { get; set; } = null!;
+    [Parameter] public string? Search { get; set; }
+    [Parameter] public EventCallback<HashSet<StorePathDetail>> OnSelectedItemsChanged { get; set; }
+
+    private bool _initialized = false;
+    private string? _savePath;
+    private IReadOnlyList<StorePathDetail> _elements = [];
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (_savePath != Path)
+        {
+            _savePath = Path;
+            await Load();
+        }
+    }
+
+    private async Task Load()
+    {
+        string path = Path + "/**";
+        _elements = await _sharedFileStore.Search(path);
+        _initialized = true;
+        StateHasChanged();
+    }
+
+    private bool QuickFilter(StorePathDetail item)
+    {
+        if (Search is null) return true;
+        return item.Path.Contains(Search, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private async Task ViewItem(StorePathDetail item)
+    {
+        item.NotNull().Path.NotEmpty();
+
+        var fileResult = await _sharedFileStore.Get(item.Path);
+
+        if (fileResult.IsError())
+        {
+            _snackbar.Add($"Can not find {item.Path}", Severity.Error);
+            return;
+        }
+
+        byte[] fileData = fileResult.Return().Data.ToArray();
+        var fileStream = new MemoryStream(fileData);
+        using var streamRef = new DotNetStreamReference(stream: fileStream);
+
+        await JSRuntime.InvokeVoidAsync("downloadFileFromStream", item.Path, streamRef);
+    }
+}

@@ -46,8 +46,8 @@
         _toolbarItems = [
             .. text,
             .. ToolbarElements,
-            ToolbarButtonTool.Expand(this, () => InternalOnExpand(true), show: !_expanded),
-            ToolbarButtonTool.Collapse(this, () => InternalOnExpand(false), show: _expanded)
+            ToolbarButtonTool.Expand.Create(this, () => InternalOnExpand(true), show: !_expanded),
+            ToolbarButtonTool.Collapse.Create(this, () => InternalOnExpand(false), show: _expanded)
         ];
     }
 

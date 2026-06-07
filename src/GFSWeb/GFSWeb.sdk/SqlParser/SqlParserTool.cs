@@ -25,7 +25,11 @@ public static class SqlParserTool
         return commandRecord;
     }
 
-    public static string GetSqlCommandHash(string sql) => FormatLine(sql).FormattedSql.ToLowerInvariant().ToHashHex(true);
+    public static string GetSqlCommandHash(string sql) => FormatLine(sql).FormattedSql.ToLowerInvariant().ToNullIfEmpty() switch
+    {
+        string v => v.ToHashHex(true),
+        _ => string.Empty,
+    };
 
     public static (string FormattedSql, IList<SqlParseError> Errors) FormatLine(string sql)
     {
