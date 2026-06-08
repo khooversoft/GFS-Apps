@@ -1,4 +1,5 @@
 ﻿@page "/packages"
+@using GFSWeb.Components.Controls.Toolbar
 
 @if (!_initialized)
 {
@@ -9,7 +10,14 @@ else
     <MudStack Spacing="2">
         <ReturnUrlButton ReturnUrl=@returnUrl />
         <BlockHeader Title="Packages" />
-        <BlockToolbar2 Items="@_toolbarItems" />
+
+        <Toolbar>
+            <ToolbarButton Variant="ToolbarVariant.Add" OnClick="OnAdd" />
+            <ToolbarButton Variant="ToolbarVariant.Edit" OnClick="OnEdit" Disabled="@_editDisabled" />
+            <ToolbarButton Variant="ToolbarVariant.Delete" OnClick="OnDelete" Disabled="@_deleteDisabled" />
+            <ToolbarSpacer />
+            <ToolbarSearch OnClick="OnSearch" Disabled="@_searchDisabled" />
+        </Toolbar>
 
         <MudDataGrid T="ReportPackageRow"
                      Items="@_list"
@@ -54,12 +62,10 @@ else
     private string? _searchString;
     private bool _deleteAsk = false;
     private IReadOnlyList<string> _deleteDescriptions = Array.Empty<string>();
-    private IToolbarElement[] _toolbarItems = [];
 
     protected override async Task OnParametersSetAsync()
     {
         await Load();
-        SetupToolbar();
     }
 
     // protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -76,17 +82,6 @@ else
         _list = await _store.Package.GetAll();
         _searchDisabled = _list.Count == 0;
         _initialized = true;
-    }
-
-    private void SetupToolbar()
-    {
-        _toolbarItems = [
-            ToolbarButtonTool.Add.Create(this, OnAdd),
-            ToolbarButtonTool.Edit.Create(this, OnEdit, disabled: _editDisabled),
-            ToolbarButtonTool.Delete.Create(this, OnDelete, disabled: _deleteDisabled),
-            new ToolbarSpacer(),
-            ToolbarSearchTool.Create(this, OnSearch)
-        ];
     }
 
     private async Task SelectedItemsChanged(HashSet<ReportPackageRow> items)

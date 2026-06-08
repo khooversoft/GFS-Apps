@@ -1,5 +1,12 @@
-﻿<MudStack Spacing="2">
-    <BlockToolbar2 Items="@_toolbarItems" />
+﻿@using GFSWeb.Components.Controls.Toolbar
+<MudStack Spacing="2">
+    @* <BlockToolbar2 Items="@_toolbarItems" /> *@
+    <Toolbar>
+        <ToolbarSpacer />
+        <ToolbarButton Variant="@ToolbarVariant.Edit" OnClick="OnEdit" />
+        <ToolbarButton Variant="@ToolbarVariant.Linked" OnClick="OnLinked" Show="@(_linked != null)" />
+        <ToolbarButton Variant="@ToolbarVariant.Link" OnClick="OnLink" Show="@(_linked == null)" />
+    </Toolbar>
 
     <MudField Label="SQL Command" Variant="Variant.Outlined" Style="padding:10px;">
         <MudText Style="flex:1; font-family:'Consolas','Courier New',monospace; white-space:pre-wrap; word-break:break-all;">
@@ -26,7 +33,7 @@
     [Parameter] public EventCallback OnUpdate { get; set; }
     [Parameter] public EventCallback<string> OnMove { get; set; }
     [Parameter] public bool ExpandState { get; set; }
-    [Parameter] public PossibleMove PossibleMove { get; set; }
+    // [Parameter] public PossibleMove PossibleMove { get; set; }
     [Parameter] public string? MoveValue { get; set; }
 
     private bool _editorOpen = false;
@@ -34,7 +41,7 @@
     private bool _linkToOpen = false;
     private bool _expanded = true;
     private CommandRecord? _linked;
-    private IToolbarElement[] _toolbarItems = [];
+    // private IToolbarElement[] _toolbarItems = [];
 
     protected override async Task OnParametersSetAsync()
     {
@@ -44,12 +51,12 @@
 
     private void SetupToolbar()
     {
-        _toolbarItems = [
-            new ToolbarSpacer(),
-            ToolbarButtonTool.Edit.Create(this, OnEdit),
-            ToolbarButtonTool.Linked.Create(this, OnLinked, show: _linked != null),
-            ToolbarButtonTool.Link.Create(this, OnLink, show: _linked == null),
-        ];
+        // _toolbarItems = [
+        //     new ToolbarSpacer(),
+        //     ToolbarButtonTool.Edit.Create(this, OnEdit),
+        //     ToolbarButtonTool.Linked.Create(this, OnLinked, show: _linked != null),
+        //     ToolbarButtonTool.Link.Create(this, OnLink, show: _linked == null),
+        // ];
     }
 
     private async Task LoadLink()

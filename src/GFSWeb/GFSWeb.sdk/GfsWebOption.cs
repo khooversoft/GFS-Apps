@@ -16,6 +16,7 @@ public record GfsWebOption
     public static IValidator<GfsWebOption> Validator { get; } = new Validator<GfsWebOption>()
         .RuleFor(x => x.AdminConnectionString).NotEmpty()
         .RuleFor(x => x.VaultUri).NotEmpty()
+        .RuleFor(x => x.Credentials).Validate(ClientSecretOption.Validator)
         .RuleFor(x => x.UserStore).Validate(StoreOption.Validator)
         .RuleFor(x => x.ScheduleStore).Validate(StoreOption.Validator)
         .RuleFor(x => x.GeneralStore).Validate(StoreOption.Validator)

@@ -1,11 +1,21 @@
 ﻿@page "/files/{storeType}/"
 @page "/files/{storeType}/{*path}"
+@using GFSWeb.Components.Controls.Toolbar
 
 <MudStack Spacing="2">
     <ReturnUrlButton ReturnUrl=@returnUrl />
     <BlockHeader Title="@_title" />
 
-    <BlockToolbar2 Items="@_toolbarItems" />
+    <Toolbar>
+        <ToolbarButton Variant="ToolbarVariant.Delete" OnClick="@OnDelete" Disabled="@(_selectedItems.Count == 0)" />
+        <ToolbarButton Variant="ToolbarVariant.Upload" OnClick="@OnUpload" />
+        <ToolbarButton Variant="ToolbarVariant.Download" OnClick="@OnDownload" />
+        <ToolbarButton Variant="ToolbarVariant.Refresh" OnClick="@Load" />
+        <ToolbarSpacer />
+        @* <ToolbarSearch OnClick="@OnSearch" /> *@
+    </Toolbar>
+
+    @* <BlockToolbar2 Items="@_toolbarItems" /> *@
 
     <PathNavigation Items="@_pathVectors" OnClick="OnPathChanged" />
 
@@ -35,7 +45,7 @@
     private int _selectedFileCount = 0;
     private bool _showDeleteQuestion;
     private IReadOnlyList<string> _descriptions = [];
-    private IToolbarElement[] _toolbarItems = [];
+    // private IToolbarElement[] _toolbarItems = [];
     private string? _searchString;
 
     private IReadOnlyList<StorePathDetail> _elements = [];
@@ -85,14 +95,14 @@
 
     private void SetupToolbar()
     {
-        _toolbarItems = [
-            ToolbarButtonTool.Delete.Create(this, OnDelete, _selectedItems.Count == 0),
-            ToolbarFileUploadTool.Create(this, OnUpload, text: "Upload"),
-            ToolbarButtonTool.Download.Create(this, OnDownload, _selectedItems.Count == 0),
-            ToolbarButtonTool.Refresh.Create(this, Load),
-            new ToolbarSpacer(),
-            ToolbarSearchTool.Create(this, OnSearch)
-        ];
+        // _toolbarItems = [
+        //     ToolbarButtonTool.Delete.Create(this, OnDelete, _selectedItems.Count == 0),
+        //     ToolbarFileUploadTool.Create(this, OnUpload, text: "Upload"),
+        //     ToolbarButtonTool.Download.Create(this, OnDownload, _selectedItems.Count == 0),
+        //     ToolbarButtonTool.Refresh.Create(this, Load),
+        //     new ToolbarSpacer(),
+        //     ToolbarSearchTool.Create(this, OnSearch)
+        // ];
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -107,7 +117,7 @@
         StateHasChanged();
     }
 
-    private async Task OnUpload(IReadOnlyList<IBrowserFile> files)
+    private async Task OnUpload()
     {
 
     }

@@ -1,5 +1,10 @@
-﻿<div style="margin-top:10px">
-    <BlockToolBar Title="@Title" OnAdd="OnAdd" />
+﻿@using GFSWeb.Components.Controls.Toolbar
+<div style="margin-top:10px">
+    <Toolbar>
+        <ToolbarText Text="@Title" />
+        <ToolbarSpacer />
+        <ToolbarButton Variant="@ToolbarVariant.Add" OnClick="@OnAdd" />
+    </Toolbar>
 
     <MudDataGrid T="MiscTablesRecord"
                  Items="@Elements"
@@ -51,7 +56,7 @@
     }
 
     private void OnAdd() { }
-    
+
     private void EditItem(MiscTablesRecord item)
     {
     }

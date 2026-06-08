@@ -1,0 +1,49 @@
+﻿@implements IDisposable
+
+@code {
+    [CascadingParameter] internal NavTabs? Parent { get; set; }
+    [Parameter] public string? Text { get; set; }
+    [Parameter] public string? Icon { get; set; }
+    [Parameter] public bool Disabled { get; set; }
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    private bool _previousDisabled;
+    private string? _previousText;
+    private string? _previousIcon;
+    private bool _initialized;
+
+    protected override void OnInitialized()
+    {
+        if (Parent is null)
+        {
+            throw new InvalidOperationException($"{nameof(NavTabPanel)} must be placed inside a {nameof(NavTabs)}.");
+        }
+
+        Parent.AddPanel(this);
+    }
+
+    protected override void OnParametersSet()
+    {
+        if (!_initialized)
+        {
+            _previousDisabled = Disabled;
+            _previousText = Text;
+            _previousIcon = Icon;
+            _initialized = true;
+            return;
+        }
+
+        var disabledChanged = _previousDisabled != Disabled;
+        var textChanged = _previousText != Text;
+        var iconChanged = _previousIcon != Icon;
+
+        if (!disabledChanged && !textChanged && !iconChanged) return;
+
+        _previousDisabled = Disabled;
+        _previousText = Text;
+        _previousIcon = Icon;
+        _ = Parent?.RefreshPanel(this, forceRender: textChanged || iconChanged);
+    }
+
+    public void Dispose() => Parent?.RemovePanel(this);
+}

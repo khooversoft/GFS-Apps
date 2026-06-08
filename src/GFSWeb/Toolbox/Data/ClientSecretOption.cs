@@ -10,14 +10,13 @@ public record ClientSecretOption
 {
     public string TenantId { get; init; } = null!;
     public string ClientId { get; init; } = null!;
-    public string ClientSecret { get; init; } = null!;
+    public string? ClientSecret { get; init; }
 
-    public override string ToString() => $"TenantId={TenantId}, ClientId={ClientId}, ClientSecret={ClientSecret.GetSecretThumbprint()}";
+    public override string ToString() => $"TenantId={TenantId}, ClientId={ClientId}, ClientSecret={ClientSecret?.GetSecretThumbprint() ?? "<none>"}";
 
     public static IValidator<ClientSecretOption> Validator { get; } = new Validator<ClientSecretOption>()
         .RuleFor(x => x.TenantId).NotEmpty()
         .RuleFor(x => x.ClientId).NotEmpty()
-        .RuleFor(x => x.ClientSecret).NotEmpty()
         .Build();
 }
 

@@ -1,4 +1,5 @@
-﻿<MudDrawer Open="@Open" OpenChanged=@OnClose Anchor="Anchor.End" Elevation="1" Variant="@DrawerVariant.Temporary" OverlayAutoClose=true Width="70%">
+﻿@using GFSWeb.Components.Controls.Toolbar
+<MudDrawer Open="@Open" OpenChanged=@OnClose Anchor="Anchor.End" Elevation="1" Variant="@DrawerVariant.Temporary" OverlayAutoClose=true Width="70%">
     <MudDrawerHeader>
         <MudStack Spacing="2">
             <MudText Typo="Typo.h6">Link to Common Command</MudText>
@@ -14,7 +15,13 @@
             else
             {
                 <MudStack Spacing="2">
-                    <BlockToolbar2 Items="@_toolbarItems" Dense="false" />
+                    @* <BlockToolbar2 Items="@_toolbarItems" Dense="false" /> *@
+                    <Toolbar>
+                        <ToolbarButton Variant="@ToolbarVariant.Save" OnSave Disabled="@(_selectedActivity == null)" />
+                        <ToolbarButton Variant="@ToolbarVariant.Close" OnClick="OnClose" />
+                        <ToolbarSpacer />
+                        <ToolbarSearch OnClick="OnSearch" />
+                    </Toolbar>
 
                     <MudDataGrid T="ActivityInfoRecord"
                                  Items="@_activities"
@@ -64,7 +71,7 @@
     private string? _searchString;
     private IReadOnlyList<ActivityInfoRecord> _activities = [];
     private ActivityInfoRecord? _selectedActivity;
-    private IToolbarElement[] _toolbarItems = [];
+    // private IToolbarElement[] _toolbarItems = [];
 
     protected override async Task OnParametersSetAsync()
     {
@@ -76,12 +83,12 @@
 
     private void SetupToolbar()
     {
-        _toolbarItems = [
-            ToolbarButtonTool.Save.Create(this, OnSave, disabled: _selectedActivity == null),
-            ToolbarButtonTool.Close.Create(OnClose),
-            new ToolbarSpacer(),
-            ToolbarSearchTool.Create(this, OnSearch)
-        ];
+        // _toolbarItems = [
+        //     ToolbarButtonTool.Save.Create(this, OnSave, disabled: _selectedActivity == null),
+        //     ToolbarButtonTool.Close.Create(OnClose),
+        //     new ToolbarSpacer(),
+        //     ToolbarSearchTool.Create(this, OnSearch)
+        // ];
     }
 
     private async Task OnSave()

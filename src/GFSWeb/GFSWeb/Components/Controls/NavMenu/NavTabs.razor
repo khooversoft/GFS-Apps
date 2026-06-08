@@ -1,0 +1,102 @@
+﻿
+<CascadingValue Value="this">
+    @ChildContent
+</CascadingValue>
+
+<MudStack Spacing="2" Row="true" Style="@GetContainerStyle()">
+    <MudPaper Elevation="2" Style="@GetStyle()">
+        <MudStack Spacing="2">
+            <MudIconButton Icon="@(_navMenuCollapsed ? Icons.Material.Outlined.ChevronRight : Icons.Material.Outlined.ChevronLeft)"
+                           Color="Color.Default"
+                           Size="Size.Small"
+                           Style="align-self:flex-end"
+                           OnClick="() => _navMenuCollapsed = !_navMenuCollapsed" />
+
+            <MudNavMenu Dense="true">
+                @foreach (var item in _items)
+                {
+                    <div @key="item">
+                    <MudTooltip Text="@item.Text" Placement="Placement.Right" Disabled="@(!_navMenuCollapsed)">
+                        <MudNavLink Icon="@item.Icon"
+                                    OnClick="@(() => SelectPanel(item))"
+                                    Match="NavLinkMatch.Prefix"
+                                    Style="@GetNavLinkStyle(item)">@(_navMenuCollapsed ? string.Empty : @item.Text)</MudNavLink>
+                    </MudTooltip>
+                    </div>
+                }
+            </MudNavMenu>
+        </MudStack>
+    </MudPaper>
+
+    <MudPaper Elevation="2" Style="@GetContentStyle()">
+        <div style="margin-bottom: 5px; padding:10px; width:100%; box-sizing:border-box">
+            @_activePanel?.ChildContent
+        </div>
+    </MudPaper>
+
+</MudStack>
+
+@code {
+    [Parameter] public RenderFragment ChildContent { get; set; } = null!;
+    [Parameter] public bool Expand { get; set; } = false;
+    [Parameter] public string MaxWidth { get; set; } = "150px";
+
+    private readonly List<NavTabPanel> _items = new();
+    private bool _navMenuCollapsed = false;
+    private string GetContainerStyle() => Expand ? "align-items:stretch;width:100%" : string.Empty;
+    private string GetContentStyle() => Expand ? "flex:1 1 auto; min-width:0; align-self:stretch" : "flex:1 1 auto; min-width:0";
+    private string GetStyle() => _navMenuCollapsed ? Fixup("55px") : Fixup(MaxWidth);
+    private string Fixup(string value) => $"flex:0 0 {value};width:{value};max-width:{value};min-width:{value};box-sizing:border-box;overflow:hidden";
+    private string GetNavLinkStyle(NavTabPanel panel) => ReferenceEquals(_activePanel, panel)
+        ? "border-radius:4px;background-color:var(--mud-palette-action-default-hover);color:var(--mud-palette-primary)"
+        : string.Empty;
+    private NavTabPanel? _activePanel;
+
+    private NavTabPanel? GetFirstEnabledPanel() => _items.FirstOrDefault(x => !x.Disabled);
+
+    internal void AddPanel(NavTabPanel panel)
+    {
+        if (panel is null || _items.Contains(panel)) return;
+
+        _items.Add(panel);
+
+        if (_activePanel is null && !panel.Disabled)
+        {
+            _activePanel = panel;
+        }
+    }
+
+    internal async Task RemovePanel(NavTabPanel panel)
+    {
+        if (!_items.Remove(panel)) return;
+        if (_activePanel == panel) _activePanel = GetFirstEnabledPanel();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    internal async Task RefreshPanel(NavTabPanel panel, bool forceRender = false)
+    {
+        if (panel is null || !_items.Contains(panel)) return;
+
+        var previousActivePanel = _activePanel;
+
+        if (panel.Disabled && _activePanel == panel)
+        {
+            _activePanel = GetFirstEnabledPanel();
+        }
+        else if (_activePanel is null && !panel.Disabled)
+        {
+            _activePanel = panel;
+        }
+
+        if (forceRender || !ReferenceEquals(previousActivePanel, _activePanel))
+        {
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private void SelectPanel(NavTabPanel panel)
+    {
+        if (panel is null || panel.Disabled) return;
+        _activePanel = panel;
+    }
+}

@@ -1,5 +1,9 @@
-﻿<MudStack Spacing="2">
-    <BlockToolbar2 Items="@_toolbarItems" />
+﻿@using GFSWeb.Components.Controls.Toolbar
+<MudStack Spacing="2">
+    @* <BlockToolbar2 Items="@_toolbarItems" /> *@
+    <Toolbar>
+        <ToolbarButton Variant="@ToolbarVariant.Add" OnClick="OnAdd" />
+    </Toolbar>
 
     <MudDataGrid T="IPackageActivity"
                  Items="@EditContext.Activities"
@@ -23,45 +27,17 @@
             @switch (context.Item)
             {
                 case SapQueryActivity sapQuery:
-                    <SapQueryBlock Activity="@sapQuery"
-                                   OnUpdate="OnUpdate"
-                                   ExpandState="@_expanded" />
+                    <SapQueryBlock Activity="@sapQuery" OnUpdate="OnUpdate" ExpandState="@_expanded" />
                     break;
 
                 case SqlCommandActivity sqlCommand:
-                    <SqlCommandBlock Activity="@sqlCommand"
-                                     OnUpdate="OnUpdate" />
+                    <SqlCommandBlock Activity="@sqlCommand" OnUpdate="OnUpdate" />
                     break;
             }
         </ChildRowContent>
     </MudDataGrid>
 
 
-    @*     @foreach (var activity in EditContext.Activities)
-    {
-        var currentMove = _moveDict.GetOrAdd(activity.Id, x => new CurrentMove(x));
-
-        switch (activity)
-        {
-            case SapQueryActivity sapQuery:
-                <SapQueryBlock Activity="@sapQuery"
-                OnUpdate="OnUpdate"
-                ExpandState="@_expanded"
-                OnMove="@(x => Move(x, sapQuery.Id))"
-                PossibleMove="@(CanMove(sapQuery.Id))"
-                MoveValue="@currentMove.MoveValue" />
-                break;
-
-            case SqlCommandActivity sqlCommand:
-                <SqlCommandBlock Activity="@sqlCommand"
-                OnUpdate="OnUpdate"
-                ExpandState="@_expanded"
-                OnMove="@(x => Move(x, sqlCommand.Id))"
-                PossibleMove="@(CanMove(sqlCommand.Id))"
-                MoveValue="@currentMove.MoveValue" />
-                break;
-        }
-    } *@
 </MudStack>
 
 <AddActivityDrawer Open="@_addOpen" OnSelect="@OnSelect" OnClose="@(() => _addOpen = false)" />
@@ -74,7 +50,7 @@
 
     private record CurrentMove(String Id, string? MoveValue = null);
     private ConcurrentDictionary<string, CurrentMove> _moveDict = new(StringComparer.OrdinalIgnoreCase);
-    private IToolbarElement[] _toolbarItems = [];
+    // private IToolbarElement[] _toolbarItems = [];
     private bool _expanded = false;
     private bool _addOpen = false;
     private string? _searchString;
@@ -100,12 +76,12 @@
 
     private void SetupToolbar()
     {
-        _toolbarItems = [
-            ToolbarButtonTool.Add.Create(this, OnAdd),
-            new ToolbarSpacer(),
-            ToolbarButtonTool.ExpandAll.Create(this, () => InternalOnExpand(true)),
-            ToolbarButtonTool.CollapseAll.Create(this, () => InternalOnExpand(false))
-        ];
+        // _toolbarItems = [
+        //     ToolbarButtonTool.Add.Create(this, OnAdd),
+        //     new ToolbarSpacer(),
+        //     ToolbarButtonTool.ExpandAll.Create(this, () => InternalOnExpand(true)),
+        //     ToolbarButtonTool.CollapseAll.Create(this, () => InternalOnExpand(false))
+        // ];
     }
 
 
@@ -117,36 +93,36 @@
 
         _moveDict.AddOrUpdate(id, x => new CurrentMove(id, cmd), (x, v) => v with { MoveValue = cmd });
 
-        switch (cmd)
-        {
-            case ToolbarDropdownMove.Top:
-                if (index == 0) return;
-                EditContext.SwapActivites(0, index);
-                break;
+        // switch (cmd)
+        // {
+        //     case ToolbarDropdownMove.Top:
+        //         if (index == 0) return;
+        //         EditContext.SwapActivites(0, index);
+        //         break;
 
-            case ToolbarDropdownMove.Bottom:
-                if (index == EditContext.Activities.Count - 1) return;
-                EditContext.SwapActivites(EditContext.Activities.Count - 1, index);
-                break;
+        //     case ToolbarDropdownMove.Bottom:
+        //         if (index == EditContext.Activities.Count - 1) return;
+        //         EditContext.SwapActivites(EditContext.Activities.Count - 1, index);
+        //         break;
 
-            case ToolbarDropdownMove.Up:
-                if (index == 0) return;
-                EditContext.SwapActivites(index, index - 1);
-                break;
+        //     case ToolbarDropdownMove.Up:
+        //         if (index == 0) return;
+        //         EditContext.SwapActivites(index, index - 1);
+        //         break;
 
-            case ToolbarDropdownMove.Down:
-                if (index == EditContext.Activities.Count - 1) return;
-                EditContext.SwapActivites(index, index + 1);
-                break;
-        }
-    ;
+        //     case ToolbarDropdownMove.Down:
+        //         if (index == EditContext.Activities.Count - 1) return;
+        //         EditContext.SwapActivites(index, index + 1);
+        //         break;
+        // }
+        ;
     }
 
-    private PossibleMove CanMove(string id)
-    {
-        var index = EditContext.Activities.FindIndex(a => a.Id == id);
-        return ToolbarDropdownMove.CanMove(index, EditContext.Activities.Count);
-    }
+    // private PossibleMove CanMove(string id)
+    // {
+    //     var index = EditContext.Activities.FindIndex(a => a.Id == id);
+    //     return ToolbarDropdownMove.CanMove(index, EditContext.Activities.Count);
+    // }
 
     private async Task OnSelect(IReadOnlyList<ActivityInfoRecord>
     activities)

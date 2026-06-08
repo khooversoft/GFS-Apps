@@ -1,4 +1,5 @@
 ﻿@page "/package/{packageId}"
+@using GFSWeb.Components.Controls.Toolbar
 
 <MudStack Spacing="2">
     <ReturnUrlButton ReturnUrl=@returnUrl />
@@ -10,80 +11,46 @@
     else
     {
         <BlockHeader Title="Package" SubTitle="@_currentRecord.NotNull().Description" />
-        <BlockToolBar OnSave="@OnSave" OnCancel="@OnCancel" />
 
-        <NavMenu2 Items="@_navMenuItems">
-            <CascadingValue Value="_editPackageContext">
-                <MudTabs @ref="_tabs">
-                    <MudTabPanel Text="Parameters">
-                        <MudGrid Spacing="2" Style="margin:0; width:100%; box-sizing:border-box; padding:10px 12px 8px 8px;">
-                            <MudItem xs="6" Class="pr-2">
-                                <MudTextField T="string"
-                                              Label="Description"
-                                              Variant="Variant.Outlined"
-                                              Required="true"
-                                              Immediate="true"
-                                              @bind-Value="@_description"
-                                              @bind-Value:after="OnEditorChanged" />
+        <Toolbar Elevation="2">
+            <ToolbarButton Variant="ToolbarVariant.Save" OnClick="@OnSave" />
+            <ToolbarButton Variant="ToolbarVariant.Cancel" OnClick="@OnCancel" />
+        </Toolbar>
 
-                                <MudCheckBox @bind-Value="@_disabled">Disabled</MudCheckBox>
-                            </MudItem>
-                        </MudGrid>
-                    </MudTabPanel>
-                    <MudTabPanel Text="Parameters">
-                        @foreach (var item in _sections)
-                        {
-                            <EditProperties Title="@item.Title" Elements="GetSection(item.SectionId)" DisableTableId="item.DisableTableId" OnUpdate="OnUpdate" />
-                        }
-                    </MudTabPanel>
-                    <MudTabPanel Text="Pipeline">
-                        <PipelineActivites />
-                    </MudTabPanel>
-                    <MudTabPanel Text="Access">
-                        <PackageAccess PackageId="@PackageId" />
-                    </MudTabPanel>
-                </MudTabs>
-            </CascadingValue>
-        </NavMenu2>
+        <CascadingValue Value="_editPackageContext">
 
-        <MudGrid Spacing="2" Style="margin:0; width:100%;">
-            <MudItem xs="12" md="@(_navMenuCollapsed ? 11 : 9)" lg="@(_navMenuCollapsed ? 11 : 10)">
-                <CascadingValue Value="_editPackageContext">
-                    <MudPaper Elevation="0" Outlined="true" Square="true" Style="padding:10px">
-                        <MudTabs @ref="_tabs" Position="@Position.Top">
-                            <MudTabPanel Text="Properties">
-                                <MudGrid Spacing="2" Style="margin:0; width:100%; box-sizing:border-box; padding:10px 12px 8px 8px;">
-                                    <MudItem xs="6" Class="pr-2">
-                                        <MudTextField T="string"
-                                                      Label="Description"
-                                                      Variant="Variant.Outlined"
-                                                      Required="true"
-                                                      Immediate="true"
-                                                      @bind-Value="@_description"
-                                                      @bind-Value:after="OnEditorChanged" />
+            <NavTabs>
+                <NavTabPanel Text="Properties" Icon="@Icons.Material.Outlined.GridOn">
+                    <MudGrid Spacing="2" Style="margin:0; width:100%; box-sizing:border-box; padding:10px 12px 8px 8px;">
+                        <MudItem xs="6" Class="pr-2">
+                            <MudTextField T="string"
+                                          Label="Description"
+                                          Variant="Variant.Outlined"
+                                          Required="true"
+                                          Immediate="true"
+                                          @bind-Value="@_description"
+                                          @bind-Value:after="OnEditorChanged" />
+                            <MudCheckBox @bind-Value="@_disabled">Disabled</MudCheckBox>
+                        </MudItem>
+                    </MudGrid>
 
-                                        <MudCheckBox @bind-Value="@_disabled">Disabled</MudCheckBox>
-                                    </MudItem>
-                                </MudGrid>
-                            </MudTabPanel>
-                            <MudTabPanel Text="Parameters">
-                                @foreach (var item in _sections)
-                                {
-                                    <EditProperties Title="@item.Title" Elements="GetSection(item.SectionId)" DisableTableId="item.DisableTableId" OnUpdate="OnUpdate" />
-                                }
-                            </MudTabPanel>
-                            <MudTabPanel Text="Pipeline">
-                                <PipelineActivites />
-                            </MudTabPanel>
-                            <MudTabPanel Text="Access">
-                                <PackageAccess PackageId="@PackageId" />
-                            </MudTabPanel>
-                        </MudTabs>
-                    </MudPaper>
-                </CascadingValue>
-            </MudItem>
-        </MudGrid>
+                    @foreach (var item in _sections)
+                    {
+                        <EditProperties Title="@item.Title" Elements="GetSection(item.SectionId)" DisableTableId="item.DisableTableId" OnUpdate="OnUpdate" />
+                    }
+                </NavTabPanel>
 
+                <NavTabPanel Text="Pipeline" Icon="@Icons.Material.Outlined.FactCheck">
+                    <PipelineActivites />
+                </NavTabPanel>
+
+                <NavTabPanel Text="Access" Icon="@Icons.Material.Outlined.Shield">
+                    <PackageAccess PackageId="@PackageId" />
+                </NavTabPanel>
+
+            </NavTabs>
+
+        </CascadingValue>
     }
 </MudStack>
 
@@ -101,7 +68,6 @@
     private PipelinePackageRecord? _pipelinePackageRecord;
     private bool _disabled;
     private EditProperty[] _sections = [];
-    private NavMenuItem[] _navMenuItems = [];
 
     private record EditProperty(SectionId SectionId, string Title, bool DisableTableId);
     private string? _description;
@@ -114,12 +80,6 @@
             new EditProperty(SectionId.Pivot, SectionId.Pivot.GetTitle(), true),
             new EditProperty(SectionId.Je, SectionId.Je.GetTitle(), true),
             new EditProperty(SectionId.Data2Excel, SectionId.Data2Excel.GetTitle(), true),
-        ];
-
-        _navMenuItems = [
-            new NavMenuItem("Properties", this, OnProperty, Icons.Material.Outlined.GridOn),
-            new NavMenuItem("Pipeline", this, OnPipeline, Icons.Material.Outlined.FactCheck),
-            new NavMenuItem("Access", this, OnAccess, Icons.Material.Outlined.Shield),
         ];
     }
 
@@ -155,11 +115,9 @@
         }
     }
 
-    private List<MiscTablesRecord>
-    GetSection(SectionId sectionId)
+    private List<MiscTablesRecord> GetSection(SectionId sectionId)
     {
-        if (_pipelinePackageRecord is null) return new List<MiscTablesRecord>
-        ();
+        if (_pipelinePackageRecord is null) return new List<MiscTablesRecord>();
         return _pipelinePackageRecord.GetSection(sectionId);
     }
 
@@ -179,6 +137,7 @@
     {
         _currentRecord = (await _store.Package.Get(PackageId)).BeOk().Return();
         _pipelinePackageRecord = _currentRecord.Unpack();
+        _description = _currentRecord.Description;
         _disabled = _currentRecord.Disabled;
 
         _editPackageContext = _pipelinePackageRecord.ConvertTo();
