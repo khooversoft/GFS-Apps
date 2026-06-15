@@ -24,5 +24,5 @@ public record StorePathDetail
     public LeaseDuration LeaseDuration { get; init; }
     public string? ContentHash { get; init; }
 
-    public string SizeK => $"{(int)(ContentLength / 1024)}K";
+    public string SizeK => $"{(int)(ContentLength / 1024)} KB";
 }

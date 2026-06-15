@@ -1,0 +1,91 @@
+﻿<MudDrawer Open="@Open" OpenChanged=@OnClose Anchor="Anchor.End" Elevation="1" Variant="@DrawerVariant.Temporary" OverlayAutoClose=true Width="50%">
+    <MudDrawerHeader>
+        <MudText Typo="Typo.h6">@GetTitle()</MudText>
+    </MudDrawerHeader>
+    <MudDrawerContainer>
+        <MudStack Spacing="2" Style="margin:10px">
+            <Toolbar>
+                <ToolbarButton Variant="ToolbarVariant.Upload" OnClick="@OnUpload" Disabled="@(_files.Count == 0)" />
+                <ToolbarButton Variant="ToolbarVariant.Clear" OnClick="@OnClear" Disabled="@(_files.Count == 0)" />
+                <ToolbarButton Variant="ToolbarVariant.Close" OnClick="@OnClose" />
+            </Toolbar>
+
+            <MudCard Elevation="2">
+                <MudCardHeader>
+                    <MudStack Row="true" Style="width:100%" AlignItems="AlignItems.Center">
+                        <MudText Typo="Typo.h6">Drag and Drop</MudText>
+                        <MudSpacer />
+
+                        <div style="width:200px">
+                            <MudFileUpload @bind-Files="@_files"
+                                           @bind-Files:after="StateHasChanged"
+                                           DragAndDrop="true"
+                                           AppendMultipleFiles="true">
+                                <CustomContent>
+                                    <MudButton Variant="Variant.Filled"
+                                               OnClick="@context.OpenFilePickerAsync"
+                                               Color="Color.Info">
+                                        Browse local computer
+                                    </MudButton>
+                                </CustomContent>
+                                <SelectedTemplate />
+                            </MudFileUpload>
+                        </div>
+                    </MudStack>
+                </MudCardHeader>
+                <MudCardContent>
+                    <MudFileUpload @bind-Files="@_files"
+                                   @bind-Files:after="StateHasChanged"
+                                   DragAndDrop="true"
+                                   AppendMultipleFiles="true">
+                        <SelectedTemplate />
+                    </MudFileUpload>
+                </MudCardContent>
+            </MudCard>
+
+            <MudDataGrid T="IBrowserFile"
+                         Items="@_files"
+                         ReadOnly="true"
+                         Dense="true"
+                         Bordered="true">
+                <Columns>
+                    <TemplateColumn CellStyle="width: 1%; white-space: nowrap;" HeaderStyle="width: 1%; white-space: nowrap;">
+                        <CellTemplate>
+                            <MudIconButton Color="Color.Error" Size="@Size.Small" Icon="@Icons.Material.Outlined.Delete" OnClick="@(() => DeleteItem(context.Item))" />
+                        </CellTemplate>
+                    </TemplateColumn>
+                    <PropertyColumn Property="x => x.Name" Title="Name" />
+                    <PropertyColumn Property="x => x.GetSizeK()" Title="Size" CellStyle="width: 1%; white-space: nowrap;" HeaderStyle="width: 1%; white-space: nowrap;" />
+                </Columns>
+            </MudDataGrid>
+
+        </MudStack>
+    </MudDrawerContainer>
+    <MudDivider />
+</MudDrawer>
+
+@code {
+    [Parameter] public bool Open { get; set; }
+    [Parameter] public string Description { get; set; } = null!;
+    [Parameter] public EventCallback OnClose { get; set; }
+    [Parameter] public EventCallback<IReadOnlyList<IBrowserFile>> OnUploaded { get; set; }
+
+    private IReadOnlyList<IBrowserFile> _files = [];
+    private string GetTitle() => Description is not null ? Description : "Upload File";
+
+    private async Task OnUpload()
+    {
+        await OnUploaded.InvokeAsync(_files);
+    }
+
+    private void OnClear()
+    {
+        _files = [];
+        StateHasChanged();
+    }
+
+    private void DeleteItem(IBrowserFile file)
+    {
+        _files = _files.Where(f => f != file).ToList();
+    }
+}

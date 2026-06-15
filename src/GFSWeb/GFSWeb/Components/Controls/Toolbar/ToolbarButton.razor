@@ -15,7 +15,7 @@
 }
 
 @code {
-    [Parameter] public ToolbarVariant? Variant { get; set; }
+    [Parameter] public ToolbarVariant Variant { get; set; }
     [Parameter] public string? Icon { get; set; } = null!;
     [Parameter] public Color Color { get; set; } = Color.Info;
     [Parameter] public EventCallback OnClick { get; set; }
@@ -49,11 +49,14 @@
         [ToolbarVariant.Search] = new(Icons.Material.Outlined.Search, Color.Info, null),
         [ToolbarVariant.Upload] = new(Icons.Material.Outlined.FileUpload, Color.Info, "Upload"),
         [ToolbarVariant.Download] = new(Icons.Material.Outlined.FileDownload, Color.Info, "Download"),
+        [ToolbarVariant.Clear] = new(Icons.Material.Outlined.Clear, Color.Info, "Clear"),
     };
 
     protected override void OnParametersSet()
     {
-        if (Variant is { } variant && VariantConfigs.TryGetValue(variant, out var config))
+        Variant.IsEnumValid().Assert(x => x == true, $"Invalid ToolbarVariant: {Variant}");
+
+        if (VariantConfigs.TryGetValue(Variant, out var config))
         {
             _icon = config.Icon;
             _color = config.Color;

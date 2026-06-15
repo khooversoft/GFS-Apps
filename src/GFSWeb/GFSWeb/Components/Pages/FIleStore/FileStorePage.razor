@@ -8,14 +8,12 @@
 
     <Toolbar>
         <ToolbarButton Variant="ToolbarVariant.Delete" OnClick="@OnDelete" Disabled="@(_selectedItems.Count == 0)" />
-        <ToolbarButton Variant="ToolbarVariant.Upload" OnClick="@OnUpload" />
+        <ToolbarButton Variant="ToolbarVariant.Upload" OnClick="@OnUploadOpen" />
         <ToolbarButton Variant="ToolbarVariant.Download" OnClick="@OnDownload" />
         <ToolbarButton Variant="ToolbarVariant.Refresh" OnClick="@Load" />
         <ToolbarSpacer />
-        @* <ToolbarSearch OnClick="@OnSearch" /> *@
+        <ToolbarSearch OnClick="@OnSearch" />
     </Toolbar>
-
-    @* <BlockToolbar2 Items="@_toolbarItems" /> *@
 
     <PathNavigation Items="@_pathVectors" OnClick="OnPathChanged" />
 
@@ -27,6 +25,8 @@
           Descriptions="@_descriptions"
           OnYes="@(() => DeleteItem())"
           OnNo="@(() => _showDeleteQuestion = false)" />
+
+<UploadFile Open="@_showUpload" Description="Upload file to current folder" OnClose="@OnUploadClose" OnUploaded="@OnUploadFiles" />
 
 
 @code {
@@ -44,8 +44,8 @@
     private string _title = string.Empty;
     private int _selectedFileCount = 0;
     private bool _showDeleteQuestion;
+    private bool _showUpload;
     private IReadOnlyList<string> _descriptions = [];
-    // private IToolbarElement[] _toolbarItems = [];
     private string? _searchString;
 
     private IReadOnlyList<StorePathDetail> _elements = [];
@@ -83,26 +83,12 @@
         _currentPath = _paths.Join('/');
         _pathVectors = _paths.Select(x => new KeyValue<string>(StorePathTool.GetFileName(x), x)).ToArray();
 
-        SetupToolbar();
-
         async Task<(string basePath, string title)> setUser()
         {
             var email = (await _authAccess.GetEmail()).NotEmpty("No email");
             var userName = (await _authAccess.GetUserName()).NotEmpty("No user name");
             return (email, "Personal files for " + userName);
         }
-    }
-
-    private void SetupToolbar()
-    {
-        // _toolbarItems = [
-        //     ToolbarButtonTool.Delete.Create(this, OnDelete, _selectedItems.Count == 0),
-        //     ToolbarFileUploadTool.Create(this, OnUpload, text: "Upload"),
-        //     ToolbarButtonTool.Download.Create(this, OnDownload, _selectedItems.Count == 0),
-        //     ToolbarButtonTool.Refresh.Create(this, Load),
-        //     new ToolbarSpacer(),
-        //     ToolbarSearchTool.Create(this, OnSearch)
-        // ];
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -117,13 +103,20 @@
         StateHasChanged();
     }
 
-    private async Task OnUpload()
-    {
+    private void OnUploadOpen() => _showUpload = true;
+    private void OnUploadClose() => _showUpload = false;
 
+    private async Task OnUploadFiles(IReadOnlyList<IBrowserFile> browerFiles)
+    {
     }
 
-    private async Task OnDownload()
+    private void OnDownload()
     {
+        // if (_selectedItems.Count == 0) return;
+        // foreach (var item in _selectedItems)
+        // {
+        //     ViewItem(item);
+        // }
     }
 
     private void OnSearch(string? searchString)
@@ -137,7 +130,6 @@
     private async Task OnSelectedItemsChanged(HashSet<StorePathDetail> items)
     {
         _selectedItems = items;
-        SetupToolbar();
     }
 
     private async Task OnDelete()

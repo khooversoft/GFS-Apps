@@ -2,6 +2,7 @@
 
 public enum ToolbarVariant
 {
+    None,
     ArrowBack,
     Add,
     Edit,
@@ -22,4 +23,5 @@ public enum ToolbarVariant
     Search,
     Upload,
     Download,
+    Clear
 }
