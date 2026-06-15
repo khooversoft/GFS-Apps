@@ -5,8 +5,8 @@
     <MudDrawerContainer>
         <MudStack Spacing="2" Style="margin:10px">
             <Toolbar>
-                <ToolbarButton Variant="ToolbarVariant.Upload" OnClick="@OnUpload" Disabled="@(_files.Count == 0)" />
-                <ToolbarButton Variant="ToolbarVariant.Clear" OnClick="@OnClear" Disabled="@(_files.Count == 0)" />
+                <ToolbarButton Variant="ToolbarVariant.Upload" OnClick="@OnUpload" Disabled="@GetUploadDisable()" />
+                <ToolbarButton Variant="ToolbarVariant.Clear" OnClick="@OnClear" Disabled="@GetUploadDisable()" />
                 <ToolbarButton Variant="ToolbarVariant.Close" OnClick="@OnClose" />
             </Toolbar>
 
@@ -20,7 +20,8 @@
                             <MudFileUpload @bind-Files="@_files"
                                            @bind-Files:after="StateHasChanged"
                                            DragAndDrop="true"
-                                           AppendMultipleFiles="true">
+                                           AppendMultipleFiles="true"
+                                           Disabled="@_uploading">
                                 <CustomContent>
                                     <MudButton Variant="Variant.Filled"
                                                OnClick="@context.OpenFilePickerAsync"
@@ -34,14 +35,24 @@
                     </MudStack>
                 </MudCardHeader>
                 <MudCardContent>
-                    <MudFileUpload @bind-Files="@_files"
-                                   @bind-Files:after="StateHasChanged"
-                                   DragAndDrop="true"
-                                   AppendMultipleFiles="true">
-                        <SelectedTemplate />
-                    </MudFileUpload>
+                    <MudStack Spacing="2">
+                        <MudFileUpload @bind-Files="@_files"
+                                       @bind-Files:after="StateHasChanged"
+                                       DragAndDrop="true"
+                                       AppendMultipleFiles="true"
+                                       Disabled="@_uploading">
+                            <SelectedTemplate />
+                        </MudFileUpload>
+
+                        <MudCheckBox @bind-Value="_overwriteFile" Label="Overwrite existing files" LabelPlacement="Placement.Right" />
+                    </MudStack>
                 </MudCardContent>
             </MudCard>
+
+            @if (_uploading)
+            {
+                <MudProgressLinear Color="Color.Primary" Value=@GetCurrentUploadCount()" Class="my-7" />
+            }
 
             <MudDataGrid T="IBrowserFile"
                          Items="@_files"
@@ -51,7 +62,30 @@
                 <Columns>
                     <TemplateColumn CellStyle="width: 1%; white-space: nowrap;" HeaderStyle="width: 1%; white-space: nowrap;">
                         <CellTemplate>
-                            <MudIconButton Color="Color.Error" Size="@Size.Small" Icon="@Icons.Material.Outlined.Delete" OnClick="@(() => DeleteItem(context.Item))" />
+                            @switch (_uploading)
+                            {
+                                case true:
+                                    if (_uploadedList.TryGetValue(context.Item.Name, out var fileAction))
+                                    {
+                                        if (fileAction.Success)
+                                        {
+                                            <MudIcon Color="Color.Success" Size="@Size.Small" Icon="@Icons.Material.Outlined.CheckCircle" />
+                                        }
+                                        else
+                                        {
+                                            <MudIcon Color="Color.Error" Size="@Size.Small" Icon="@Icons.Material.Outlined.Error" />
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <MudIcon Color="Color.Default" Size="@Size.Small" Icon="@Icons.Material.Outlined.HourglassEmpty" />
+                                    }
+
+                                    break;
+                                case false:
+                                    <MudIconButton Color="Color.Error" Size="@Size.Small" Icon="@Icons.Material.Outlined.Delete" OnClick="@(() => DeleteItem(context.Item))" />
+                                    break;
+                            }
                         </CellTemplate>
                     </TemplateColumn>
                     <PropertyColumn Property="x => x.Name" Title="Name" />
@@ -65,17 +99,50 @@
 </MudDrawer>
 
 @code {
+    @inject SharedFileStore _sharedFileStore;
+
     [Parameter] public bool Open { get; set; }
     [Parameter] public string Description { get; set; } = null!;
+    [Parameter] public string BasePath { get; set; } = null!;
     [Parameter] public EventCallback OnClose { get; set; }
-    [Parameter] public EventCallback<IReadOnlyList<IBrowserFile>> OnUploaded { get; set; }
 
     private IReadOnlyList<IBrowserFile> _files = [];
+    private bool _overwriteFile = false;
     private string GetTitle() => Description is not null ? Description : "Upload File";
+
+    private record FileAction(string File, bool Success, string? ErrorMessage = null);
+    private bool _uploading = false;
+    private ConcurrentDictionary<string, FileAction> _uploadedList = new(StringComparer.OrdinalIgnoreCase);
+    private int GetCurrentUploadCount() => _uploadedList.Count - (_uploadedList.Count - _uploadedList.Count);
+    private bool GetUploadDisable() => _files.Count == 0 || _uploading;
 
     private async Task OnUpload()
     {
-        await OnUploaded.InvokeAsync(_files);
+        if (_files.Count == 0) return;
+
+        _uploadedList.Clear();
+        _uploading = true;
+
+        foreach (var file in _files)
+        {
+            string path = $"{BasePath}/{file.Name}";
+            Stream readStream = file.OpenReadStream();
+            DataETag dataETag = readStream.ToDataETag();
+
+            var option = _overwriteFile switch
+            {
+                false => await _sharedFileStore.Add(path, dataETag),
+                true => await _sharedFileStore.Upsert(path, dataETag)
+            };
+
+            if (option.IsError())
+            {
+                _uploadedList[file.Name] = new FileAction(file.Name, false, "File already exists");
+                continue;
+            }
+
+            _uploadedList[file.Name] = new FileAction(file.Name, true, "File up loaded");
+        }
     }
 
     private void OnClear()

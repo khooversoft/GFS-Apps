@@ -51,10 +51,23 @@ public static class DataETagExtensions
     public static DataETag ToDataETag<T>(this T value, string? currentETag = null)
     {
         value.NotNull();
-        if (value is DataETag dataTag) return dataTag;
 
-        var bytes = value.ConvertToBytes();
-        return new DataETag(bytes, currentETag);
+        switch (value)
+        {
+            case DataETag dataTag: return dataTag;
+
+            case Stream stream:
+                {
+                    using var memoryStream = new MemoryStream();
+                    stream.CopyTo(memoryStream);
+
+                    return new DataETag(memoryStream.ToArray(), currentETag);
+                }
+
+            default:
+                var bytes = value.ConvertToBytes();
+                return new DataETag(bytes, currentETag);
+        }
     }
 
     [DebuggerStepThrough]

@@ -20,6 +20,7 @@ public class SharedFileStore
     }
 
     public async Task<Option<string>> Add(string path, DataETag data) => await _datalakeStore.Add(path, data);
+    public async Task<Option<string>> Upsert(string path, DataETag data) => await _datalakeStore.Upsert(path, data);
     public async Task<Option> Delete(string path) => await _datalakeStore.Delete(path);
     public async Task<Option<DataETag>> Get(string path) => await _datalakeStore.Get(path);
     public async Task<IReadOnlyList<StorePathDetail>> Search(string path) => await _datalakeStore.Search(path);

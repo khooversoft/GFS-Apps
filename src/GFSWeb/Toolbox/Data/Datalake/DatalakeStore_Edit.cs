@@ -30,6 +30,18 @@ public partial class DatalakeStore
         return result;
     }
 
+    public async Task<Option<string>> Upsert(string key, DataETag data)
+    {
+        key.NotEmpty();
+        data.NotNull();
+
+        var addOption = await Add(key, data);
+        if (addOption.IsOk()) return addOption;
+
+        return await Set(key, data.StripETag());
+    }
+
+
     public async Task<Option> Delete(string path, string? leaseId = null)
     {
         path.NotEmpty();
