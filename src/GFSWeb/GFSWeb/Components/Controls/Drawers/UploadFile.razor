@@ -49,11 +49,6 @@
                 </MudCardContent>
             </MudCard>
 
-            @if (_uploading)
-            {
-                <MudProgressLinear Color="Color.Primary" Value=@GetCurrentUploadCount()" Class="my-7" />
-            }
-
             <MudDataGrid T="IBrowserFile"
                          Items="@_files"
                          ReadOnly="true"
@@ -62,30 +57,7 @@
                 <Columns>
                     <TemplateColumn CellStyle="width: 1%; white-space: nowrap;" HeaderStyle="width: 1%; white-space: nowrap;">
                         <CellTemplate>
-                            @switch (_uploading)
-                            {
-                                case true:
-                                    if (_uploadedList.TryGetValue(context.Item.Name, out var fileAction))
-                                    {
-                                        if (fileAction.Success)
-                                        {
-                                            <MudIcon Color="Color.Success" Size="@Size.Small" Icon="@Icons.Material.Outlined.CheckCircle" />
-                                        }
-                                        else
-                                        {
-                                            <MudIcon Color="Color.Error" Size="@Size.Small" Icon="@Icons.Material.Outlined.Error" />
-                                        }
-                                    }
-                                    else
-                                    {
-                                        <MudIcon Color="Color.Default" Size="@Size.Small" Icon="@Icons.Material.Outlined.HourglassEmpty" />
-                                    }
-
-                                    break;
-                                case false:
-                                    <MudIconButton Color="Color.Error" Size="@Size.Small" Icon="@Icons.Material.Outlined.Delete" OnClick="@(() => DeleteItem(context.Item))" />
-                                    break;
-                            }
+                            <MudIconButton Color="Color.Error" Size="@Size.Small" Icon="@Icons.Material.Outlined.Delete" OnClick="@(() => DeleteItem(context.Item))" />
                         </CellTemplate>
                     </TemplateColumn>
                     <PropertyColumn Property="x => x.Name" Title="Name" />
@@ -100,6 +72,7 @@
 
 @code {
     @inject SharedFileStore _sharedFileStore;
+    @inject ISnackbar _snackbar;
 
     [Parameter] public bool Open { get; set; }
     [Parameter] public string Description { get; set; } = null!;
@@ -110,24 +83,33 @@
     private bool _overwriteFile = false;
     private string GetTitle() => Description is not null ? Description : "Upload File";
 
-    private record FileAction(string File, bool Success, string? ErrorMessage = null);
     private bool _uploading = false;
-    private ConcurrentDictionary<string, FileAction> _uploadedList = new(StringComparer.OrdinalIgnoreCase);
-    private int GetCurrentUploadCount() => _uploadedList.Count - (_uploadedList.Count - _uploadedList.Count);
     private bool GetUploadDisable() => _files.Count == 0 || _uploading;
+
+    protected override void OnParametersSet()
+    {
+        _uploading = false;
+        _files = [];
+        base.OnParametersSet();
+    }
 
     private async Task OnUpload()
     {
         if (_files.Count == 0) return;
 
-        _uploadedList.Clear();
         _uploading = true;
+        StateHasChanged();
 
         foreach (var file in _files)
         {
             string path = $"{BasePath}/{file.Name}";
-            Stream readStream = file.OpenReadStream();
-            DataETag dataETag = readStream.ToDataETag();
+
+            using var readStream = file.OpenReadStream(maxAllowedSize: 100 * 1024 * 1024);
+            using var memoryStream = new MemoryStream((int)file.Size);
+            await readStream.CopyToAsync(memoryStream);
+
+            byte[] array = memoryStream.ToArray();
+            DataETag dataETag = array.ToDataETag();
 
             var option = _overwriteFile switch
             {
@@ -137,11 +119,11 @@
 
             if (option.IsError())
             {
-                _uploadedList[file.Name] = new FileAction(file.Name, false, "File already exists");
+                _snackbar.Add($"File {file.Name} already exist", Severity.Error);
                 continue;
             }
 
-            _uploadedList[file.Name] = new FileAction(file.Name, true, "File up loaded");
+            _snackbar.Add($"{file.Name} file up loaded to {BasePath}", Severity.Success);
         }
     }
 

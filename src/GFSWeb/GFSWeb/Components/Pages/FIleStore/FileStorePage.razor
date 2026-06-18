@@ -9,15 +9,15 @@
     <Toolbar>
         <ToolbarButton Variant="ToolbarVariant.Delete" OnClick="@OnDelete" Disabled="@(_selectedItems.Count == 0)" />
         <ToolbarButton Variant="ToolbarVariant.Upload" OnClick="@OnUploadOpen" />
-        <ToolbarButton Variant="ToolbarVariant.Download" OnClick="@OnDownload" />
-        <ToolbarButton Variant="ToolbarVariant.Refresh" OnClick="@Load" />
+        <ToolbarButton Variant="ToolbarVariant.Download" OnClick="@OnDownload" Disabled="@(_selectedItems.Count == 0)" />
+        <ToolbarButton Variant="ToolbarVariant.Refresh" OnClick="@OnRefresh" />
         <ToolbarSpacer />
         <ToolbarSearch OnClick="@OnSearch" />
     </Toolbar>
 
     <PathNavigation Items="@_pathVectors" OnClick="OnPathChanged" />
 
-    <FileExplorer Path="@_currentPath" OnSelectedItemsChanged="@OnSelectedItemsChanged" Search="@_searchString" />
+    <FileExplorer @ref="_fileExplorer" Path="@_currentPath" OnSelectedItemsChanged="@OnSelectedItemsChanged" Search="@_searchString" />
 </MudStack>
 
 <Question Show="@_showDeleteQuestion"
@@ -26,7 +26,7 @@
           OnYes="@(() => DeleteItem())"
           OnNo="@(() => _showDeleteQuestion = false)" />
 
-<UploadFile Open="@_showUpload" Description="Upload file to current folder" OnClose="@OnUploadClose" OnUploaded="@OnUploadFiles" />
+<UploadFile Open="@_showUpload" Description="Upload file to current folder" OnClose="@OnUploadClose" BasePath="@_currentPath" />
 
 
 @code {
@@ -41,6 +41,7 @@
     [Parameter] public string? Path { get; set; }
     [Parameter, SupplyParameterFromQuery] public string returnUrl { get; set; } = null!;
 
+    private int _stateVersion = 0;
     private string _title = string.Empty;
     private int _selectedFileCount = 0;
     private bool _showDeleteQuestion;
@@ -48,13 +49,15 @@
     private IReadOnlyList<string> _descriptions = [];
     private string? _searchString;
 
-    private IReadOnlyList<StorePathDetail> _elements = [];
     private HashSet<StorePathDetail> _selectedItems = new();
     private readonly List<string> _paths = new();
     private string _storeType = string.Empty;
     private string _basePath = string.Empty;
     private string _currentPath = string.Empty;
     private KeyValue<string>[] _pathVectors = [];
+    private FileExplorer _fileExplorer = null!;
+
+    private async Task OnRefresh() => await _fileExplorer.RefreshAsync();
 
     private void OnPathChanged(string key)
     {
@@ -79,7 +82,7 @@
         };
 
         _paths.Clear();
-        _paths.AddRange([_basePath, .. Path?.Split('/') ?? []]);
+        _paths.AddRange([_storeType, _basePath, .. Path?.Split('/') ?? []]);
         _currentPath = _paths.Join('/');
         _pathVectors = _paths.Select(x => new KeyValue<string>(StorePathTool.GetFileName(x), x)).ToArray();
 
@@ -91,23 +94,11 @@
         }
     }
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (firstRender) await Load();
-    }
-
-    public async Task Load()
-    {
-        string path = _paths.Join('/') + "/**";
-        _elements = await _sharedFileStore.Search(path);
-        StateHasChanged();
-    }
-
     private void OnUploadOpen() => _showUpload = true;
-    private void OnUploadClose() => _showUpload = false;
-
-    private async Task OnUploadFiles(IReadOnlyList<IBrowserFile> browerFiles)
+    private async Task OnUploadClose()
     {
+        _showUpload = false;
+        await _fileExplorer.RefreshAsync();
     }
 
     private void OnDownload()
@@ -157,8 +148,7 @@
             _snackbar.Add($"Deleted {item.Path}", Severity.Info);
         }
 
-        await Load();
-        StateHasChanged();
+        await _fileExplorer.RefreshAsync();
     }
 
     private async Task ViewItem(StorePathDetail item)

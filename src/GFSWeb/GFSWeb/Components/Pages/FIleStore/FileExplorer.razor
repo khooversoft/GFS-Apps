@@ -22,7 +22,7 @@
                         <CellTemplate>
                             <MudLink Color="Color.Info"
                                      OnClick="@(() => ViewItem(context.Item))"
-                                     Style="cursor: pointer;">@context.Item.Path</MudLink>
+                                     Style="cursor: pointer;">@GetFileName(context.Item.Path)</MudLink>
                         </CellTemplate>
                     </TemplateColumn>
                     <PropertyColumn Property="x => x.LastModified" Title="Last Modified" CellStyle="width: 1%; white-space: nowrap;" HeaderStyle="width: 1%; white-space: nowrap;" />
@@ -53,6 +53,16 @@
             _savePath = Path;
             await Load();
         }
+    }
+
+    public Task RefreshAsync() => Load();
+
+    private string GetFileName(string path)
+    {
+        if (path.IsEmpty()) return string.Empty;
+
+        int lastSlashIndex = path.LastIndexOf('/');
+        return lastSlashIndex >= 0 ? path[(lastSlashIndex + 1)..] : path;
     }
 
     private async Task Load()

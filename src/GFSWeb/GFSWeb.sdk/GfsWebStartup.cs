@@ -44,7 +44,7 @@ public static class GfsWebStartup
 
         services.AddTransient<SharedFileStore>(service =>
         {
-            var datalakeOption = webOption.ConvertTo(() => webOption.ScheduleStore);
+            var datalakeOption = webOption.ConvertTo(() => webOption.GeneralStore);
             return ActivatorUtilities.CreateInstance<SharedFileStore>(service, datalakeOption);
         });
 

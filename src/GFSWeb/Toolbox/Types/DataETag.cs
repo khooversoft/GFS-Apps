@@ -64,6 +64,9 @@ public static class DataETagExtensions
                     return new DataETag(memoryStream.ToArray(), currentETag);
                 }
 
+            case byte[] b1:
+                return new DataETag(b1, currentETag);
+
             default:
                 var bytes = value.ConvertToBytes();
                 return new DataETag(bytes, currentETag);
