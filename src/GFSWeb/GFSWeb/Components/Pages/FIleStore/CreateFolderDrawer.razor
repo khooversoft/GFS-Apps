@@ -1,0 +1,55 @@
+﻿<MudDrawer Open="@Show"
+           OpenChanged="@OnClose"
+           Anchor="Anchor.End"
+           Elevation="1"
+           Variant="@DrawerVariant.Temporary"
+           OverlayAutoClose=true
+           Width="50%">
+
+    <MudPaper Class="ma-2" Elevation="2" Style="padding:10px">
+        <MudDrawerHeader>
+            <MudText Typo="Typo.h6">Create New Folder</MudText>
+        </MudDrawerHeader>
+        <MudDrawerContainer>
+            <MudStack Spacing="2">
+                <MudTextField @bind-Value="_newFolderName" Immediate="true" Label="Folder Name" Variant="Variant.Outlined" />
+                <MudStack Row="true" Spacing="2">
+                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="@CreateNewFolder" Disabled="@(_newFolderName.IsEmpty())">Create</MudButton>
+                    <MudButton Variant="Variant.Outlined" Color="Color.Surface" OnClick="@OnClose">Close</MudButton>
+                </MudStack>
+            </MudStack>
+        </MudDrawerContainer>
+    </MudPaper>
+</MudDrawer>
+
+@code {
+    @inject SharedFileStore _sharedFileStore;
+    @inject ISnackbar _snackbar;
+
+    [Parameter] public bool Show { get; set; }
+    [Parameter] public string BasePath { get; set; } = null!;
+    [Parameter] public EventCallback OnClose { get; set; }
+    [Parameter] public EventCallback<string> OnFolderCreated { get; set; }
+
+    private string? _newFolderName;
+
+    protected override void OnParametersSet() => _newFolderName = null;
+
+    private async Task CreateNewFolder()
+    {
+        _newFolderName.NotEmpty();
+
+        string[] list = [.. BasePath.NotEmpty().Split('/'), _newFolderName];
+        var path = list.Join('/');
+
+        var result = await _sharedFileStore.CreateFolder(path);
+        if (result.IsError())
+        {
+            _snackbar.Add($"Failed to create folder: {result.Error}", Severity.Error);
+            return;
+        }
+
+        _snackbar.Add($"Folder '{_newFolderName}' created successfully.", Severity.Success);
+        await OnFolderCreated.InvokeAsync(_newFolderName);
+    }
+}

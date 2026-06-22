@@ -14,17 +14,55 @@ public partial class DatalakeStore
     private readonly DataLakeFileSystemClient _fileSystem;
     private readonly ILogger<DatalakeStore> _logger;
     private readonly DatalakeOption _datalakeOption;
-    private readonly DataLakeServiceClient _serviceClient;
 
     public DatalakeStore(DatalakeOption datalakeOption, ILogger<DatalakeStore> logger)
     {
         _datalakeOption = datalakeOption.NotNull().Action(x => x.Validate().ThrowOnError());
         _logger = logger.NotNull();
 
-        _serviceClient = datalakeOption.CreateDataLakeServiceClient();
-
-        _fileSystem = _serviceClient.GetFileSystemClient(datalakeOption.Container);
+        DataLakeServiceClient serviceClient = datalakeOption.CreateDataLakeServiceClient();
+        _fileSystem = serviceClient.GetFileSystemClient(datalakeOption.Container);
         _fileSystem.Exists().Assert(x => x == true, $"Datalake file system does not exist, containerName={datalakeOption.Container}");
+    }
+
+    public async Task<Option> CreateFolder(string path)
+    {
+        path.NotEmpty();
+        path = _datalakeOption.WithBasePath(path);
+
+        using var metric = _logger.LogDuration("dataLakeStore-CreateFolder", "path={path}", path);
+        _logger.LogDebug("Creating directory {path}", path);
+
+        try
+        {
+            string[] parts = path.Split('/', StringSplitOptions.RemoveEmptyEntries);
+            string currentPath = string.Empty;
+
+            foreach (string part in parts)
+            {
+                currentPath = currentPath.Length == 0 ? part : $"{currentPath}/{part}";
+
+                DataLakeDirectoryClient directoryClient = _fileSystem.GetDirectoryClient(currentPath);
+                Response<PathInfo?> response = await directoryClient.CreateIfNotExistsAsync();
+
+                if (response != null)
+                {
+                    int status = response.GetRawResponse().Status;
+                    if (status is not 200 and not 201)
+                    {
+                        return (StatusCode.Conflict, response.GetRawResponse().ReasonPhrase);
+                    }
+                }
+            }
+
+            return StatusCode.OK;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to create directory for {path}", path);
+        }
+
+        return StatusCode.BadRequest;
     }
 
     public async Task<Option> DeleteFolder(string path)
@@ -90,7 +128,7 @@ public partial class DatalakeStore
     {
         var basePattern = _datalakeOption.WithBasePath(pattern);
 
-        var matcher = new GlobFileMatching(basePattern);
+        var matcher = new PathMatching(basePattern);
         using var metric = _logger.LogDuration("dataLakeStore-search", "pattern={pattern}", basePattern);
 
         var list = new Sequence<StorePathDetail>();
@@ -106,8 +144,7 @@ public partial class DatalakeStore
             await foreach (PathItem pathItem in _fileSystem.GetPathsAsync(options))
             {
                 scanCount++;
-                if (!matcher.IsMatch(pathItem.Name)) continue;
-                if (pathItem.IsDirectory == true && !matcher.IncludeFolders) continue;
+                if (!matcher.Match(pathItem.Name)) continue;
                 if (count++ < index) continue;
 
                 string trimmedPath = _datalakeOption.RemoveBaseRoot(pathItem.Name);

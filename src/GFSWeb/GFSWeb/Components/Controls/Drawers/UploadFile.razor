@@ -125,6 +125,8 @@
 
             _snackbar.Add($"{file.Name} file up loaded to {BasePath}", Severity.Success);
         }
+
+        await OnClose.InvokeAsync();
     }
 
     private void OnClear()

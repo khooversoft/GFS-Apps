@@ -14,6 +14,6 @@ public class TestExcelFileGenerator
 
         using var stream = new MemoryStream();
         workbook.SaveAs(stream);
-        return new DataETag(stream.ToArray());
+        return new DataETag(stream.ToArray()).WithHash();
     }
 }

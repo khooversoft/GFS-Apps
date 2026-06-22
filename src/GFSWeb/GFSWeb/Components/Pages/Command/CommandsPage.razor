@@ -34,8 +34,7 @@ else
                 <SelectColumn T="CommandRecord" />
                 <TemplateColumn Title="Command" Resizable="true" Sortable="true" SortBy="x => x.Description">
                     <CellTemplate>
-                        <MudLink Color="Color.Info"
-                                 Href="@(NavHelper.Command.Href(@context.Item.CommandId, _nav.Uri))">@context.Item.Description</MudLink>
+                        <MudLink Color="Color.Info" Href="@(NavHelper.Command.Href(@context.Item.CommandId, _nav.Uri))">@context.Item.Description</MudLink>
                     </CellTemplate>
                 </TemplateColumn>
                 <PropertyColumn Property="x => x.Type" Title="Type" Sortable="true" Resizable="true" />

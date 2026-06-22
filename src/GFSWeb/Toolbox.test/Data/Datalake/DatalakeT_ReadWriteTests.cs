@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Toolbox.Data;
+using Toolbox.Extensions;
 using Toolbox.test.Application;
 using Toolbox.Tools;
 using Toolbox.Types;
@@ -130,7 +131,11 @@ public class DatalakeT_ReadWriteTests
         (await store.Search("testrecord.*")).Count().Be(0);
         (await store.Search("*.json")).Count().Be(5);
         (await store.Search("*.*")).Count().Be(5);
-        (await store.Search("**")).Count().Be(15);
+        (await store.Search("**")).Action(x =>
+        {
+            x.Where(x => !x.IsFolder).Count().Be(15);
+            x.Count().Be(17);
+        });
 
         (await store.DeleteFolder("**")).BeOk();
         (await store.Search("**")).Count().Be(0);
@@ -208,7 +213,7 @@ public class DatalakeT_ReadWriteTests
         await store.Add($"{folderPath}/file2.json", testRecord);
         await store.Add($"{folderPath}/subfolder/file3.json", testRecord);
 
-        (await store.Search($"{folderPath}/**")).Count().Be(3);
+        (await store.Search($"{folderPath}/**")).Where(x => !x.IsFolder).Count().Be(3);
 
         (await store.DeleteFolder(folderPath)).BeOk();
 
@@ -232,7 +237,12 @@ public class DatalakeT_ReadWriteTests
         (await store.Add("hashfiles/a0/b3/hashfile5.json", testRecord)).BeOk();
         (await store.Add("hashfiles/a5/b2/hashfile6.json", testRecord)).BeOk();
 
-        (await store.Search("**")).Count().Be(8);
+        (await store.Search("**")).Action(x =>
+        {
+            x.Where(x => !x.IsFolder).Count().Be(8);
+            x.Count().Be(16);
+
+        });
         (await store.Search("root*.json")).Count().Be(1);
         (await store.Search("folder1/*.json")).Count().Be(2);
         (await store.Search("folder2/**/*.json")).Count().Be(1);

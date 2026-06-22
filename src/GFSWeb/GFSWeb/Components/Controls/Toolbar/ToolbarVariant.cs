@@ -23,5 +23,6 @@ public enum ToolbarVariant
     Search,
     Upload,
     Download,
-    Clear
+    Clear,
+    NewFolder,
 }

@@ -10,14 +10,15 @@
         <ToolbarButton Variant="ToolbarVariant.Delete" OnClick="@OnDelete" Disabled="@(_selectedItems.Count == 0)" />
         <ToolbarButton Variant="ToolbarVariant.Upload" OnClick="@OnUploadOpen" />
         <ToolbarButton Variant="ToolbarVariant.Download" OnClick="@OnDownload" Disabled="@(_selectedItems.Count == 0)" />
+        <ToolbarButton Variant="ToolbarVariant.NewFolder" OnClick="@(() => _askNewFolder = true)" />
         <ToolbarButton Variant="ToolbarVariant.Refresh" OnClick="@OnRefresh" />
         <ToolbarSpacer />
         <ToolbarSearch OnClick="@OnSearch" />
     </Toolbar>
 
-    <PathNavigation Items="@_pathVectors" OnClick="OnPathChanged" />
+    <PathNavigation Path="@_currentPath" SkipSegments="1" OnClick="@OnPathChanged" />
 
-    <FileExplorer @ref="_fileExplorer" Path="@_currentPath" OnSelectedItemsChanged="@OnSelectedItemsChanged" Search="@_searchString" />
+    <FileExplorer @ref="_fileExplorer" Path="@_currentPath" OnSelectedItemsChanged="@OnSelectedItemsChanged" OnPathChanged="@OnPathChanged" Search="@_searchString" />
 </MudStack>
 
 <Question Show="@_showDeleteQuestion"
@@ -28,6 +29,7 @@
 
 <UploadFile Open="@_showUpload" Description="Upload file to current folder" OnClose="@OnUploadClose" BasePath="@_currentPath" />
 
+<CreateFolderDrawer Show="@_askNewFolder" BasePath="@_currentPath" OnClose="@(() => _askNewFolder = false)" OnFolderCreated="@OnRefresh" />
 
 @code {
     @inject SharedFileStore _sharedFileStore;
@@ -35,7 +37,6 @@
     @inject IAuthAccess _authAccess;
     @inject ISnackbar _snackbar;
     @inject IJSRuntime JSRuntime;
-    @inject NavigationManager _nav;
 
     [Parameter] public string StoreType { get; set; } = null!;
     [Parameter] public string? Path { get; set; }
@@ -46,6 +47,7 @@
     private int _selectedFileCount = 0;
     private bool _showDeleteQuestion;
     private bool _showUpload;
+    private bool _askNewFolder = false;
     private IReadOnlyList<string> _descriptions = [];
     private string? _searchString;
 
@@ -54,14 +56,10 @@
     private string _storeType = string.Empty;
     private string _basePath = string.Empty;
     private string _currentPath = string.Empty;
-    private KeyValue<string>[] _pathVectors = [];
     private FileExplorer _fileExplorer = null!;
 
     private async Task OnRefresh() => await _fileExplorer.RefreshAsync();
 
-    private void OnPathChanged(string key)
-    {
-    }
 
     protected override async Task OnParametersSetAsync()
     {
@@ -84,7 +82,6 @@
         _paths.Clear();
         _paths.AddRange([_storeType, _basePath, .. Path?.Split('/') ?? []]);
         _currentPath = _paths.Join('/');
-        _pathVectors = _paths.Select(x => new KeyValue<string>(StorePathTool.GetFileName(x), x)).ToArray();
 
         async Task<(string basePath, string title)> setUser()
         {
@@ -92,6 +89,19 @@
             var userName = (await _authAccess.GetUserName()).NotEmpty("No user name");
             return (email, "Personal files for " + userName);
         }
+    }
+
+    private void OnPathChanged(string path)
+    {
+        path.NotEmpty();
+        var elements = path.Split('/').ToArray();
+        elements.Length.Assert(x => x > 1, "Path should have at least 2 elements");
+        elements[0].Assert(x => x == _storeType, $"Store type does not match {_storeType}");
+        elements[1].Assert(x => x == _basePath, $"Base path does not match {_basePath}");
+
+        _paths.Clear();
+        _paths.AddRange(elements);
+        _currentPath = _paths.Join('/');
     }
 
     private void OnUploadOpen() => _showUpload = true;
@@ -168,11 +178,5 @@
         using var streamRef = new DotNetStreamReference(stream: fileStream);
 
         await JSRuntime.InvokeVoidAsync("downloadFileFromStream", item.Path, streamRef);
-    }
-
-    private sealed class UploadFileData
-    {
-        public string? Name { get; set; }
-        public byte[]? Content { get; set; }
     }
 }

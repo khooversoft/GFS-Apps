@@ -15,6 +15,7 @@ public class ExcelGenerationTest
         blobData.Data.Length.Assert(x => x > 0, "BlobData.Data should not be empty.");
         blobData.ETag.NotEmpty();
 
-        File.WriteAllBytes(@"E:\\work\test.xlsx", [.. blobData.Data]);
+        string tempFile = Path.GetTempFileName() + ".xlsx";
+        File.WriteAllBytes(tempFile, [.. blobData.Data]);
     }
 }

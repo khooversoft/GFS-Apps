@@ -35,8 +35,7 @@ else
                 <SelectColumn T="ReportPackageRow" />
                 <TemplateColumn Title="Package ID" Resizable="true" Sortable="true" SortBy="x => x.Description">
                     <CellTemplate>
-                        <MudLink Color="Color.Info"
-                                 Href="@(NavHelper.Package.Href(@context.Item.PackageId, _nav.Uri))">@context.Item.PackageId</MudLink>
+                        <MudLink Color="Color.Info" Href="@(NavHelper.Package.Href(@context.Item.PackageId, _nav.Uri))">@context.Item.PackageId</MudLink>
                     </CellTemplate>
                 </TemplateColumn>
                 <PropertyColumn Property="x => x.Description" Title="Description" Sortable="true" Resizable="true" />

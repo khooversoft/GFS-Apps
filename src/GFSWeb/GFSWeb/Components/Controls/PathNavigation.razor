@@ -1,8 +1,10 @@
 ﻿<MudPaper Elevation="0" Outlined="true" Style="padding:10px">
     <MudStack Spacing="2" Row="true">
-        @foreach (var item in getItems())
+        @for (int i = 0; i < _items.Count; i++)
         {
-            if (item.index != 0)
+            var item = _items[i];
+
+            if (i != 0)
             {
                 <span style="display:flex;align-items:center;">
                     <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Size="Size.Small" Color="Color.Surface" />
@@ -12,17 +14,35 @@
             <MudButton Variant="Variant.Text"
                        Color="Color.Surface"
                        Size="Size.Small"
-                       OnClick="@EventCallback.Factory.Create(this, () => OnClick.InvokeAsync(item.value.Key))"
+                       OnClick="@EventCallback.Factory.Create(this, () => OnClick.InvokeAsync(item.Value))"
                        Style="text-transform:none;min-width:0;">
-                @item.value.Value
+                @item.Key
             </MudButton>
         }
     </MudStack>
 </MudPaper>
 
 @code {
-    [Parameter] public IReadOnlyList<KeyValue<string>> Items { get; set; } = [];
+    [Parameter] public string Path { get; set; } = null!;
+    [Parameter] public int SkipSegments { get; set; } = 0;
     [Parameter] public EventCallback<string> OnClick { get; set; }
 
-    private IReadOnlyList<(KeyValue<string> value, int index)> getItems() => Items.WithIndex().ToArray();
+    private IReadOnlyList<KeyValue<string>> _items = [];
+
+    protected override void OnParametersSet()
+    {
+        string[] segments = Path.Split('/', StringSplitOptions.RemoveEmptyEntries);
+        var items = new List<KeyValue<string>>(segments.Length);
+        var currentPath = new System.Text.StringBuilder();
+
+        foreach (string segment in segments)
+        {
+            if (currentPath.Length > 0) currentPath.Append('/');
+            currentPath.Append(segment);
+
+            items.Add(new KeyValue<string>(StorePathTool.GetFileName(segment), currentPath.ToString()));
+        }
+
+        _items = items.Skip(1).ToArray();
+    }
 }
