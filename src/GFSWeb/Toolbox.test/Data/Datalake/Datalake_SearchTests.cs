@@ -102,7 +102,7 @@ public class Datalake_SearchTests
     }
 
     [Fact]
-    public async Task Search_TripleStar_AndDoubleStar_ShouldReturnFolders()
+    public async Task Search_IncludeFolder_ShouldReturnFolders()
     {
         using var host = await BuildService();
         DatalakeStore store = host.Services.GetRequiredService<DatalakeStore>();
@@ -112,11 +112,11 @@ public class Datalake_SearchTests
         (await store.Add("diff/a/file1.json", record.ToJson().ToDataETag())).BeOk();
         (await store.Add("diff/a/sub/file2.json", record.ToJson().ToDataETag())).BeOk();
 
-        var doubleStar = await store.Search("diff/**");
+        var doubleStar = await store.Search("diff/**", includeFolder: false);
         doubleStar.Count.Assert(x => x >= 2);
-        doubleStar.Any(x => x.IsFolder).BeTrue();
+        doubleStar.Any(x => x.IsFolder).BeFalse();
 
-        var tripleStar = await store.Search("diff/***");
+        var tripleStar = await store.Search("diff/**", includeFolder: true);
         tripleStar.Count.Assert(x => x >= doubleStar.Count);
         tripleStar.Any(x => x.IsFolder).BeTrue();
     }

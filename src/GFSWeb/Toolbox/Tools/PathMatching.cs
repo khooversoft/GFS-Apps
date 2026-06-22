@@ -10,7 +10,7 @@ namespace Toolbox.Tools;
 /// 
 /// *       Matches zero or more characters in a file or folder name(but not / or \).
 /// ?       Matches exactly one character(except / or \).
-/// **      Matches zero or more directory levels(recursive).
+/// **      Matches zero or more directory levels (recursive).
 /// {a,b}	Matches either a or b (brace expansion).
 /// [abc]   Matches any one of the characters a, b, or c.
 /// [!abc]  Matches any character except a, b, or c.

@@ -124,7 +124,7 @@ public partial class DatalakeStore
         }
     }
 
-    public async Task<IReadOnlyList<StorePathDetail>> Search(string pattern, int index = 0, int size = -1)
+    public async Task<IReadOnlyList<StorePathDetail>> Search(string pattern, int index = 0, int size = -1, bool includeFolder = false)
     {
         var basePattern = _datalakeOption.WithBasePath(pattern);
 
@@ -145,6 +145,7 @@ public partial class DatalakeStore
             {
                 scanCount++;
                 if (!matcher.Match(pathItem.Name)) continue;
+                if( !includeFolder && (pathItem.IsDirectory ?? false)) continue;
                 if (count++ < index) continue;
 
                 string trimmedPath = _datalakeOption.RemoveBaseRoot(pathItem.Name);

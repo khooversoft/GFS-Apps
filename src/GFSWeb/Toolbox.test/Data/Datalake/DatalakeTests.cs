@@ -212,9 +212,10 @@ public class DatalakeTests
         await keyStore.Set(path1, "File 1".ToDataETag());
         await keyStore.Set(path2, "File 2".ToDataETag());
 
-        (await keyStore.Search("**")).Count.Be(4);
+        (await keyStore.Search("**")).Count.Be(2);
         (await keyStore.DeleteFolder(folder)).BeOk();
-        (await keyStore.Search("**")).Count.Be(1);
+        (await keyStore.Search("**")).Count.Be(0);
+        (await keyStore.Search("**", includeFolder: true)).Count.Be(1);
         (await keyStore.Search("**")).Where(x => !x.IsFolder).Count().Be(0);
 
         (await keyStore.Search($"{folder}/**")).Count.Be(0);
@@ -242,7 +243,8 @@ public class DatalakeTests
 
         (await keyStore.DeleteFolder(folder)).BeOk();
 
-        (await keyStore.Search("**")).Count.Be(4);
+        (await keyStore.Search("**")).Count.Be(2);
+        (await keyStore.Search("**", includeFolder: true)).Count.Be(4);
         (await keyStore.Search("**")).Count.Assert(x => x >= 2, x => $"{x} is invalid");
         (await keyStore.Search($"{folder}/**")).Count.Be(0);
         (await keyStore.Search($"{folder2}/**")).Count.Be(2);

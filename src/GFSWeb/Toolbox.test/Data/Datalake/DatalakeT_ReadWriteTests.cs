@@ -131,7 +131,7 @@ public class DatalakeT_ReadWriteTests
         (await store.Search("testrecord.*")).Count().Be(0);
         (await store.Search("*.json")).Count().Be(5);
         (await store.Search("*.*")).Count().Be(5);
-        (await store.Search("**")).Action(x =>
+        (await store.Search("**", includeFolder: true)).Action(x =>
         {
             x.Where(x => !x.IsFolder).Count().Be(15);
             x.Count().Be(17);
@@ -237,7 +237,7 @@ public class DatalakeT_ReadWriteTests
         (await store.Add("hashfiles/a0/b3/hashfile5.json", testRecord)).BeOk();
         (await store.Add("hashfiles/a5/b2/hashfile6.json", testRecord)).BeOk();
 
-        (await store.Search("**")).Action(x =>
+        (await store.Search("**", includeFolder: true)).Action(x =>
         {
             x.Where(x => !x.IsFolder).Count().Be(8);
             x.Count().Be(16);
