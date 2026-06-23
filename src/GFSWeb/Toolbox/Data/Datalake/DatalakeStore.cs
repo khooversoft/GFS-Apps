@@ -22,7 +22,7 @@ public partial class DatalakeStore
 
         DataLakeServiceClient serviceClient = datalakeOption.CreateDataLakeServiceClient();
         _fileSystem = serviceClient.GetFileSystemClient(datalakeOption.Container);
-        _fileSystem.Exists().Assert(x => x == true, $"Datalake file system does not exist, containerName={datalakeOption.Container}");
+        //_fileSystem.Exists().Assert(x => x == true, $"Datalake file system does not exist, containerName={datalakeOption.Container}");
     }
 
     public async Task<Option> CreateFolder(string path)

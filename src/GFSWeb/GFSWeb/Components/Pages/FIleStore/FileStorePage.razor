@@ -19,8 +19,6 @@
         <ToolbarSearch OnClick="@OnSearch" />
     </Toolbar>
 
-    <PathNavigation Path="@_currentPath" SkipSegments="1" OnClick="@OnPathChanged" />
-
     <FileExplorer @ref="_fileExplorer" Path="@_currentPath" OnSelectedItemsChanged="@OnSelectedItemsChanged" OnPathChanged="@OnPathChanged" Search="@_searchString" MultiSelect="@_multiSelect" />
 </MudStack>
 
@@ -58,9 +56,8 @@
     private string _currentPath = string.Empty;
     private FileExplorer _fileExplorer = null!;
 
-
     private void OnSelectedItemsChanged(HashSet<StorePathDetail> items) => _selectedItems = items;
-    private void OnProperties() => _showFileProperty = _selectedItems.Count == 1s;
+    private void OnProperties() => _showFileProperty = _selectedItems.Count == 1;
 
     private string? GetSelectedPath() => _selectedItems.Count switch
     {
