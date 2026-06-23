@@ -89,6 +89,24 @@ public static class StorePathTool
         };
     }
 
+    public static string GetFileExtension(string path)
+    {
+        path.NotEmpty();
+
+        var span = path.AsSpan().TrimEnd('/');
+        if (span.IsEmpty) return string.Empty;
+
+        int lastSlash = span.LastIndexOf('/');
+        int lastDot = span.LastIndexOf('.');
+
+        return lastDot switch
+        {
+            -1 => string.Empty,
+            _ when lastDot < lastSlash => string.Empty,
+            _ => span[lastDot..].ToString(),
+        };
+    }
+
     public static string ToSafePath(string path, string? extension = null)
     {
         path.NotEmpty();

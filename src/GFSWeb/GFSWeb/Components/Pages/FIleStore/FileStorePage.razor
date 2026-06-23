@@ -12,28 +12,28 @@
         <ToolbarButton Variant="ToolbarVariant.Download" OnClick="@OnDownload" Disabled="@(_selectedItems.Count == 0)" />
         <ToolbarButton Variant="ToolbarVariant.NewFolder" OnClick="@(() => _askNewFolder = true)" />
         <ToolbarButton Variant="ToolbarVariant.Refresh" OnClick="@OnRefresh" />
+        <ToolbarButton Variant="ToolbarVariant.OpenInBrowser" OnClick="@OpenInBrowser" Disabled="@DisableOpenInBrowser()" />
+        <ToolbarButton Variant="ToolbarVariant.List" OnClick="@OnProperties" Disabled="@(_selectedItems.Count != 1)" />
         <ToolbarSpacer />
+        <MudSwitch Style="margin: 0px 10px" Label="Multi Select" @bind-Value="_multiSelect" Color="@Color.Info" />
         <ToolbarSearch OnClick="@OnSearch" />
     </Toolbar>
 
     <PathNavigation Path="@_currentPath" SkipSegments="1" OnClick="@OnPathChanged" />
 
-    <FileExplorer @ref="_fileExplorer" Path="@_currentPath" OnSelectedItemsChanged="@OnSelectedItemsChanged" OnPathChanged="@OnPathChanged" Search="@_searchString" />
+    <FileExplorer @ref="_fileExplorer" Path="@_currentPath" OnSelectedItemsChanged="@OnSelectedItemsChanged" OnPathChanged="@OnPathChanged" Search="@_searchString" MultiSelect="@_multiSelect" />
 </MudStack>
 
-<Question Show="@_showDeleteQuestion"
-          Title="Delete Confirmation"
-          Descriptions="@_descriptions"
-          OnYes="@(() => DeleteItem())"
-          OnNo="@(() => _showDeleteQuestion = false)" />
+<Question Show="@_showDeleteQuestion" Title="Delete Confirmation" Descriptions="@_descriptions" OnYes="@(() => DeleteItem())" OnNo="@(() => _showDeleteQuestion = false)" />
 
 <UploadFile Open="@_showUpload" Description="Upload file to current folder" OnClose="@OnUploadClose" BasePath="@_currentPath" />
 
 <CreateFolderDrawer Show="@_askNewFolder" BasePath="@_currentPath" OnClose="@(() => _askNewFolder = false)" OnFolderCreated="@OnRefresh" />
 
+<FilePropertyDrawer Show="@_showFileProperty" Path="@GetSelectedPath()" OnClose="@(() => _showFileProperty = false)" />
+
 @code {
     @inject SharedFileStore _sharedFileStore;
-    @inject GFSAdminStore _store;
     @inject IAuthAccess _authAccess;
     @inject ISnackbar _snackbar;
     @inject IJSRuntime JSRuntime;
@@ -42,12 +42,12 @@
     [Parameter] public string? Path { get; set; }
     [Parameter, SupplyParameterFromQuery] public string returnUrl { get; set; } = null!;
 
-    private int _stateVersion = 0;
     private string _title = string.Empty;
-    private int _selectedFileCount = 0;
     private bool _showDeleteQuestion;
     private bool _showUpload;
+    private bool _showFileProperty = false;
     private bool _askNewFolder = false;
+    private bool _multiSelect = false;
     private IReadOnlyList<string> _descriptions = [];
     private string? _searchString;
 
@@ -58,8 +58,25 @@
     private string _currentPath = string.Empty;
     private FileExplorer _fileExplorer = null!;
 
-    private async Task OnRefresh() => await _fileExplorer.RefreshAsync();
 
+    private void OnSelectedItemsChanged(HashSet<StorePathDetail> items) => _selectedItems = items;
+    private void OnProperties() => _showFileProperty = _selectedItems.Count == 1s;
+
+    private string? GetSelectedPath() => _selectedItems.Count switch
+    {
+        1 => _selectedItems.First().Path,
+        _ => null,
+    };
+
+    private async Task OnRefresh()
+    {
+        _askNewFolder = false;
+        _showUpload = false;
+        _showDeleteQuestion = false;
+        _showFileProperty = false;
+
+        await _fileExplorer.RefreshAsync();
+    }
 
     protected override async Task OnParametersSetAsync()
     {
@@ -111,26 +128,12 @@
         await _fileExplorer.RefreshAsync();
     }
 
-    private void OnDownload()
-    {
-        // if (_selectedItems.Count == 0) return;
-        // foreach (var item in _selectedItems)
-        // {
-        //     ViewItem(item);
-        // }
-    }
-
     private void OnSearch(string? searchString)
     {
         searchString = searchString.ToNullIfEmpty();
         if (_searchString == searchString) return;
 
         _searchString = searchString;
-    }
-
-    private async Task OnSelectedItemsChanged(HashSet<StorePathDetail> items)
-    {
-        _selectedItems = items;
     }
 
     private async Task OnDelete()
@@ -161,7 +164,37 @@
         await _fileExplorer.RefreshAsync();
     }
 
-    private async Task ViewItem(StorePathDetail item)
+
+    private bool DisableOpenInBrowser()
+    {
+        if (_selectedItems.Count != 1) return true;
+
+        var item = _selectedItems.First();
+        var fileName = StorePathTool.GetFileName(item.Path);
+        var ext = StorePathTool.GetFileExtension(fileName);
+
+        if (ext.EqualsIgnoreCase(".pdf")) return false;
+        return true;
+    }
+
+    private async Task OpenInBrowser()
+    {
+        if (DisableOpenInBrowser() == true) return;
+
+        await DownloadItem(_selectedItems.First(), openInBrowser: true);
+    }
+
+    private async Task OnDownload()
+    {
+        if (_selectedItems.Count == 0) return;
+
+        foreach (var item in _selectedItems)
+        {
+            await DownloadItem(item);
+        }
+    }
+
+    private async Task DownloadItem(StorePathDetail item, bool openInBrowser = false)
     {
         item.NotNull().Path.NotEmpty();
 
@@ -174,9 +207,10 @@
         }
 
         byte[] fileData = fileResult.Return().Data.ToArray();
-        var fileStream = new MemoryStream(fileData);
+        using var fileStream = new MemoryStream(fileData);
         using var streamRef = new DotNetStreamReference(stream: fileStream);
 
-        await JSRuntime.InvokeVoidAsync("downloadFileFromStream", item.Path, streamRef);
+        string jsFunction = openInBrowser ? "openFileInBrowser" : "downloadFileFromStream";
+        await JSRuntime.InvokeVoidAsync(jsFunction, item.Path, streamRef);
     }
 }

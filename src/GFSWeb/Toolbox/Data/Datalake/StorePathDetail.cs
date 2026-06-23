@@ -1,4 +1,6 @@
-﻿namespace Toolbox.Data;
+﻿using Toolbox.Extensions;
+
+namespace Toolbox.Data;
 
 public enum LeaseStatus
 {
@@ -25,4 +27,12 @@ public record StorePathDetail
     public string? ContentHash { get; init; }
 
     public string SizeK => $"{(int)(ContentLength / 1024)} KB";
+
+    public string GetFileName()
+    {
+        if (Path.IsEmpty()) return string.Empty;
+
+        int lastSlashIndex = Path.LastIndexOf('/');
+        return lastSlashIndex >= 0 ? Path[(lastSlashIndex + 1)..] : Path;
+    }
 }

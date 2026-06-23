@@ -25,4 +25,7 @@ public enum ToolbarVariant
     Download,
     Clear,
     NewFolder,
+    OpenInBrowser,
+    ContentCopy,
+    List,
 }

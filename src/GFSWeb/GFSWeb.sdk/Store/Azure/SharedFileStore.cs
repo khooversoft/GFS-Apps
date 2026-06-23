@@ -24,7 +24,7 @@ public class SharedFileStore
     public async Task<Option> CreateFolder(string path) => await _datalakeStore.CreateFolder(path);
     public async Task<Option> Delete(string path) => await _datalakeStore.Delete(path);
     public async Task<Option<DataETag>> Get(string path) => await _datalakeStore.Get(path);
-    public async Task<IReadOnlyList<StorePathDetail>> Search(string path) => await _datalakeStore.Search(path);
+    public async Task<IReadOnlyList<StorePathDetail>> Search(string path, bool includeFolder) => await _datalakeStore.Search(path, includeFolder: includeFolder);
     public async Task<Option<string>> Upsert(string path, DataETag data) => await _datalakeStore.Upsert(path, data);
 }
 
