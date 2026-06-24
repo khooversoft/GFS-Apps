@@ -18,6 +18,7 @@ public class GFSAdminStore
         PrincipalGroup = ActivatorUtilities.CreateInstance<PrincipalGroupEntity>(serviceProvider, client);
         Package = ActivatorUtilities.CreateInstance<PackageEntity>(serviceProvider, client);
         Command = ActivatorUtilities.CreateInstance<CommandEntity>(serviceProvider, client);
+        UserUsage = ActivatorUtilities.CreateInstance<UserUsageEntity>(serviceProvider, client);
     }
 
     public ReportMenuEntity Menu { get; }
@@ -26,4 +27,5 @@ public class GFSAdminStore
     public PrincipalGroupEntity PrincipalGroup { get; }
     public PackageEntity Package { get; }
     public CommandEntity Command { get; }
+    public UserUsageEntity UserUsage { get; }
 }

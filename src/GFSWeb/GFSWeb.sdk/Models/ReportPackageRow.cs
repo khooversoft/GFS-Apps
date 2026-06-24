@@ -13,6 +13,7 @@ public record ReportPackageRow
     public bool Disabled { get; set; }
     public DateTime DateTimeStamp { get; set; }
     public string UserStamp { get; set; } = null!;
+    public bool IsFavorite { get; set; }
 
     public static IValidator<ReportPackageRow> Validator { get; } = new Validator<ReportPackageRow>()
         .RuleFor(x => x.PackageId).NotEmpty()

@@ -5,9 +5,7 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
-    DECLARE @role NVARCHAR(20) = (
-        SELECT [Role] FROM [AppDbo].[PrincipalIdentity] WHERE [NameIdentifier] = @NameIdentifier
-    );
+    DECLARE @role NVARCHAR(20) = (SELECT [Role] FROM [AppDbo].[PrincipalIdentity] WHERE [NameIdentifier] = @NameIdentifier);
 
     IF @role IS NULL
     BEGIN
@@ -15,31 +13,35 @@ BEGIN
         RETURN;
     END
 
+    -- System contributors and owners can see all packages
     IF @role IN ('contributor', 'owner')
     BEGIN
-        IF @PackageId IS NULL
-        BEGIN
-            SELECT  x.*
-            FROM    [App].[ReportPackageView] x;
-            RETURN;
-        END
-
-        SELECT  x.*
-        FROM    [App].[ReportPackageView] x
-        WHERE   x.[PackageId] = @PackageId;
+        SELECT  rp.[PackageId]
+                ,rp.[Description]
+                ,rp.[MenuId]
+                ,rp.[Data]
+                ,rp.[Disabled]
+                ,ISNULL(pu.[Favorite], 0) AS [IsFavorite]
+        FROM    [App].[ReportPackageView] rp
+                    LEFT JOIN [AppDbo].[PackageUsage] pu ON pu.[PackageId] = rp.[PackageId]
+        AND     pu.[NameIdentifier] = @NameIdentifier
+        WHERE   (@PackageId IS NULL OR rp.[PackageId] = @PackageId);
         RETURN;
     END
 
-    IF @PackageId IS NULL
-    BEGIN
-        SELECT  DISTINCT x.*
-        FROM    [App].[PackageRoleView] x
-        WHERE   x.[EffectiveRole] in ('contributor', 'owner');
-        RETURN;
-    END
-
-    SELECT  DISTINCT x.*
-    FROM    [App].[PackageRoleView] x
-    WHERE   x.[EffectiveRole] in ('contributor', 'owner')
-    AND     x.[PackageId] = @PackageId;
+    -- Regular users can only see packages accessible via their group memberships
+    SELECT  DISTINCT
+            rp.[PackageId]
+            ,rp.[Description]
+            ,rp.[MenuId]
+            ,rp.[Data]
+            ,rp.[Disabled]
+            ,ISNULL(pu.[Favorite], 0) AS [IsFavorite]
+    FROM    [App].[ReportPackageView] rp
+                INNER JOIN [AppDbo].[GroupPackageAccess] gpa ON gpa.[PackageId] = rp.[PackageId]
+                INNER JOIN [AppDbo].[GroupMembership] m ON m.[GroupName] = gpa.[GroupName]
+                LEFT JOIN  [AppDbo].[PackageUsage] pu ON pu.[PackageId] = rp.[PackageId]
+    AND     pu.[NameIdentifier] = @NameIdentifier
+    WHERE   m.[NameIdentifier] = @NameIdentifier
+    AND     (@PackageId IS NULL OR rp.[PackageId] = @PackageId);
 END

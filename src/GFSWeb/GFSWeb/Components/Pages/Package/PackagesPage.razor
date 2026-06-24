@@ -16,31 +16,18 @@ else
             <ToolbarButton Variant="ToolbarVariant.Edit" OnClick="OnEdit" Disabled="@_editDisabled" />
             <ToolbarButton Variant="ToolbarVariant.Delete" OnClick="OnDelete" Disabled="@_deleteDisabled" />
             <ToolbarSpacer />
+            <MudSwitch Style="margin: 0px 10px" Label="Multi Select" @bind-Value="_multiSelect" Color="@Color.Info" />
             <ToolbarSearch OnClick="OnSearch" Disabled="@_searchDisabled" />
         </Toolbar>
 
-        <MudDataGrid T="ReportPackageRow"
-                     Items="@_list"
-                     Dense="true"
-                     Hover="true"
-                     Elevation="0"
-                     SelectedItemsChanged="@SelectedItemsChanged"
-                     RowStyleFunc="GetRowStyle"
-                     SortMode="SortMode.Multiple"
-                     ColumnResizeMode="ResizeMode.Column"
-                     MultiSelection=true
-                     QuickFilter="QuickFilter">
-
-            <Columns>
-                <SelectColumn T="ReportPackageRow" />
-                <TemplateColumn Title="Package ID" Resizable="true" Sortable="true" SortBy="x => x.Description">
-                    <CellTemplate>
-                        <MudLink Color="Color.Info" Href="@(NavHelper.Package.Href(@context.Item.PackageId, _nav.Uri))">@context.Item.PackageId</MudLink>
-                    </CellTemplate>
-                </TemplateColumn>
-                <PropertyColumn Property="x => x.Description" Title="Description" Sortable="true" Resizable="true" />
-            </Columns>
-        </MudDataGrid>
+        <MudExpansionPanels MultiExpansion="true" @ref="@_expansionPanels">
+            <MudExpansionPanel Text="Favorites" Expanded="true">
+                <PackageList List="@_favorites" MultiSelect="@_multiSelect" SearchText="@_searchString" SelectedItemsChanged="@SelectedItemsChanged" OnUpdate="@Load" />
+            </MudExpansionPanel>
+            <MudExpansionPanel Text="All Packages" Expanded="true">
+                <PackageList List="@_list" MultiSelect="@_multiSelect" SearchText="@_searchString" SelectedItemsChanged="@SelectedItemsChanged" OnUpdate="@Load" />
+            </MudExpansionPanel>
+        </MudExpansionPanels>
     </MudStack>
 
     <Question Show=_deleteAsk Title="Delete Group" Descriptions=@_deleteDescriptions OnYes=DeleteOnYes OnNo=DeleteCancel OnClose=DeleteCancel />
@@ -54,31 +41,31 @@ else
 
     private HashSet<ReportPackageRow> _selectedItems = new();
     private IReadOnlyList<ReportPackageRow> _list = null!;
+    private IReadOnlyList<ReportPackageRow> _favorites = null!;
     private bool _initialized = false;
     private bool _searchDisabled = true;
     private bool _editDisabled = true;
     private bool _deleteDisabled = true;
+    private bool _multiSelect = false;
     private string? _searchString;
     private bool _deleteAsk = false;
     private IReadOnlyList<string> _deleteDescriptions = Array.Empty<string>();
+    private MudExpansionPanels _expansionPanels = null!;
 
-    protected override async Task OnParametersSetAsync()
+    protected override async Task OnParametersSetAsync() => await Load();
+
+    private async Task SetFavorite(ReportPackageRow row, bool value)
     {
+        var result = await _store.UserUsage.UpsertUsage(row.PackageId, value);
+        if (result.IsError()) _snackbar.Add(result.Error ?? "Failed", Severity.Error);
+
         await Load();
     }
-
-    // protected override async Task OnAfterRenderAsync(bool firstRender)
-    // {
-    //     if (firstRender)
-    //     {
-    //         await Load();
-    //         StateHasChanged();
-    //     }
-    // }
 
     private async Task Load()
     {
         _list = await _store.Package.GetAll();
+        _favorites = _list.Where(x => x.IsFavorite).ToList();
         _searchDisabled = _list.Count == 0;
         _initialized = true;
     }
@@ -115,6 +102,7 @@ else
         if (_searchString == searchString) return;
 
         _searchString = searchString;
+        _expansionPanels.ExpandAllAsync();
     }
 
     private bool QuickFilter(ReportPackageRow item)

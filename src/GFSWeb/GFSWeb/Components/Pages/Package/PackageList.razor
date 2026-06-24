@@ -1,0 +1,57 @@
+﻿<MudDataGrid T="ReportPackageRow"
+             Items="@List"
+             Dense="true"
+             Hover="true"
+             Elevation="0"
+             SelectedItemsChanged="@SelectedItemsChanged"
+             SortMode="SortMode.Multiple"
+             ColumnResizeMode="ResizeMode.Column"
+             MultiSelection="@MultiSelect"
+             QuickFilter="QuickFilter">
+
+    <Columns>
+        @if (MultiSelect)
+        {
+            <SelectColumn T="ReportPackageRow" />
+        }
+        <TemplateColumn Title="Package ID" Resizable="true" Sortable="true" SortBy="x => x.Description" HeaderStyle="width: 1%; white-space: nowrap;">
+            <CellTemplate>
+                <MudLink Color="Color.Info" Href="@(NavHelper.Package.Href(@context.Item.PackageId, _nav.Uri))">@context.Item.PackageId</MudLink>
+            </CellTemplate>
+        </TemplateColumn>
+        <PropertyColumn Property="@(x => x.Description)" Title="Description" Sortable="true" Resizable="true" />
+        <TemplateColumn Title="Favorite" Sortable="true" SortBy="@(x => x.IsFavorite ? $"0{x.Description}" : $"1{x.Description}")" HeaderStyle="width: 1%; white-space: nowrap;">
+            <CellTemplate>
+                <MudCheckBox T="bool" Value="@context.Item.IsFavorite" Color="Color.Info" ValueChanged="@(x => SetFavorite(context.Item, x))"></MudCheckBox>
+            </CellTemplate>
+        </TemplateColumn>
+    </Columns>
+</MudDataGrid>
+
+@code {
+    @inject GFSAdminStore _store;
+    @inject NavigationManager _nav;
+    @inject ISnackbar _snackbar;
+
+    [Parameter] public IReadOnlyList<ReportPackageRow> List { get; set; } = null!;
+    [Parameter] public bool MultiSelect { get; set; }
+    [Parameter] public string? SearchText { get; set; }
+    [Parameter] public EventCallback<HashSet<ReportPackageRow>> SelectedItemsChanged { get; set; }
+    [Parameter] public EventCallback OnUpdate { get; set; }
+
+    private bool QuickFilter(ReportPackageRow item)
+    {
+        if (SearchText is null) return true;
+
+        return item.PackageId.Contains(SearchText, StringComparison.OrdinalIgnoreCase)
+            || (item.Description?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ?? false);
+    }
+
+    private async Task SetFavorite(ReportPackageRow row, bool value)
+    {
+        var result = await _store.UserUsage.UpsertUsage(row.PackageId, value);
+        if (result.IsError()) _snackbar.Add(result.Error ?? "Failed", Severity.Error);
+
+        await OnUpdate.InvokeAsync();
+    }
+}

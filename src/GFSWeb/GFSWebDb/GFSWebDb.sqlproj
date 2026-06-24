@@ -71,6 +71,7 @@
     <Folder Include="App\Stored Procedures\Group" />
     <Folder Include="App\Stored Procedures\Operations" />
     <Folder Include="App\Stored Procedures\Command" />
+    <Folder Include="App\Stored Procedures\PackageUsage" />
   </ItemGroup>
   <ItemGroup>
     <Build Include="AppDbo\Tables\PrincipalIdentity.sql" />
@@ -123,6 +124,10 @@
     <Build Include="App\Stored Procedures\ReportPackage\ReportPackageView.sql" />
     <Build Include="PackageGroupAccess.sql" />
     <Build Include="App\Stored Procedures\ReportPackage\PackageRoleView.sql" />
+    <Build Include="AppDbo\Tables\PackageUsage.sql" />
+    <Build Include="App\Stored Procedures\PackageUsage\UpsertPackageUsage.sql" />
+    <Build Include="App\Stored Procedures\PackageUsage\GetUserUsage.sql" />
+    <Build Include="App\Stored Procedures\PackageUsage\ClearUserUsage.sql" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Publish\GFSWebDb.publish.xml" />
