@@ -1,43 +1,55 @@
 ﻿@using GFSWeb.Components.Controls.Toolbar
+@using MudBlazor.Utilities
+
 <MudStack Spacing="2">
-    @* <BlockToolbar2 Items="@_toolbarItems" /> *@
-    <Toolbar>
-        <ToolbarButton Variant="@ToolbarVariant.Add" OnClick="OnAdd" />
-    </Toolbar>
 
-    <MudDataGrid T="IPackageActivity"
-                 Items="@EditContext.Activities"
-                 Dense="true"
-                 Hover="true"
-                 Elevation="0"
-                 SelectedItemsChanged="@SelectedItemsChanged"
-                 SortMode="SortMode.Multiple"
-                 ColumnResizeMode="ResizeMode.Column"
-                 MultiSelection=true
-                 QuickFilter="QuickFilter">
+    @if (_reorder)
+    {
+        <PackageReorder Activities="@EditContext.Activities"
+                        OnUpdate="@OnUpdateOrder"
+                        OnCancel="@(() => _reorder = false)" />
+    }
+    else
+    {
+        <Toolbar>
+            <ToolbarButton Variant="@ToolbarVariant.Add" OnClick="OnAdd" />
+            <ToolbarButton Variant="@ToolbarVariant.Reorder" OnClick="ReOrder" />
+        </Toolbar>
 
-        <Columns>
-            <HierarchyColumn T="IPackageActivity" />
-            <SelectColumn T="IPackageActivity" />
-            <PropertyColumn Property="x => x.Type" Title="Type" Sortable="true" />
-            <PropertyColumn Property="x => x.Description" Title="Description" Sortable="true" />
-        </Columns>
-        <ChildRowContent>
-            <MudButton StartIcon="@Icons.Material.Outlined.Add" Variant="Variant.Text" Color="Color.Info">Add</MudButton>
-            @switch (context.Item)
-            {
-                case SapQueryActivity sapQuery:
-                    <SapQueryBlock Activity="@sapQuery" OnUpdate="OnUpdate" ExpandState="@_expanded" />
-                    break;
+        <MudDataGrid T="IPackageActivity"
+                     @ref="_grid"
+                     Items="@EditContext.Activities"
+                     Dense="true"
+                     Hover="true"
+                     Elevation="0"
+                     SelectedItemsChanged="@SelectedItemsChanged"
+                     SortMode="SortMode.Multiple"
+                     ColumnResizeMode="ResizeMode.Column"
+                     MultiSelection=true
+                     RowStyleFunc="@GetRowStyle"
+                     QuickFilter="QuickFilter"
+                     HierarchyVisibilityToggled="OnExpand">
 
-                case SqlCommandActivity sqlCommand:
-                    <SqlCommandBlock Activity="@sqlCommand" OnUpdate="OnUpdate" />
-                    break;
-            }
-        </ChildRowContent>
-    </MudDataGrid>
+            <Columns>
+                <HierarchyColumn T="IPackageActivity" />
+                <PropertyColumn Property="x => x.Id" Title="Id" Sortable="true" HeaderStyle="width: 1%; white-space: nowrap;" CellStyle="width: 1%; white-space: nowrap;" />
+                <PropertyColumn Property="x => x.Type" Title="Type" Sortable="true" HeaderStyle="width: 1%; white-space: nowrap;" CellStyle="width: 1%; white-space: nowrap;" />
+                <PropertyColumn Property="x => x.Description" Title="Description" Sortable="true" />
+            </Columns>
+            <ChildRowContent>
+                @switch (context.Item)
+                {
+                    case SapQueryActivity sapQuery:
+                        <SapQueryBlock Activity="@sapQuery" OnUpdate="OnUpdate" ExpandState="@_expanded" />
+                        break;
 
-
+                    case SqlCommandActivity sqlCommand:
+                        <SqlCommandBlock Activity="@sqlCommand" OnUpdate="OnUpdate" />
+                        break;
+                }
+            </ChildRowContent>
+        </MudDataGrid>
+    }
 </MudStack>
 
 <AddActivityDrawer Open="@_addOpen" OnSelect="@OnSelect" OnClose="@(() => _addOpen = false)" />
@@ -48,18 +60,24 @@
     [Parameter] public EventCallback OnUpdate { get; set; }
     [CascadingParameter] public EditPackageContext EditContext { get; set; } = null!;
 
-    private record CurrentMove(String Id, string? MoveValue = null);
-    private ConcurrentDictionary<string, CurrentMove> _moveDict = new(StringComparer.OrdinalIgnoreCase);
-    // private IToolbarElement[] _toolbarItems = [];
+    private MudDataGrid<IPackageActivity>? _grid;
     private bool _expanded = false;
     private bool _addOpen = false;
+    private bool _reorder = false;
     private string? _searchString;
     private HashSet<IPackageActivity> _selectedActivities = [];
 
-    protected override void OnParametersSet() => SetupToolbar();
     private void SelectedItemsChanged(HashSet<IPackageActivity> activities) => _selectedActivities = activities;
     private void OnAdd() => _addOpen = true;
     private void InternalOnExpand(bool state) { _expanded = state; }
+    private void ReOrder() => _reorder = true;
+    private ConcurrentDictionary<string, bool> _expandedStates = new();
+
+    // protected override void OnParametersSet()
+    // {
+    //     _expandedStates.Clear();
+    // }
+
 
     private string GetTitle(IPackageActivity activity) => activity switch
     {
@@ -74,56 +92,6 @@
         var s => item.Description.Contains(s, StringComparison.OrdinalIgnoreCase),
     };
 
-    private void SetupToolbar()
-    {
-        // _toolbarItems = [
-        //     ToolbarButtonTool.Add.Create(this, OnAdd),
-        //     new ToolbarSpacer(),
-        //     ToolbarButtonTool.ExpandAll.Create(this, () => InternalOnExpand(true)),
-        //     ToolbarButtonTool.CollapseAll.Create(this, () => InternalOnExpand(false))
-        // ];
-    }
-
-
-
-    private void Move(string cmd, string id)
-    {
-        var index = EditContext.Activities.FindIndex(a => a.Id == id);
-        if (index == -1) return;
-
-        _moveDict.AddOrUpdate(id, x => new CurrentMove(id, cmd), (x, v) => v with { MoveValue = cmd });
-
-        // switch (cmd)
-        // {
-        //     case ToolbarDropdownMove.Top:
-        //         if (index == 0) return;
-        //         EditContext.SwapActivites(0, index);
-        //         break;
-
-        //     case ToolbarDropdownMove.Bottom:
-        //         if (index == EditContext.Activities.Count - 1) return;
-        //         EditContext.SwapActivites(EditContext.Activities.Count - 1, index);
-        //         break;
-
-        //     case ToolbarDropdownMove.Up:
-        //         if (index == 0) return;
-        //         EditContext.SwapActivites(index, index - 1);
-        //         break;
-
-        //     case ToolbarDropdownMove.Down:
-        //         if (index == EditContext.Activities.Count - 1) return;
-        //         EditContext.SwapActivites(index, index + 1);
-        //         break;
-        // }
-        ;
-    }
-
-    // private PossibleMove CanMove(string id)
-    // {
-    //     var index = EditContext.Activities.FindIndex(a => a.Id == id);
-    //     return ToolbarDropdownMove.CanMove(index, EditContext.Activities.Count);
-    // }
-
     private async Task OnSelect(IReadOnlyList<ActivityInfoRecord>
     activities)
     {
@@ -137,4 +105,21 @@
 
         StateHasChanged();
     }
+
+    private void OnUpdateOrder(IReadOnlyList<IPackageActivity> activities)
+    {
+        EditContext.Activities = activities.ToList();
+        _reorder = false;
+    }
+
+    private void OnExpand(DataGridHierarchyVisibilityToggledEventArgs<IPackageActivity> args)
+    {
+        _expandedStates.AddOrUpdate(args.Item.Id, args.Expanded, (key, oldValue) => args.Expanded);
+    }
+
+    private string GetRowStyle(IPackageActivity item, int index) => _expandedStates.TryGetValue(item.Id, out var state) switch
+    {
+        true when state => "background-color: var(--mud-palette-success);",
+        _ => string.Empty,
+    };
 }

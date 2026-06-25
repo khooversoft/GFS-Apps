@@ -15,10 +15,9 @@
             else
             {
                 <MudStack Spacing="2">
-                    @* <BlockToolbar2 Items="@_toolbarItems" Dense="false" /> *@
                     <Toolbar>
-                        <ToolbarButton Variant="@ToolbarVariant.Save" OnSave Disabled="@(_selectedActivity == null)" />
-                        <ToolbarButton Variant="@ToolbarVariant.Close" OnClick="OnClose" />
+                        <ToolbarButton Variant="@ToolbarVariant.Save" OnClick="@OnSave" Disabled="@(_selectedActivity == null)" />
+                        <ToolbarButton Variant="@ToolbarVariant.Close" OnClick="@OnClose" />
                         <ToolbarSpacer />
                         <ToolbarSearch OnClick="OnSearch" />
                     </Toolbar>
@@ -71,24 +70,12 @@
     private string? _searchString;
     private IReadOnlyList<ActivityInfoRecord> _activities = [];
     private ActivityInfoRecord? _selectedActivity;
-    // private IToolbarElement[] _toolbarItems = [];
 
     protected override async Task OnParametersSetAsync()
     {
         _activities = await _activitySelect.GetAll();
         _selectedActivity = null;
-        SetupToolbar();
         _initialized = true;
-    }
-
-    private void SetupToolbar()
-    {
-        // _toolbarItems = [
-        //     ToolbarButtonTool.Save.Create(this, OnSave, disabled: _selectedActivity == null),
-        //     ToolbarButtonTool.Close.Create(OnClose),
-        //     new ToolbarSpacer(),
-        //     ToolbarSearchTool.Create(this, OnSearch)
-        // ];
     }
 
     private async Task OnSave()
@@ -97,11 +84,7 @@
         await OnSelect.InvokeAsync(_selectedActivity);
     }
 
-    private void SelectedItemChanged(ActivityInfoRecord? item)
-    {
-        _selectedActivity = item;
-        SetupToolbar();
-    }
+    private void SelectedItemChanged(ActivityInfoRecord? item) => _selectedActivity = item;
 
     private void OnSearch(string? searchString)
     {

@@ -22,7 +22,12 @@
         <PropertyColumn Property="@(x => x.Description)" Title="Description" Sortable="true" Resizable="true" />
         <TemplateColumn Title="Favorite" Sortable="true" SortBy="@(x => x.IsFavorite ? $"0{x.Description}" : $"1{x.Description}")" HeaderStyle="width: 1%; white-space: nowrap;">
             <CellTemplate>
-                <MudCheckBox T="bool" Value="@context.Item.IsFavorite" Color="Color.Info" ValueChanged="@(x => SetFavorite(context.Item, x))"></MudCheckBox>
+                <MudCheckBox T="bool"
+                             Value="@context.Item.IsFavorite"
+                             Color="@(context.Item.IsFavorite ? Color.Warning : Color.Surface)"
+                             ValueChanged="@(x => SetFavorite(context.Item, x))"
+                             CheckedIcon="@Icons.Material.Filled.Star" 
+                             UncheckedIcon="@Icons.Material.Filled.StarOutline" />
             </CellTemplate>
         </TemplateColumn>
     </Columns>

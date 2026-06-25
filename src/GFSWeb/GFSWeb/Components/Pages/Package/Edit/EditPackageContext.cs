@@ -9,7 +9,7 @@ public class EditPackageContext
     public string PackageId { get; set; } = null!;
     public string Description { get; set; } = null!;
     public PackageType PackageType { get; set; }
-    public List<IPackageActivity> Activities { get; init; } = new();
+    public List<IPackageActivity> Activities { get; set; } = new();
 }
 
 public static class EditPackageContextTool

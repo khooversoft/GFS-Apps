@@ -28,4 +28,5 @@ public enum ToolbarVariant
     OpenInBrowser,
     ContentCopy,
     List,
+    Reorder,
 }
