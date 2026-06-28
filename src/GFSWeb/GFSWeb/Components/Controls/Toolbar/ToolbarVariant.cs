@@ -29,4 +29,6 @@ public enum ToolbarVariant
     ContentCopy,
     List,
     Reorder,
+    Yes,
+    No,
 }

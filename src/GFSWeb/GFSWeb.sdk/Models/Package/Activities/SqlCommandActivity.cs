@@ -12,6 +12,14 @@ public record SqlCommandActivity : IPackageActivity
     public string SqlCommand { get; set; } = null!;
     public string Hash { get; set; } = null!;
 
+    public bool Search(string searchTerm)
+    {
+        return Id.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+               Type.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+               Description.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+               SqlCommand.Contains(searchTerm, StringComparison.OrdinalIgnoreCase);
+    }
+
     public static IValidator<SqlCommandActivity> Validator { get; } = new Validator<SqlCommandActivity>()
         .RuleFor(x => x.Id).NotEmpty()
         .RuleFor(x => x.Description).NotEmpty()

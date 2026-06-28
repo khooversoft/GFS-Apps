@@ -15,7 +15,7 @@
         <ToolbarButton Variant="ToolbarVariant.OpenInBrowser" OnClick="@OpenInBrowser" Disabled="@DisableOpenInBrowser()" />
         <ToolbarButton Variant="ToolbarVariant.List" OnClick="@OnProperties" Disabled="@(_selectedItems.Count != 1)" />
         <ToolbarSpacer />
-        <MudSwitch Style="margin: 0px 10px" Label="Multi Select" @bind-Value="_multiSelect" Color="@Color.Info" />
+        <ToolbarSwitch @bind-Value="_multiSelect" />
         <ToolbarSearch OnClick="@OnSearch" />
     </Toolbar>
 

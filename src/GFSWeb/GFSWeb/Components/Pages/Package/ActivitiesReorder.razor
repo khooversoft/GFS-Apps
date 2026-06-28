@@ -1,0 +1,90 @@
+﻿<MudStack Spacing="2">
+    <div style="padding:10px">
+        <MudStack>
+            <MudText Typo="Typo.body1">Reorder Activities</MudText>
+            Use your mouse to drag and drop to reorder the activities.
+        </MudStack>
+    </div>
+
+    <Toolbar Elevation="4">
+        <ToolbarButton Variant="@ToolbarVariant.Save" OnClick="@OnSave" />
+        <ToolbarButton Variant="@ToolbarVariant.Undo" OnClick="@OnUndo" Disabled="@(!CanUndo())" />
+        <ToolbarButton Variant="@ToolbarVariant.Cancel" OnClick="OnCancel" />
+    </Toolbar>
+
+    <MudField Variant="@Variant.Outlined">
+        <MudDropContainer T="DropItem"
+                          @ref="_container"
+                          Items="_items"
+                          ItemDropped="ItemUpdated"
+                          ItemsSelector="@((item,dropzone) => dropzone=="0")"
+                          Class="d-flex flex-wrap flex-grow-1">
+            <ChildContent>
+                <MudPaper Class="flex-grow-1">
+                    <MudList T="string" Class="d-flex flex-column mud-height-full">
+                        <MudDropZone T="DropItem" Identifier="0" Class="flex-grow-1" AllowReorder="true" />
+                    </MudList>
+                </MudPaper>
+            </ChildContent>
+            <ItemRenderer>
+                <MudListItem T="string" Gutters="false">
+                    <MudSimpleTable Dense="true" Elevation="0" Hover="false" Style="font-family: monospace; width: 100%;">
+                        <tbody>
+                            <tr>
+                                <td style="width: 50px; min-width: 50px; max-width: 50px; text-align: right; white-space: nowrap;padding-top:0px;padding-bottom:0px">@context.Index</td>
+                                <td style="width: 200px; min-width: 200px; max-width:200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;padding-top:0px;padding-bottom:0px">@context.Item.Id</td>
+                                <td style="width: 200px; min-width: 200px; max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;padding-top:0px;padding-bottom:0px">@context.Item.Type</td>
+                                <td style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;padding-top:0px;padding-bottom:0px">@context.Item.Description</td>
+                            </tr>
+                        </tbody>
+                    </MudSimpleTable>
+                </MudListItem>
+            </ItemRenderer>
+        </MudDropContainer>
+    </MudField>
+
+</MudStack>
+
+@code {
+    [Parameter] public IReadOnlyList<IPackageActivity> Activities { get; set; } = null!;
+    [Parameter] public EventCallback<IReadOnlyList<IPackageActivity>> OnUpdate { get; set; }
+    [Parameter] public EventCallback OnCancel { get; set; }
+
+    private List<DropItem> _items = [];
+    private MudDropContainer<DropItem>? _container;
+
+    protected override void OnParametersSet() => _items = Activities.Select((x, i) => new DropItem(i, x)).ToList();
+    private bool CanUndo() => _items.Select((x, i) => (x, i)).Any(x => x.x.Index != x.i);
+
+    private async Task OnSave()
+    {
+        var list = _items.Select(x => x.Item).ToList();
+        await OnUpdate.InvokeAsync(list);
+    }
+
+    private void OnUndo()
+    {
+        _items.Clear();
+        _items.AddRange(Activities.Select((x, i) => new DropItem(i, x)));
+        _container?.Refresh();
+    }
+
+    private void ItemUpdated(MudItemDropInfo<DropItem> dropItem)
+    {
+        int oldIndex = _items.IndexOf(dropItem.Item!);
+        int newIndex = dropItem.IndexInZone;
+
+        if (oldIndex < 0 || oldIndex == newIndex) return;
+
+        _items.RemoveAt(oldIndex);
+        _items.Insert(newIndex, dropItem.Item!);
+    }
+
+    private record DropItem(int Index, IPackageActivity Item)
+    {
+        public string ToDisplay()
+        {
+            return $"{Index,6}: {Item.Id,-10} - {Item.Type,-10}, {Item.Description}";
+        }
+    }
+}

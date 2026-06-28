@@ -5,15 +5,17 @@
 
     @if (_reorder)
     {
-        <PackageReorder Activities="@EditContext.Activities"
-                        OnUpdate="@OnUpdateOrder"
-                        OnCancel="@(() => _reorder = false)" />
+        <ActivitiesReorder Activities="@EditContext.Activities" OnUpdate="@OnUpdateReorder" OnCancel="@OnCancelReorder" />
     }
     else
     {
         <Toolbar>
-            <ToolbarButton Variant="@ToolbarVariant.Add" OnClick="OnAdd" />
-            <ToolbarButton Variant="@ToolbarVariant.Reorder" OnClick="ReOrder" />
+            <ToolbarButton Variant="@ToolbarVariant.Add" OnClick="OnAdd" Disabled="@_reorder" />
+            <ToolbarButton Variant="@ToolbarVariant.Reorder" OnClick="@(() => _reorder = true)" Disabled="@_reorder" />
+            <ToolbarButton Variant="@ToolbarVariant.Delete" OnClick="@(() => _deleteAsk = true)" Disabled="@(_selectedActivities.Count == 0 || _reorder)" />
+            <ToolbarSpacer />
+            <ToolbarSwitch @bind-Value="_multiSelect" Disabled="@_reorder" />
+            <ToolbarSearch OnClick="OnSearch" Disabled="@_reorder" />
         </Toolbar>
 
         <MudDataGrid T="IPackageActivity"
@@ -25,16 +27,52 @@
                      SelectedItemsChanged="@SelectedItemsChanged"
                      SortMode="SortMode.Multiple"
                      ColumnResizeMode="ResizeMode.Column"
-                     MultiSelection=true
+                     MultiSelection="@_multiSelect"
                      RowStyleFunc="@GetRowStyle"
-                     QuickFilter="QuickFilter"
+                     QuickFilter="@QuickFilter"
                      HierarchyVisibilityToggled="OnExpand">
 
             <Columns>
+                @if (_multiSelect)
+                {
+                    <SelectColumn T="IPackageActivity" />
+                }
                 <HierarchyColumn T="IPackageActivity" />
                 <PropertyColumn Property="x => x.Id" Title="Id" Sortable="true" HeaderStyle="width: 1%; white-space: nowrap;" CellStyle="width: 1%; white-space: nowrap;" />
                 <PropertyColumn Property="x => x.Type" Title="Type" Sortable="true" HeaderStyle="width: 1%; white-space: nowrap;" CellStyle="width: 1%; white-space: nowrap;" />
                 <PropertyColumn Property="x => x.Description" Title="Description" Sortable="true" />
+                <TemplateColumn HeaderStyle="width: 1%; white-space: nowrap" CellStyle="padding: 0; line-height: 0;">
+                    <CellTemplate>
+                        <MudMenu Icon="@Icons.Material.Outlined.MoreHoriz"
+                                 AriaLabel="Open user menu"
+                                 Dense="true"
+                                 Variant="Variant.Text"
+                                 Style="max-height: 24px; display: flex; align-items: center;">
+
+                            <MudMenuItem Label="Delete" OnClick="@(() => _deleteAsk = true)" />
+
+                            <MudMenu Label="Move To">
+                                @if (IndexOfSelectedItem(context.Item) > 0)
+                                {
+                                    <MudMenuItem Label="Top" OnClick="@(() => Move(context.Item, 0))" />
+                                }
+                                @if (EditContext.Activities.Count > 2)
+                                {
+                                    int currentIndex = IndexOfSelectedItem(context.Item);
+                                    foreach (var count in Enumerable.Range(1, EditContext.Activities.Count - 1))
+                                    {
+                                        if (count == currentIndex) continue;
+                                        <MudMenuItem Label="@($"Position {count}")" OnClick="@(() => Move(context.Item, count))" />
+                                    }
+                                }
+                                @if (IndexOfSelectedItem(context.Item) < EditContext.Activities.Count - 1)
+                                {
+                                    <MudMenuItem Label="Bottom" OnClick="@(() => Move(context.Item, -1))" />
+                                }
+                            </MudMenu>
+                        </MudMenu>
+                    </CellTemplate>
+                </TemplateColumn>
             </Columns>
             <ChildRowContent>
                 @switch (context.Item)
@@ -54,6 +92,21 @@
 
 <AddActivityDrawer Open="@_addOpen" OnSelect="@OnSelect" OnClose="@(() => _addOpen = false)" />
 
+<Drawer Show="_deleteAsk" OnClose="@(() => _deleteAsk = false)">
+    <DrawerHeader Title="Delete Activity">
+        <MudText Typo="Typo.body1">Are you sure you want to delete these activities?</MudText>
+    </DrawerHeader>
+
+    <DrawerContainer OnYes=DeleteOnYes OnNo="@(() => _deleteAsk = false)">
+        <MudStack Spacing=2>
+            @foreach (var item in _selectedActivities)
+            {
+                <MudText Typo="Typo.body1" Class="mx-4">@($"{item.Id} - {item.Description}")</MudText>
+            }
+        </MudStack>
+    </DrawerContainer>
+</Drawer>
+
 @code {
     @inject ActivitySelect _activitySelect;
 
@@ -64,20 +117,56 @@
     private bool _expanded = false;
     private bool _addOpen = false;
     private bool _reorder = false;
+    private bool _multiSelect = false;
     private string? _searchString;
     private HashSet<IPackageActivity> _selectedActivities = [];
+    private bool _deleteAsk = false;
 
-    private void SelectedItemsChanged(HashSet<IPackageActivity> activities) => _selectedActivities = activities;
+    private int IndexOfSelectedItem(IPackageActivity activity) => EditContext.Activities.IndexOf(x => x.Id == activity.Id);
     private void OnAdd() => _addOpen = true;
     private void InternalOnExpand(bool state) { _expanded = state; }
-    private void ReOrder() => _reorder = true;
     private ConcurrentDictionary<string, bool> _expandedStates = new();
 
-    // protected override void OnParametersSet()
-    // {
-    //     _expandedStates.Clear();
-    // }
+    private void SelectedItemsChanged(HashSet<IPackageActivity> activities)
+    {
+        _selectedActivities = activities;
+        StateHasChanged();
+    }
 
+    private void Move(IPackageActivity activity, int newIndex)
+    {
+        newIndex.Assert(x => x >= 0 || x == -1, "New index must be greater than or equal to 0 or -1");
+        
+        if (newIndex < 0) newIndex = EditContext.Activities.Count - 1;
+        var currentIndex = EditContext.Activities.IndexOf(x => x.Id == activity.Id);
+        if (currentIndex < 0 || currentIndex == newIndex) return;
+
+        EditContext.Activities.RemoveAt(currentIndex);
+        EditContext.Activities.Insert(newIndex, activity);
+        _expandedStates.Clear();
+    }
+
+    private async Task DeleteOnYes()
+    {
+        _deleteAsk = false;
+        if (_selectedActivities.Count == 0) return;
+
+        foreach (var item in _selectedActivities)
+        {
+            EditContext.Activities.Remove(item);
+        }
+
+        _selectedActivities.Clear();
+        await OnUpdate.InvokeAsync();
+    }
+
+    private void OnSearch(string? searchString)
+    {
+        searchString = searchString.ToNullIfEmpty();
+        if (_searchString == searchString) return;
+
+        _searchString = searchString;
+    }
 
     private string GetTitle(IPackageActivity activity) => activity switch
     {
@@ -89,11 +178,10 @@
     private bool QuickFilter(IPackageActivity item) => _searchString switch
     {
         null => true,
-        var s => item.Description.Contains(s, StringComparison.OrdinalIgnoreCase),
+        var s => item.Search(s),
     };
 
-    private async Task OnSelect(IReadOnlyList<ActivityInfoRecord>
-    activities)
+    private async Task OnSelect(IReadOnlyList<ActivityInfoRecord> activities)
     {
         _addOpen = false;
 
@@ -106,10 +194,17 @@
         StateHasChanged();
     }
 
-    private void OnUpdateOrder(IReadOnlyList<IPackageActivity> activities)
+    private void OnUpdateReorder(IReadOnlyList<IPackageActivity> activities)
     {
         EditContext.Activities = activities.ToList();
         _reorder = false;
+        _expandedStates.Clear();
+    }
+
+    private void OnCancelReorder()
+    {
+        _reorder = false;
+        _expandedStates.Clear();
     }
 
     private void OnExpand(DataGridHierarchyVisibilityToggledEventArgs<IPackageActivity> args)
@@ -119,7 +214,11 @@
 
     private string GetRowStyle(IPackageActivity item, int index) => _expandedStates.TryGetValue(item.Id, out var state) switch
     {
-        true when state => "background-color: var(--mud-palette-success);",
-        _ => string.Empty,
+        true when state => "background-color: var(--mud-palette-primary);",
+        _ => _selectedActivities.Any(x => x.Id == item.Id) switch
+        {
+            true => "background-color: var(--mud-palette-gray-default);",
+            _ => String.Empty,
+        },
     };
 }

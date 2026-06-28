@@ -10,4 +10,5 @@ public interface IPackageActivity
     public string Id { get; }
     public string Type { get; }
     public string Description { get; }
+    public bool Search(string searchTerm);
 }

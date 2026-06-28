@@ -1,0 +1,28 @@
+﻿<!-- Settings Drawer -->
+<MudDrawer Open="@Show"
+           OpenChanged=OnClose
+           Anchor="Anchor.End"
+           Elevation="@Elevation"
+           Variant="@DrawerVariant.Temporary"
+           OverlayAutoClose=autoClose
+           Width="@Width">
+
+    <MudPaper Class="@Class" Elevation="@Elevation" Square="true" Style="@PaperStyle">
+
+        @ChildContent
+
+    </MudPaper>
+</MudDrawer>
+
+@code {
+    [Parameter] public RenderFragment ChildContent { get; set; } = null!;
+    [Parameter] public bool Show { get; set; }
+    [Parameter] public int Elevation { get; set; } = 2;
+    [Parameter] public string Class { get; set; } = "ma-2";
+    [Parameter] public string Width { get; set; } = "30%";
+    [Parameter] public bool NoLine { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+
+    private bool autoClose => OnClose.HasDelegate;
+    private string PaperStyle => NoLine ? string.Empty : "border-bottom-color:gray;border-bottom-style:solid;border-bottom-width:1px";
+}

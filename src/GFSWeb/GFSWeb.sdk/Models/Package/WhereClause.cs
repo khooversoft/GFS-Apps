@@ -26,6 +26,14 @@ public record WhereClause
     public Operator Operator { get; set; } = Operator.Equal;
     public string? Value { get; set; }
     public string? Value2 { get; set; }
+
+    public bool Search(string searchTerm)
+    {
+        return Id.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+               (FieldName?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ?? false) ||
+               (Value?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ?? false) ||
+               (Value2?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ?? false);
+    }
 }
 
 public static class OperatorTool

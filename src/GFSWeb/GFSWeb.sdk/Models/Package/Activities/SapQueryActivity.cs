@@ -11,6 +11,16 @@ public record SapQueryActivity : IPackageActivity
 
     public List<SapQueryMapping> SapQueryMappings { get; init; } = new();
     public List<WhereEditRecord> SapQueries { get; init; } = new();
+
+    public bool Search(string searchTerm)
+    {
+        return Id.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+               Type.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+               Description.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+               SapQueryMappings.Any(x => x.Search(searchTerm)) ||
+               SapQueries.Any(x => x.Search(searchTerm));
+    }
+
     public static IValidator<SapQueryActivity> Validator { get; } = new Validator<SapQueryActivity>()
         .RuleFor(x => x.Id).NotEmpty()
         .RuleFor(x => x.Description).NotEmpty()

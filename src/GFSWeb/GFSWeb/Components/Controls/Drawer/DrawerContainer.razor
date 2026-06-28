@@ -1,0 +1,32 @@
+﻿<MudStack>
+    @if (useToolbar)
+    {
+        <Toolbar>
+            @if (OnYes.HasDelegate)
+            {
+                <ToolbarButton Variant="@ToolbarVariant.Yes" OnClick="@OnYes" />
+            }
+            @if (OnNo.HasDelegate)
+            {
+                <ToolbarButton Variant="@ToolbarVariant.No" OnClick="@OnNo" ButtonColor="Color.Error" />
+            }
+            @if (OnCancel.HasDelegate)
+            {
+                <ToolbarButton Variant="@ToolbarVariant.Cancel" OnClick="@OnCancel" />
+            }
+        </Toolbar>
+    }
+
+    <div style="margin:10px">
+        @ChildContent
+    </div>
+</MudStack>
+
+@code {
+    [Parameter] public RenderFragment ChildContent { get; set; } = null!;
+    [Parameter] public EventCallback OnYes { get; set; }
+    [Parameter] public EventCallback OnNo { get; set; }
+    [Parameter] public EventCallback OnCancel { get; set; }
+
+    private bool useToolbar => OnYes.HasDelegate || OnNo.HasDelegate || OnCancel.HasDelegate;
+}

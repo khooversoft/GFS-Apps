@@ -15,7 +15,7 @@ else
             <ToolbarButton Variant="ToolbarVariant.Edit" OnClick="OnEdit" Disabled="@_editDisabled" />
             <ToolbarButton Variant="ToolbarVariant.Delete" OnClick="OnDelete" Disabled="@_deleteDisabled" />
             <ToolbarSpacer />
-            <MudSwitch Style="margin: 0px 10px" Label="Multi Select" @bind-Value="_multiSelect" Color="@Color.Info" />
+            <ToolbarSwitch @bind-Value="_multiSelect" />
             <ToolbarSearch OnClick="OnSearch" Disabled="@_searchDisabled" />
         </Toolbar>
 
