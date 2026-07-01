@@ -1,5 +1,6 @@
 ﻿using Toolbox.Extensions;
 using Toolbox.Tools;
+using Toolbox.Types;
 
 namespace GFSWeb.sdk.Models;
 
@@ -14,6 +15,7 @@ public class PipelinePackageBuilder
     public EliminationRecord? Elimination { get; set; }
     public List<ElimSelectRecord> ElimSelects { get; set; } = new();
     public List<MiscTablesRecord> MiscTables { get; set; } = new();
+    public List<KeyValue<string>> Properties { get; init; } = new();
 
     public PipelinePackageRecord Build()
     {
@@ -27,6 +29,7 @@ public class PipelinePackageBuilder
             Elimination = Elimination,
             ElimSelects = ElimSelects.ToArray(),
             MiscTables = MiscTables.ToArray(),
+            Properties = Properties.ToArray(),
             Activities = [
                 new SapQueryActivity
                 {

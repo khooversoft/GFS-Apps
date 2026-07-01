@@ -14,7 +14,7 @@
             <ToolbarButton Variant="@ToolbarVariant.Reorder" OnClick="@(() => _reorder = true)" Disabled="@_reorder" />
             <ToolbarButton Variant="@ToolbarVariant.Delete" OnClick="@(() => _deleteAsk = true)" Disabled="@(_selectedActivities.Count == 0 || _reorder)" />
             <ToolbarSpacer />
-            <ToolbarSwitch @bind-Value="_multiSelect" Disabled="@_reorder" />
+            <ToolbarSwitch Label="Multi Select" @bind-Value="_multiSelect" Disabled="@_reorder" />
             <ToolbarSearch OnClick="OnSearch" Disabled="@_reorder" />
         </Toolbar>
 
@@ -54,19 +54,14 @@
                             <MudMenu Label="Move To">
                                 @if (IndexOfSelectedItem(context.Item) > 0)
                                 {
-                                    <MudMenuItem Label="Top" OnClick="@(() => Move(context.Item, 0))" />
-                                }
-                                @if (EditContext.Activities.Count > 2)
-                                {
                                     int currentIndex = IndexOfSelectedItem(context.Item);
-                                    foreach (var count in Enumerable.Range(1, EditContext.Activities.Count - 1))
-                                    {
-                                        if (count == currentIndex) continue;
-                                        <MudMenuItem Label="@($"Position {count}")" OnClick="@(() => Move(context.Item, count))" />
-                                    }
+                                    <MudMenuItem Label="Top" OnClick="@(() => Move(context.Item, 0))" />
+                                    <MudMenuItem Label="Move Up" OnClick="@(() => Move(context.Item, currentIndex - 1))" />
                                 }
                                 @if (IndexOfSelectedItem(context.Item) < EditContext.Activities.Count - 1)
                                 {
+                                    int currentIndex = IndexOfSelectedItem(context.Item);
+                                    <MudMenuItem Label="Move Down" OnClick="@(() => Move(context.Item, currentIndex + 1))" />
                                     <MudMenuItem Label="Bottom" OnClick="@(() => Move(context.Item, -1))" />
                                 }
                             </MudMenu>
@@ -127,16 +122,12 @@
     private void InternalOnExpand(bool state) { _expanded = state; }
     private ConcurrentDictionary<string, bool> _expandedStates = new();
 
-    private void SelectedItemsChanged(HashSet<IPackageActivity> activities)
-    {
-        _selectedActivities = activities;
-        StateHasChanged();
-    }
+    private void SelectedItemsChanged(HashSet<IPackageActivity> activities) => _selectedActivities = activities;
 
     private void Move(IPackageActivity activity, int newIndex)
     {
         newIndex.Assert(x => x >= 0 || x == -1, "New index must be greater than or equal to 0 or -1");
-        
+
         if (newIndex < 0) newIndex = EditContext.Activities.Count - 1;
         var currentIndex = EditContext.Activities.IndexOf(x => x.Id == activity.Id);
         if (currentIndex < 0 || currentIndex == newIndex) return;

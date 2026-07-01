@@ -21,29 +21,14 @@
 
             <NavTabs>
                 <NavTabPanel Text="Properties" Icon="@Icons.Material.Outlined.GridOn">
-                    <MudGrid Spacing="2" Style="margin:0; width:100%; box-sizing:border-box; padding:10px 12px 8px 8px;">
-                        <MudItem xs="6" Class="pr-2">
-                            <MudTextField T="string"
-                                          Label="Description"
-                                          Variant="Variant.Outlined"
-                                          Required="true"
-                                          Immediate="true"
-                                          @bind-Value="@_description"
-                                          @bind-Value:after="OnEditorChanged" />
-                            <MudCheckBox @bind-Value="@_disabled">Disabled</MudCheckBox>
-                        </MudItem>
-                    </MudGrid>
-
-                    @foreach (var item in _sections)
-                    {
-                        <EditProperties Title="@item.Title" Elements="GetSection(item.SectionId)" DisableTableId="item.DisableTableId" OnUpdate="OnUpdate" />
-                    }
+                        <PropertyBlock />
                 </NavTabPanel>
-
+                <NavTabPanel Text="Parameters" Icon="@Icons.Material.Outlined.FormatListBulleted">
+                        <KeyValueBlock />
+                </NavTabPanel>
                 <NavTabPanel Text="Pipeline" Icon="@Icons.Material.Outlined.FactCheck">
                     <PipelineActivites />
                 </NavTabPanel>
-
                 <NavTabPanel Text="Access" Icon="@Icons.Material.Outlined.Shield">
                     <PackageAccess PackageId="@PackageId" />
                 </NavTabPanel>
@@ -67,21 +52,8 @@
     private ReportPackageRow? _currentRecord;
     private PipelinePackageRecord? _pipelinePackageRecord;
     private bool _disabled;
-    private EditProperty[] _sections = [];
 
-    private record EditProperty(SectionId SectionId, string Title, bool DisableTableId);
     private string? _description;
-
-    protected override void OnInitialized()
-    {
-        _sections = [
-            new EditProperty(SectionId.Parameters, SectionId.Parameters.GetTitle(), false),
-            new EditProperty(SectionId.ReconExcel, SectionId.ReconExcel.GetTitle(), true),
-            new EditProperty(SectionId.Pivot, SectionId.Pivot.GetTitle(), true),
-            new EditProperty(SectionId.Je, SectionId.Je.GetTitle(), true),
-            new EditProperty(SectionId.Data2Excel, SectionId.Data2Excel.GetTitle(), true),
-        ];
-    }
 
     private void ToggleNavMenu() => _navMenuCollapsed = !_navMenuCollapsed;
 

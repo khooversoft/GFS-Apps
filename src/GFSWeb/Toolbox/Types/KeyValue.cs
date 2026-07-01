@@ -8,9 +8,9 @@ public readonly struct KeyValue<TValue>
         this.Value = value;
     }
 
-    public string Key { get; }
+    public string Key { get; init; }
 
-    public TValue Value { get; }
+    public TValue Value { get; init; }
 
     public override string ToString() => $"{Key}:{Value}";
 
@@ -19,6 +19,8 @@ public readonly struct KeyValue<TValue>
         key = Key;
         value = Value;
     }
+
+    public KeyValuePair<string, TValue> ToKeyValuePair() => new(Key, Value);
 
     public static implicit operator KeyValue<TValue>((string key, TValue value) source) => new(source.key, source.value);
 

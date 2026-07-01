@@ -32,15 +32,15 @@
                 <MudTabPanel Text="Parameters">
                     @foreach (var item in _sections)
                     {
-                        <EditProperties Title="@item.Title" Elements="GetSection(item.SectionId)" DisableTableId="item.DisableTableId" OnUpdate="OnUpdate" />
+                        <EditKeyedProperties Title="@item.Title" Elements="GetSection(item.SectionId)" DisableTableId="item.DisableTableId" OnUpdate="OnUpdate" />
                     }
                 </MudTabPanel>
                 <MudTabPanel Text="SAP Query">
                     <SapQueryBlock OnUpdate="OnUpdate" />
                 </MudTabPanel>
                 <MudTabPanel Text="Mapping">
-                    <EditProperties Title="@SectionId.FieldSelect.GetTitle()" Elements="GetSection(SectionId.FieldSelect)" OnUpdate="OnUpdate" />
-                    <EditProperties Title="@SectionId.OutSelect.GetTitle()" Elements="GetSection(SectionId.OutSelect)" OnUpdate="OnUpdate" />
+                    <EditKeyedProperties Title="@SectionId.FieldSelect.GetTitle()" Elements="GetSection(SectionId.FieldSelect)" OnUpdate="OnUpdate" />
+                    <EditKeyedProperties Title="@SectionId.OutSelect.GetTitle()" Elements="GetSection(SectionId.OutSelect)" OnUpdate="OnUpdate" />
                 </MudTabPanel>
                 <MudTabPanel Text="SQL Commands">
                     <EditSqlCommands Title="@SectionId.Sql.GetTitle()" Elements="GetSection(SectionId.Sql)" OnUpdate="OnUpdate" />

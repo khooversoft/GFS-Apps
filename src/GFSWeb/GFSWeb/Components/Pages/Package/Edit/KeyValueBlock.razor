@@ -1,0 +1,205 @@
+﻿<MudStack Spacing="2">
+    <Toolbar>
+        <ToolbarButton Variant="@ToolbarVariant.Add" OnClick="@OnAdd" />
+        <ToolbarButton Variant="@ToolbarVariant.Edit" OnClick="@OnEdit" Disabled="@(_selectedItems.Count != 1)" />
+        <ToolbarButton Variant="@ToolbarVariant.Delete" OnClick="@OnDelete" Disabled="@(_selectedItems.Count == 0)" />
+        <ToolbarSpacer />
+        <ToolbarSwitch Label="Multi Select" @bind-Value="_multiSelect" @bind-Value:after="@(() => ResetMultiSelect())" />
+        <ToolbarSearch OnClick="OnSearch" />
+    </Toolbar>
+
+    <MudDataGrid @ref="_dataGrid"
+                 T="EditEntity"
+                 Items="@_list"
+                 ReadOnly="true"
+                 Dense="true"
+                 EditMode="@DataGridEditMode.Cell"
+                 EditTrigger="@DataGridEditTrigger.OnRowClick"
+                 Bordered="true"
+                 MultiSelection="@_multiSelect"
+                 SelectedItemsChanged="@SelectedItemsChanged"
+                 RowStyleFunc="@GetRowStyle"
+                 ColumnResizeMode="@ResizeMode.None">
+        <Columns>
+            @if (_multiSelect)
+            {
+                <SelectColumn T="EditEntity" />
+            }
+            <PropertyColumn Property="x => x.Key" Title="Key" Sortable="true" Resizable="true" HeaderStyle="max-width:20%" />
+            <PropertyColumn Property="x => x.Value" Title="Value" Sortable="true" Resizable="true" />
+
+            <TemplateColumn HeaderStyle="width: 1%; white-space: nowrap" CellStyle="padding: 0; line-height: 0;">
+                <CellTemplate>
+                    <MudMenu Icon="@Icons.Material.Outlined.MoreHoriz"
+                             AriaLabel="Open user menu"
+                             Dense="true"
+                             Variant="Variant.Text"
+                             Style="max-height: 24px; display: flex; align-items: center;">
+
+                        <MudMenuItem Label="Edit" OnClick="@(() => OnEdit(context.Item))" />
+                        <MudMenuItem Label="Delete" OnClick="@(() => OnDelete(context.Item))" />
+                    </MudMenu>
+                </CellTemplate>
+            </TemplateColumn>
+
+        </Columns>
+    </MudDataGrid>
+</MudStack>
+
+<Drawer Show="@_editShow" OnClose="@(() => _editShow = false)" Width="50%">
+    <DrawerHeader Title="@DrawerTitle">
+        Provide the required values
+    </DrawerHeader>
+    <DrawerContainer>
+        <Toolbar>
+            <ToolbarButton Variant="@ToolbarVariant.Save" OnClick="@OnSave" Disabled="@IsSaveDisabled()" />
+            <ToolbarButton Variant="@ToolbarVariant.Cancel" OnClick="@(() => _editShow = false)" />
+        </Toolbar>
+        <MudStack Spacing="2" Style="margin:10px">
+            <MudTextField Label="Key" Variant="Variant.Outlined" Required="true" Immediate="true" @bind-Value="@_editEntry.Key" Disabled="@(!_isAdd)" />
+            <MudTextField Label="Value" Variant="Variant.Outlined" Required="true" Immediate="true" @bind-Value="@_editEntry.Value" Lines="8" />
+        </MudStack>
+    </DrawerContainer>
+</Drawer>
+
+<Drawer Show="_deleteAsk" OnClose="@(() => _deleteAsk = false)">
+    <DrawerHeader Title="Delete Activity">
+        <MudText Typo="Typo.body1">Are you sure you want to delete these activities?</MudText>
+    </DrawerHeader>
+
+    <DrawerContainer OnYes=DeleteOnYes OnNo="@(() => _deleteAsk = false)">
+        <MudStack Spacing=2>
+            <MudText Typo="Typo.body2">@($"Selected: {_selectedItems.Count}")</MudText>
+            @foreach (var item in _selectedItems)
+            {
+                <MudText Typo="Typo.body1" Class="mx-4">@($"{item.Key} - {item.Value}")</MudText>
+            }
+        </MudStack>
+    </DrawerContainer>
+</Drawer>
+
+@code {
+    [CascadingParameter] public EditPackageContext EditContext { get; set; } = null!;
+    [Parameter] public EventCallback OnUpdate { get; set; }
+
+    private record EditEntity { public string? Key { get; set; } public string? Value { get; set; } }
+    private EditEntity _originalEntry = new();
+    private EditEntity _editEntry = new();
+    private List<EditEntity> _list = new();
+    private HashSet<EditEntity> _selectedItems = [];
+    private bool _editShow = false;
+    private bool _isAdd = false;
+    private bool _deleteAsk = false;
+    private bool _multiSelect = false;
+    private string? _searchString;
+    private MudDataGrid<EditEntity>? _dataGrid;
+
+    private string DrawerTitle => _isAdd ? "Add Property" : "Edit Property";
+
+    private void ResetMultiSelect()
+    {
+        if (!_multiSelect)
+        {
+            _selectedItems.Clear();
+            _dataGrid?.Selection.Clear();
+        }
+    }
+
+    protected override void OnParametersSet() => RefreshList();
+
+    private void RefreshList() => _list = EditContext
+        .Properties
+        .Select(x => new EditEntity { Key = x.Key, Value = x.Value })
+        .ToList();
+
+    private bool IsSaveDisabled() =>
+        _editEntry.Key.IsEmpty() ||
+        _editEntry.Value.IsEmpty() ||
+        _originalEntry == _editEntry;
+
+    private void SelectedItemsChanged(HashSet<EditEntity> items) => _selectedItems = items;
+
+    private void OnSearch(string? searchString)
+    {
+        searchString = searchString.ToNullIfEmpty();
+        if (_searchString == searchString) return;
+
+        _searchString = searchString;
+    }
+
+    private void OnEdit()
+    {
+        if (_selectedItems.Count != 1) return;
+
+        var activity = _selectedItems.First();
+        _isAdd = false;
+        _originalEntry = new EditEntity { Key = activity.Key, Value = activity.Value };
+        _editEntry = _originalEntry with { };
+        _editShow = true;
+    }
+
+    private void OnEdit(EditEntity item)
+    {
+        _editEntry = item;
+        _editShow = true;
+    }
+
+    private async Task OnSave()
+    {
+        _editShow = false;
+        _isAdd = false;
+
+        var key = _editEntry.Key.NotEmpty();
+        var value = _editEntry.Value.NotEmpty();
+
+        EditContext.Properties[key.ToLowerInvariant()] = value;
+        RefreshList();
+
+        await OnUpdate.InvokeAsync();
+    }
+
+    private void OnAdd()
+    {
+        _isAdd = true;
+        _originalEntry = new EditEntity();
+        _editEntry = new EditEntity();
+        _editShow = true;
+    }
+
+    private void OnDelete() => _deleteAsk = true;
+
+    private void OnDelete(EditEntity item)
+    {
+        _selectedItems.Clear();
+        _selectedItems.Add(item);
+        _deleteAsk = true;
+    }
+
+    private void DeleteOnYes()
+    {
+        _deleteAsk = false;
+        if (_selectedItems.Count == 0) return;
+
+        foreach (var item in _selectedItems)
+        {
+            EditContext.Properties.Remove(item.Key.NotEmpty(), out var _);
+        }
+
+        _selectedItems.Clear();
+        RefreshList();
+    }
+
+    private void EditItem(KeyValue<string> item)
+    {
+    }
+
+    private void DeleteItem(KeyValue<string> item)
+    {
+    }
+
+    private string GetRowStyle(EditEntity item, int index) => _selectedItems.Contains(item) switch
+    {
+        true => "background-color: var(--mud-palette-info-lighten);",
+        _ => String.Empty,
+    };
+}

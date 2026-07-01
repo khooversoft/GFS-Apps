@@ -126,6 +126,7 @@ internal class ExportCommand : ICommand
                 Elimination = lookupElimination(x.ShortName, x.Def),
                 ElimSelects = lookupElimSelect(x.ElimId),
                 MiscTables = getRequiredTables(x.Id),
+                Properties = getProperties(x.Id),
             }.Build()
             ).ToArray();
 
@@ -148,6 +149,22 @@ internal class ExportCommand : ICommand
             .Where(x => TableIdMap.IsRequiredTableId(id, x))
             .OrderBy(x => x.Table_ID)
             .ThenBy(x => x.ID)
+            .ToList();
+
+        List<Toolbox.Types.KeyValue<string>> getProperties(string id) => getRequiredTables(id)
+            .Select(x => (x, key: $"{x.Table_ID}.{x.ID}"))
+            .SelectMany(x => new[]
+            {
+                new Toolbox.Types.KeyValue<string>(x.key + ".Descr", x.x.Descr),
+                new Toolbox.Types.KeyValue<string>(x.key + ".Field1", x.x.Field1!),
+                new Toolbox.Types.KeyValue<string>(x.key + ".Field2", x.x.Field2!),
+                new Toolbox.Types.KeyValue<string>(x.key + ".Field3", x.x.Field3!),
+                new Toolbox.Types.KeyValue<string>(x.key + ".Field4", x.x.Field4!),
+            })
+            .Where(x => x.Value.IsNotEmpty())
+            .Select(x => x with { Key = x.Key.ToLowerInvariant() })
+            .GroupBy(x => x.Key)
+            .Select(x => x.First())
             .ToList();
     }
 

@@ -2,7 +2,6 @@
 @inject NavigationManager Navigation
 @inject IHttpContextAccessor HttpContextAccessor
 
-@* <MudThemeProvider Theme=_theme IsDarkMode=_isDarkMode /> *@
 <MudThemeProvider Theme="GFSWeb.Application.Themes.PrimaryTheme.Theme" IsDarkMode=_isDarkMode />
 <MudPopoverProvider />
 <MudSnackbarProvider />
@@ -15,7 +14,8 @@
                Breakpoint="Breakpoint.None"
                ClipMode="DrawerClipMode.Always"
                OpenMiniOnHover="true"
-               Width="180px">
+               Width="180px"
+               Style="background-color: var(--mud-palette-table-hover);">
         <NavMenu />
     </MudDrawer>
 

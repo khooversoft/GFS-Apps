@@ -1,0 +1,71 @@
+﻿<MudStack Spacing="2">
+    <Toolbar>
+        <ToolbarButton Variant="ToolbarVariant.Edit" OnClick="@OnEdit" Disabled="@_editShow" />
+    </Toolbar>
+
+    <MudGrid Spacing="2" Style="margin:0; width:100%; box-sizing:border-box; padding:10px 12px 8px 8px;">
+        <MudItem xs="6" Class="pr-2">
+            <MudTextField T="string"
+                          Label="Description"
+                          Variant="Variant.Outlined"
+                          Required="true"
+                          Immediate="true"
+                          ReadOnly="true"
+                          @bind-Value="@EditContext.Description" />
+
+            <MudCheckBox @bind-Value="@EditContext.Disabled" Disabled="true">Disabled</MudCheckBox>
+        </MudItem>
+    </MudGrid>
+</MudStack>
+
+<Drawer Show="@_editShow" OnClose="@(() => _editShow = false)" Width="50%">
+    <DrawerHeader Title="Edit Property">
+        Provide the required values
+    </DrawerHeader>
+    <DrawerContainer>
+        <Toolbar>
+            <ToolbarButton Variant="@ToolbarVariant.Save" OnClick="@OnEditSave" Disabled="@(!HasEditChanged())" />
+            <ToolbarButton Variant="@ToolbarVariant.Cancel" OnClick="@(() => _editShow = false)" />
+        </Toolbar>
+        <MudStack Spacing="2" Style="margin:10px">
+            <MudTextField Label="Description" Variant="Variant.Outlined" Required="true" Immediate="true" @bind-Value="@_editEntry.Description" />
+            <MudCheckBox Label="Disabled" Variant="Variant.Outlined" @bind-Value="@_editEntry.Disabled" />
+        </MudStack>
+    </DrawerContainer>
+</Drawer>
+
+@code {
+    [CascadingParameter] public EditPackageContext EditContext { get; set; } = null!;
+    [Parameter] public EventCallback OnUpdate { get; set; }
+
+    private record EditEntity { public string Description { get; set; } = null!; public bool Disabled { get; set; } }
+    private EditEntity _originalEntry = new();
+    private EditEntity _editEntry = new();
+    private bool _editShow = false;
+
+    private bool HasEditChanged() => _originalEntry != _editEntry && _editEntry.Description.IsNotEmpty();
+
+    protected override void OnParametersSet()
+    {
+        _originalEntry = new EditEntity { Description = EditContext.Description, Disabled = EditContext.Disabled };
+        _editEntry = _originalEntry with { };
+    }
+
+    private void OnEdit() => _editShow = true;
+
+    private async Task OnEditSave()
+    {
+        EditContext.Description = _editEntry.Description;
+        EditContext.Disabled = _editEntry.Disabled;
+        _originalEntry = _editEntry with { };
+        _editShow = false;
+
+        await OnUpdate.InvokeAsync();
+    }
+
+    private void OnEditCancel()
+    {
+        _editEntry = _originalEntry with { };
+        _editShow = false;
+    }
+}

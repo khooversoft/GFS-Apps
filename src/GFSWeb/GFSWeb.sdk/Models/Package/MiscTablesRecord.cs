@@ -1,4 +1,7 @@
-﻿namespace GFSWeb.sdk.Models;
+﻿using System.Collections.Frozen;
+using Toolbox.Types;
+
+namespace GFSWeb.sdk.Models;
 
 public enum SectionId
 {
@@ -23,6 +26,8 @@ public record MiscTablesRecord
     public string? Field4 { get; set; }
     public string? Field5 { get; set; }
     public string? Field6 { get; set; }
+
+    public string SectionTitle => this.GetSectionId().GetTitle();
 }
 
 
@@ -40,6 +45,19 @@ public static class MiscTablesRecordTool
 
         _ => SectionId.Parameters,
     };
+
+    public static FrozenDictionary<string, KeyValue<string>> SectionMap { get; } = new KeyValue<string>[]
+    {
+        ("reconexcel", "Recon Excel"),
+        ("pivot1", "Pivot"),
+        ("je_row", "JE"),
+        ("fieldselect", "Field Select"),
+        ("outselect", "Out Select"),
+        ("data2excel", "Data to Excel"),
+        ("parameters", "Parameters")
+    }.ToFrozenDictionary(x => x.Key, x => x, StringComparer.OrdinalIgnoreCase);
+
+    public static IReadOnlyList<KeyValue<string>> Sections { get; } = SectionMap.Values.OrderBy(x => x.Value).ToList();
 
     public static string GetTitle(this SectionId subject) => subject switch
     {

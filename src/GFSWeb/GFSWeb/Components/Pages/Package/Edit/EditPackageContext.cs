@@ -1,4 +1,5 @@
-﻿using GFSWeb.sdk.Models;
+﻿using System.Collections.Concurrent;
+using GFSWeb.sdk.Models;
 using Toolbox.Extensions;
 using Toolbox.Tools;
 
@@ -9,7 +10,12 @@ public class EditPackageContext
     public string PackageId { get; set; } = null!;
     public string Description { get; set; } = null!;
     public PackageType PackageType { get; set; }
+    public bool Disabled { get; set; }
+    public EliminationRecord? Elimination { get; init; }
+    public List<ElimSelectRecord> ElimSelects { get; init; } = new();
+    public List<MiscTablesRecord> MiscTables { get; init; } = new();
     public List<IPackageActivity> Activities { get; set; } = new();
+    public ConcurrentDictionary<string, string> Properties { get; init; } = new(StringComparer.OrdinalIgnoreCase);
 }
 
 public static class EditPackageContextTool
@@ -23,7 +29,12 @@ public static class EditPackageContextTool
             PackageId = subject.PackageId.NotEmpty(),
             Description = subject.Description.NotEmpty(),
             PackageType = subject.PackageType.Assert(x => x.IsEnumValid(), "Invalid enum"),
+            Disabled = subject.Disabled,
+            Elimination = subject.Elimination,
+            ElimSelects = subject.ElimSelects.NotNull().ToList(),
+            MiscTables = subject.MiscTables.NotNull().ToList(),
             Activities = subject.Activities.NotNull().ToList(),
+            Properties = new ConcurrentDictionary<string, string>(subject.Properties.Select(x => x.ToKeyValuePair()), StringComparer.OrdinalIgnoreCase),
         };
     }
 

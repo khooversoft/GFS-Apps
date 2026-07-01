@@ -25,12 +25,14 @@ public record PipelinePackageRecord
     public string Description { get; init; } = null!;
     public string MenuId { get; init; } = null!;
     public PackageType PackageType { get; init; }
+    public bool Disabled { get; init; }
 
     public EliminationRecord? Elimination { get; init; }
     public IReadOnlyList<ElimSelectRecord> ElimSelects { get; init; } = Array.Empty<ElimSelectRecord>();
     public IReadOnlyList<MiscTablesRecord> MiscTables { get; init; } = Array.Empty<MiscTablesRecord>();
 
     public IReadOnlyList<IPackageActivity> Activities { get; init; } = Array.Empty<IPackageActivity>();
+    public IReadOnlyList<KeyValue<string>> Properties { get; init; } = Array.Empty<KeyValue<string>>();
 
     public static IValidator<PipelinePackageRecord> Validator { get; } = new Validator<PipelinePackageRecord>()
         .RuleFor(x => x.PackageId).NotEmpty()

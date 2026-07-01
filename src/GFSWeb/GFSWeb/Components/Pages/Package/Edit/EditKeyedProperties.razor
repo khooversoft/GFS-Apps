@@ -1,0 +1,135 @@
+﻿
+<MudStack Spacing="2">
+    <MudGrid Spacing="2" Style="margin:0; width:100%; box-sizing:border-box; padding:10px 12px 8px 8px;">
+        <MudItem xs="6" Class="pr-2">
+            <MudTextField T="string"
+                          Label="Description"
+                          Variant="Variant.Outlined"
+                          Required="true"
+                          Immediate="true"
+                          @bind-Value="@EditContext.Description" />
+
+            <MudCheckBox @bind-Value="@EditContext.Disabled">Disabled</MudCheckBox>
+        </MudItem>
+    </MudGrid>
+
+    <div style="margin-top:10px">
+        <Toolbar>
+            <ToolbarButton Variant="@ToolbarVariant.Add" OnClick="@OnAdd" />
+            <ToolbarButton Variant="@ToolbarVariant.Edit" OnClick="@OnEdit" Disabled="@(_selectedItems.Count != 1)" />
+            <ToolbarButton Variant="@ToolbarVariant.Delete" OnClick="@OnDelete" Disabled="@(_selectedItems.Count == 0)" />
+            <ToolbarSpacer />
+            <ToolbarSwitch Label="Multi Select" @bind-Value="_multiSelect" />
+            <ToolbarSearch OnClick="OnSearch" />
+        </Toolbar>
+
+        <MudDataGrid T="PropertyEntry"
+                     Items="@_list"
+                     ReadOnly="true"
+                     Dense="true"
+                     EditMode="@DataGridEditMode.Cell"
+                     EditTrigger="@DataGridEditTrigger.OnRowClick"
+                     Bordered="true"
+                     MultiSelection="@_multiSelect"
+                     SelectedItemsChanged="@SelectedItemsChanged"
+                     RowStyleFunc="@GetRowStyle"
+                     ColumnResizeMode="@ResizeMode.None">
+            <Columns>
+                @if (_multiSelect)
+                {
+                    <SelectColumn T="PropertyEntry" />
+                }
+                <PropertyColumn Property="x => x.Key" Title="Key" Sortable="true" Resizable="true" HeaderStyle="max-width:20%" />
+                <PropertyColumn Property="x => x.Value" Title="Value" Sortable="true" Resizable="true" />
+            </Columns>
+        </MudDataGrid>
+    </div>
+</MudStack>
+
+<Drawer Show="@_editShow" OnClose="@(() => _editShow = false)">
+    <DrawerHeader Title="Edit Property">
+        Provide the required values
+    </DrawerHeader>
+    <DrawerContainer>
+        <Toolbar>
+            <ToolbarButton Variant="@ToolbarVariant.Save" OnClick="@OnEditSave" Disabled="@HasEditChanged()" />"
+            <ToolbarButton Variant="@ToolbarVariant.Cancel" OnClick="@(() => _editShow = false)" />"
+        </Toolbar>
+        <MudStack Spacing="2" Style="margin:10px">
+            <MudTextField Label="Key" Variant="Variant.Outlined" Required="true" Immediate="true" @bind-Value="@_editEntry.Key" />
+            <MudTextField Label="Value" Variant="Variant.Outlined" Required="true" Immediate="true" @bind-Value="@_editEntry.Value" />
+        </MudStack>
+    </DrawerContainer>
+</Drawer>
+
+@code {
+    [CascadingParameter] public EditPackageContext EditContext { get; set; } = null!;
+
+    private record PropertyEntry { public string? Key { get; set; } public string? Value { get; set; } }
+    private bool _multiSelect = false;
+    private bool _editShow = false;
+    private string? _searchString;
+    private List<PropertyEntry> _list = new();
+    private HashSet<PropertyEntry> _selectedItems = [];
+    private PropertyEntry _currentEntry = new();
+    private PropertyEntry _editEntry = new();
+
+    protected override void OnParametersSet() => _list = EditContext
+        .Properties
+        .Select(x => new PropertyEntry { Key = x.Key, Value = x.Value })
+        .ToList();
+
+    private bool HasEditChanged() => _currentEntry is not null &&
+        _editEntry is not null &&
+        _currentEntry == _editEntry;
+
+    private async Task<DataGridEditFormAction> CommittedItemChanges(PropertyEntry item)
+    {
+        return DataGridEditFormAction.Close;
+    }
+
+    private void SelectedItemsChanged(HashSet<PropertyEntry> items) => _selectedItems = items;
+
+    private void OnSearch(string? searchString)
+    {
+        searchString = searchString.ToNullIfEmpty();
+        if (_searchString == searchString) return;
+
+        _searchString = searchString;
+    }
+
+    private void OnEdit()
+    {
+        if (_selectedItems.Count != 1) return;
+
+        var activity = _selectedItems.First();
+        _currentEntry = new PropertyEntry { Key = activity.Key, Value = activity.Value };
+        _editEntry = _currentEntry with { };
+        _editShow = true;
+    }
+
+    private void OnEditSave()
+    {
+        _editShow = false;
+        EditContext.Properties[_editEntry.Key.NotEmpty()] = _editEntry.Value.NotEmpty();
+    }
+
+    private void OnAdd() { }
+    private void OnDelete() { }
+
+    private void EditItem(KeyValue<string> item)
+    {
+    }
+
+    private void DeleteItem(KeyValue<string> item)
+    {
+    }
+
+    private string GetRowStyle(PropertyEntry item, int index) => _selectedItems.Contains(item) switch
+    {
+        true => "background-color: var(--mud-palette-info-lighten);",
+        _ => String.Empty,
+    };
+}
+
+

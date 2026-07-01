@@ -3,7 +3,7 @@
     @ChildContent
 </CascadingValue>
 
-<MudStack Spacing="2" Row="true" Style="@GetContainerStyle()">
+<MudStack Spacing="3" Row="true" Style="@GetContainerStyle()">
     <MudPaper Elevation="2" Style="@GetStyle()">
         <MudStack Spacing="2">
             <MudIconButton Icon="@(_navMenuCollapsed ? Icons.Material.Outlined.ChevronRight : Icons.Material.Outlined.ChevronLeft)"
@@ -16,12 +16,12 @@
                 @foreach (var item in _items)
                 {
                     <div @key="item">
-                    <MudTooltip Text="@item.Text" Placement="Placement.Right" Disabled="@(!_navMenuCollapsed)">
-                        <MudNavLink Icon="@item.Icon"
-                                    OnClick="@(() => SelectPanel(item))"
-                                    Match="NavLinkMatch.Prefix"
-                                    Style="@GetNavLinkStyle(item)">@(_navMenuCollapsed ? string.Empty : @item.Text)</MudNavLink>
-                    </MudTooltip>
+                        <MudTooltip Text="@item.Text" Placement="Placement.Right" Disabled="@(!_navMenuCollapsed)" Inline="false">
+                            <MudNavLink Icon="@item.Icon"
+                                        OnClick="@(() => SelectPanel(item))"
+                                        Match="NavLinkMatch.Prefix"
+                                        Style="@GetNavLinkStyle(item)">@(_navMenuCollapsed ? string.Empty : @item.Text)</MudNavLink>
+                        </MudTooltip>
                     </div>
                 }
             </MudNavMenu>
@@ -46,7 +46,7 @@
     private string GetContainerStyle() => Expand ? "align-items:stretch;width:100%" : string.Empty;
     private string GetContentStyle() => Expand ? "flex:1 1 auto; min-width:0; align-self:stretch" : "flex:1 1 auto; min-width:0";
     private string GetStyle() => _navMenuCollapsed ? Fixup("55px") : Fixup(MaxWidth);
-    private string Fixup(string value) => $"flex:0 0 {value};width:{value};max-width:{value};min-width:{value};box-sizing:border-box;overflow:hidden";
+    private string Fixup(string value) => $"flex:0 0 {value};width:{value};max-width:{value};min-width:{value};box-sizing:border-box;overflow:hidden;background-color: var(--mud-palette-table-hover);";
     private string GetNavLinkStyle(NavTabPanel panel) => ReferenceEquals(_activePanel, panel)
         ? "border-radius:4px;background-color:var(--mud-palette-action-default-hover);color:var(--mud-palette-primary)"
         : string.Empty;
