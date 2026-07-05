@@ -12,6 +12,8 @@
     [Parameter] public bool NoLine { get; set; }
     [Parameter] public string? Style { get; set; }
 
-    private string PaperStyle => NoLine ? string.Empty : "border-bottom-color:gray;border-bottom-style:solid;border-bottom-width:1px";
+    private const string _background = "background-color: var(--mud-palette-table-hover);";
+    private const string _lineFmt = "border-bottom-color:gray;border-bottom-style:solid;border-bottom-width:1px";
+    private string PaperStyle => NoLine ? _background : _lineFmt + ';' + _background;
     private string ToolBarStyle => string.Empty; // "min-height:32px;height:32px;";
 }

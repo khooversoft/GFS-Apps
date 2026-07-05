@@ -14,7 +14,8 @@
             <ToolbarButton Variant="@ToolbarVariant.Reorder" OnClick="@(() => _reorder = true)" Disabled="@_reorder" />
             <ToolbarButton Variant="@ToolbarVariant.Delete" OnClick="@(() => _deleteAsk = true)" Disabled="@(_selectedActivities.Count == 0 || _reorder)" />
             <ToolbarSpacer />
-            <ToolbarSwitch Label="Multi Select" @bind-Value="_multiSelect" Disabled="@_reorder" />
+            <ToolbarSwitch Label="Select" @bind-Value="_multiSelect" Disabled="@_reorder" />
+            <ToolbarButton Variant="@ToolbarVariant.AllCollapse" OnClick="@OnAllCollapse" Show="@(_expandedStates.Count > 0)" Disabled="@_reorder" />
             <ToolbarSearch OnClick="OnSearch" Disabled="@_reorder" />
         </Toolbar>
 
@@ -73,7 +74,10 @@
                 @switch (context.Item)
                 {
                     case SapQueryActivity sapQuery:
-                        <SapQueryBlock Activity="@sapQuery" OnUpdate="OnUpdate" ExpandState="@_expanded" />
+                        <MudStack Spacing="2">
+                            <SapQueryMappingsBlock Activity="@sapQuery" OnUpdate="OnUpdate" />
+                            <SapQueryBlock Activity="@sapQuery" OnUpdate="OnUpdate" ExpandState="@_expanded" />
+                        </MudStack>
                         break;
 
                     case SqlCommandActivity sqlCommand:
@@ -120,9 +124,14 @@
     private int IndexOfSelectedItem(IPackageActivity activity) => EditContext.Activities.IndexOf(x => x.Id == activity.Id);
     private void OnAdd() => _addOpen = true;
     private void InternalOnExpand(bool state) { _expanded = state; }
-    private ConcurrentDictionary<string, bool> _expandedStates = new();
+    private HashSet<string> _expandedStates = new();
 
     private void SelectedItemsChanged(HashSet<IPackageActivity> activities) => _selectedActivities = activities;
+
+    private async Task OnAllCollapse()
+    {
+        if (_grid is not null) await _grid.CollapseAllHierarchy();
+    }
 
     private void Move(IPackageActivity activity, int newIndex)
     {
@@ -200,15 +209,21 @@
 
     private void OnExpand(DataGridHierarchyVisibilityToggledEventArgs<IPackageActivity> args)
     {
-        _expandedStates.AddOrUpdate(args.Item.Id, args.Expanded, (key, oldValue) => args.Expanded);
+        if (args.Expanded)
+            _expandedStates.Add(args.Item.Id);
+        else
+            _expandedStates.Remove(args.Item.Id);
     }
 
-    private string GetRowStyle(IPackageActivity item, int index) => _expandedStates.TryGetValue(item.Id, out var state) switch
+    private string GetRowStyle(IPackageActivity item, int index) => _expandedStates.Contains(item.Id) switch
     {
-        true when state => "background-color: var(--mud-palette-primary);",
+        // true when state => "background-color: var(--mud-palette-primary);",
+        // true when state => "background-color: var(--mud-palette-gray-light);",
+        true => "background-color: var(--mud-palette-lines-inputs);",
+
         _ => _selectedActivities.Any(x => x.Id == item.Id) switch
         {
-            true => "background-color: var(--mud-palette-gray-default);",
+            true => AppConstants.SelectRowStyle, // "background-color: var(--mud-palette-gray-default);",
             _ => String.Empty,
         },
     };

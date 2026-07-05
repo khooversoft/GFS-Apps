@@ -19,7 +19,7 @@
     [Parameter] public string? Icon { get; set; } = null!;
     [Parameter] public Color? ButtonColor { get; set; }
     [Parameter] public EventCallback OnClick { get; set; }
-    [Parameter] public string? Text { get; set; }
+    [Parameter] public string? Label { get; set; }
     [Parameter] public bool Disabled { get; set; }
     [Parameter] public bool Show { get => OnClick.HasDelegate && field; set; } = true;
 
@@ -57,6 +57,7 @@
         [ToolbarVariant.Reorder] = new(Icons.Material.Outlined.Reorder, Color.Surface, "Reorder"),
         [ToolbarVariant.Yes] = new(Icons.Material.Outlined.Check, Color.Surface, "Yes"),
         [ToolbarVariant.No] = new(Icons.Material.Outlined.Cancel, Color.Surface, "No"),
+        [ToolbarVariant.AllCollapse] = new(Icons.Material.Outlined.KeyboardDoubleArrowUp, Color.Surface, null),
     };
 
     protected override void OnParametersSet()
@@ -65,14 +66,14 @@
 
         if (VariantConfigs.TryGetValue(Variant, out var config))
         {
-            _icon = config.Icon;
-            if( ButtonColor.HasValue ) _color = ButtonColor.Value;
-            _text = config.Text;
+            _icon = Icon.ToNullIfEmpty() ?? config.Icon;
+            _color = ButtonColor.HasValue ? ButtonColor.Value : config.Color;
+            _text = Label.ToNullIfEmpty() ?? config.Text;
             return;
         }
 
         _icon = Icon;
         _color = ButtonColor ?? Color.Surface;
-        _text = Text;
+        _text = Label;
     }
 }

@@ -5,7 +5,7 @@ namespace GFSWeb.sdk.Models;
 
 public record SapQueryActivity : IPackageActivity
 {
-    public string Id { get; set; } = Guid.NewGuid().ToString();
+    public string Id { get; set; } = "sap-query";
     public string Type { get; } = "SAP Query";
     public string Description { get; set; } = null!;
 

@@ -4,7 +4,7 @@
         <ToolbarButton Variant="@ToolbarVariant.Edit" OnClick="@OnEdit" Disabled="@(_selectedItems.Count != 1)" />
         <ToolbarButton Variant="@ToolbarVariant.Delete" OnClick="@OnDelete" Disabled="@(_selectedItems.Count == 0)" />
         <ToolbarSpacer />
-        <ToolbarSwitch Label="Multi Select" @bind-Value="_multiSelect" @bind-Value:after="@(() => ResetMultiSelect())" />
+        <ToolbarSwitch Label="Select" @bind-Value="_multiSelect" @bind-Value:after="@(() => ResetMultiSelect())" />
         <ToolbarSearch OnClick="OnSearch" />
     </Toolbar>
 
@@ -199,7 +199,7 @@
 
     private string GetRowStyle(EditEntity item, int index) => _selectedItems.Contains(item) switch
     {
-        true => "background-color: var(--mud-palette-info-lighten);",
+        true => AppConstants.SelectRowStyle, // "background-color: var(--mud-palette-lines-default);",
         _ => String.Empty,
     };
 }

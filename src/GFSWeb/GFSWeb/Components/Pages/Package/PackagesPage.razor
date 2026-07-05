@@ -16,7 +16,7 @@ else
             <ToolbarButton Variant="ToolbarVariant.Edit" OnClick="OnEdit" Disabled="@_editDisabled" />
             <ToolbarButton Variant="ToolbarVariant.Delete" OnClick="OnDelete" Disabled="@_deleteDisabled" />
             <ToolbarSpacer />
-            <ToolbarSwitch Label="Multi Select" @bind-Value="_multiSelect" />
+            <ToolbarSwitch Label="Select" @bind-Value="_multiSelect" />
             <ToolbarSearch OnClick="OnSearch" Disabled="@_searchDisabled" />
         </Toolbar>
 

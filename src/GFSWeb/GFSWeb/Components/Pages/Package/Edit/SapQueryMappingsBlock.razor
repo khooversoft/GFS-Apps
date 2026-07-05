@@ -1,0 +1,143 @@
+﻿<MudField Label="Mapping" Variant="Variant.Outlined">
+    <Toolbar>
+        <ToolbarButton Variant="@ToolbarVariant.Add" OnClick="@OnAdd" />
+        <ToolbarButton Variant="@ToolbarVariant.Save" OnClick="@OnSave" Disabled="@(!HasChanged())" />
+        <ToolbarButton Variant="@ToolbarVariant.Undo" OnClick="@OnUndo" Disabled="@(!HasChanged())" />
+        <MudSpacer />
+        <ToolbarButton Variant="@ToolbarVariant.Expand" OnClick="@(() => _isHidden = false)" Show="@_isHidden" Label="Expand" />
+        <ToolbarButton Variant="@ToolbarVariant.Collapse" OnClick="@(() => _isHidden = true)" Show="@(!_isHidden)" Label="Collapse" />
+    </Toolbar>
+
+    @if (_isHidden)
+    {
+        <MudText Align="Align.Center">...</MudText>
+    }
+
+    <div style="margin-top:10px" hidden="@_isHidden">
+        <MudDataGrid @ref="_dataGrid"
+                     T="SapQueryMapping"
+                     Items="@_editList"
+                     Dense="true"
+                     Hover="true"
+                     Elevation="0"
+                     ReadOnly="false"
+                     EditMode="@DataGridEditMode.Cell"
+                     EditTrigger="@DataGridEditTrigger.OnRowClick"
+                     SelectedItemsChanged="@SelectedItemsChanged"
+                     CommittedItemChanges="@OnCommittedItemChanges"
+                     SortMode="SortMode.Multiple"
+                     ColumnResizeMode="ResizeMode.Column">
+
+            <Columns>
+                <TemplateColumn CellStyle="width: 1%; white-space: nowrap;" HeaderStyle="@AppConstants.FitToContext">
+                    <EditTemplate>
+                        <MudIconButton Color="Color.Error" Size="@Size.Small" Icon="@Icons.Material.Outlined.Close" OnClick="@(() => DeleteItem(context.Item))" />
+                    </EditTemplate>
+                </TemplateColumn>
+                <TemplateColumn T="SapQueryMapping" Title="Field Index" SortBy="x => x.FieldIndex" HeaderStyle="@AppConstants.FitToContext" CellStyle="@AppConstants.FitToContext">
+                    <CellTemplate>
+                        @context.Item.FieldIndex
+                    </CellTemplate>
+                    <EditTemplate>
+                        <MudSelect T="string"
+                                   Value="@context.Item.FieldIndex"
+                                   ValueChanged="@(v => OnCommittedFieldIndexChange(context.Item, v))"
+                                   Dense="true"
+                                   Margin="Margin.Dense"
+                                   Variant="Variant.Text"
+                                   Style="width: 100%; margin: 0;">
+                            @foreach (var fi in GetFieldIndexOptions(context.Item.FieldIndex))
+                            {
+                                <MudSelectItem Value="@fi">@fi</MudSelectItem>
+                            }
+                        </MudSelect>
+                    </EditTemplate>
+                </TemplateColumn>
+                <PropertyColumn Property="x => x.RfcColumn" Title="RFC Column" />
+                <PropertyColumn Property="x => x.OutColumn" Title="Out Column" />
+            </Columns>
+        </MudDataGrid>
+    </div>
+</MudField>
+
+@code {
+    [Parameter] public SapQueryActivity Activity { get; set; } = null!;
+    [Parameter] public EventCallback OnUpdate { get; set; }
+
+    private List<SapQueryMapping> _list = new();
+    private List<SapQueryMapping> _editList = new();
+    private MudDataGrid<SapQueryMapping>? _dataGrid;
+    private HashSet<SapQueryMapping> _selectedItems = new();
+    private Stack<List<SapQueryMapping>> _saveStack = new();
+    private static IReadOnlyList<string> _fieldIndex = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"];
+    private bool _isHidden = false;
+
+    protected override void OnParametersSet()
+    {
+        _list = Activity.SapQueryMappings.ToList();
+        _editList = _list.Select(x => x with { }).ToList();
+    }
+
+    private async Task<DataGridEditFormAction> OnCommittedItemChanges(SapQueryMapping _)
+    {
+        _saveStack.Push(_editList.Select(x => x with { }).ToList());
+        return DataGridEditFormAction.Close;
+    }
+
+    private void OnCommittedFieldIndexChange(SapQueryMapping item, string newFieldIndex)
+    {
+        item.FieldIndex = newFieldIndex;
+        _saveStack.Push(_editList.Select(x => x with { }).ToList());
+    }
+
+    private void OnSave()
+    {
+        Activity.SapQueryMappings.Clear();
+        Activity.SapQueryMappings.AddRange(_editList);
+        OnUpdate.InvokeAsync();
+    }
+
+    private bool HasChanged() => _saveStack.Count > 0 ||
+        _list.Count != _editList.Count ||
+        !_list.OrderBy(x => x.FieldIndex).SequenceEqual(_editList.OrderBy(x => x.FieldIndex));
+
+    private void OnUndo()
+    {
+        if (_saveStack.Count == 0)
+        {
+            _editList = _list.Select(x => x with { }).ToList();
+            _dataGrid?.ReloadServerData();
+            return;
+        }
+
+        _editList = _saveStack.Pop();
+        _dataGrid?.ReloadServerData();
+    }
+
+    private async Task SelectedItemsChanged(HashSet<SapQueryMapping> items) => _selectedItems = items;
+
+    private IReadOnlyList<string> GetFieldIndexOptions(string fieldIndex) => _fieldIndex
+        .Except([fieldIndex])
+        .Except(Activity.SapQueryMappings.Select(x => x.FieldIndex))
+        .ToArray();
+
+    private async Task OnAdd()
+    {
+        // var newFieldIndex = _fieldIndex
+        //     .Except(EditContext.SapQueryMappings.Values.Select(x => x.FieldIndex), StringComparer.OrdinalIgnoreCase)
+        //     .First();
+
+        // var newRecord = new SapQueryMapping
+        // {
+        //     FieldIndex = newFieldIndex,
+        // };
+
+        // EditContext.SapQueryMappings.Add(newRecord.FieldIndex, newRecord);
+    }
+
+    private void DeleteItem(SapQueryMapping item)
+    {
+        int index = _editList.IndexOf(x => x.FieldIndex == item.FieldIndex).Assert(x => x >= 0, "Cannot find map record");
+        _editList.RemoveAt(index);
+    }
+}

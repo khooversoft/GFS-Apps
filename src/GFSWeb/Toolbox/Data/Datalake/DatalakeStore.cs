@@ -145,7 +145,7 @@ public partial class DatalakeStore
             {
                 scanCount++;
                 if (!matcher.Match(pathItem.Name)) continue;
-                if( !includeFolder && (pathItem.IsDirectory ?? false)) continue;
+                if (!includeFolder && (pathItem.IsDirectory ?? false)) continue;
                 if (count++ < index) continue;
 
                 string trimmedPath = _datalakeOption.RemoveBaseRoot(pathItem.Name);

@@ -31,4 +31,5 @@ public enum ToolbarVariant
     Reorder,
     Yes,
     No,
+    AllCollapse,
 }

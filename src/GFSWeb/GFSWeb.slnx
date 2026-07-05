@@ -12,6 +12,8 @@
     <Deploy />
   </Project>
   <Project Path="GFSWebTool/GFSWebTool.csproj" Id="251e87c5-8693-40ac-b7f1-a536e192f2c1" />
+  <Project Path="Toolbox.SAP.sdk.test/Toolbox.SAP.sdk.test.csproj" Id="b6106b30-7f74-446f-8a45-61373e367b79" />
+  <Project Path="Toolbox.SAP.sdk/Toolbox.SAP.sdk.csproj" Id="accdb930-7da0-45c0-9f0c-cb5c06255cf2" />
   <Project Path="Toolbox.test/Toolbox.test.csproj" Id="92b8cb58-4803-48de-9893-25b840912d57" />
   <Project Path="Toolbox/Toolbox.csproj" />
 </Solution>
